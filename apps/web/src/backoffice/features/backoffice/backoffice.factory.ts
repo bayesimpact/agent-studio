@@ -14,9 +14,11 @@ import type {
   BackofficeProjectDetail,
   BackofficeProjectListItem,
   BackofficeProjectMember,
+  BackofficeRbacCatalog,
   BackofficeUser,
   BackofficeUserAgentMembership,
   BackofficeUserDetail,
+  BackofficeUserGlobalRole,
   BackofficeUserOrganizationMembership,
   BackofficeUserProjectMembership,
   BackofficeUserReviewCampaignMembership,
@@ -265,6 +267,8 @@ export const backofficeUserOrganizationMembershipFactory =
       organizationId: params.organizationId ?? organization.id,
       organizationName: params.organizationName ?? organization.name,
       role: params.role ?? "member",
+      roleKey: params.roleKey ?? "org_member",
+      permissions: params.permissions ?? ["organization.read"],
     }
   })
 
@@ -289,6 +293,8 @@ export const backofficeUserProjectMembershipFactory = BackofficeUserProjectMembe
       projectId: params.projectId ?? project.id,
       projectName: params.projectName ?? project.name,
       role: params.role ?? "member",
+      roleKey: params.roleKey ?? "project_member",
+      permissions: params.permissions ?? ["project.read"],
     }
   },
 )
@@ -300,6 +306,8 @@ export const backofficeUserAgentMembershipFactory = BackofficeUserAgentMembershi
     agentId: params.agentId ?? faker.string.uuid(),
     agentName: params.agentName ?? faker.commerce.productName(),
     role: params.role ?? "member",
+    roleKey: params.roleKey ?? "agent_member",
+    permissions: params.permissions ?? ["agent.read"],
   }),
 )
 
@@ -322,12 +330,181 @@ export const backofficeUserDetailFactory = BackofficeUserDetailFactory.define(({
     email: params.email ?? faker.internet.email({ firstName, lastName }).toLowerCase(),
     name: params.name ?? `${firstName} ${lastName}`,
     createdAt: (params.createdAt ?? faker.date.past().getTime()) as TimeType,
+    globalRoles: params.globalRoles ?? [],
     organizationMemberships: params.organizationMemberships ?? [],
     projectMemberships: params.projectMemberships ?? [],
     agentMemberships: params.agentMemberships ?? [],
     reviewCampaignMemberships: params.reviewCampaignMemberships ?? [],
   }
 })
+
+class BackofficeUserGlobalRoleFactory extends Factory<BackofficeUserGlobalRole> {}
+
+export const backofficeUserGlobalRoleFactory = BackofficeUserGlobalRoleFactory.define(
+  ({ params }) => ({
+    key: params.key ?? "platform_staff",
+    name: params.name ?? "Platform Staff",
+    permissions: params.permissions ?? ["backoffice.read", "trace.read", "backoffice.terms.update"],
+  }),
+)
+
+class BackofficeRbacCatalogFactory extends Factory<BackofficeRbacCatalog> {}
+
+export const backofficeRbacCatalogFactory = BackofficeRbacCatalogFactory.define(({ params }) => ({
+  roles: params.roles ?? [
+    {
+      key: "platform_staff",
+      name: "Platform Staff",
+      scopeType: "global" as const,
+      permissions: ["backoffice.read", "trace.read", "backoffice.terms.update"],
+    },
+    {
+      key: "platform_superadmin",
+      name: "Platform Superadmin",
+      scopeType: "global" as const,
+      permissions: [
+        "backoffice.read",
+        "trace.read",
+        "backoffice.terms.update",
+        "backoffice.organization.read",
+        "backoffice.project.read",
+        "backoffice.project.update",
+        "backoffice.agent.read",
+        "backoffice.user.read",
+        "organization.create",
+      ],
+    },
+    {
+      key: "org_owner",
+      name: "Organization Owner",
+      scopeType: "organization" as const,
+      permissions: [
+        "organization.read",
+        "organization.update",
+        "organization.delete",
+        "project.create",
+        "user.read",
+        "backoffice.organization.read",
+        "backoffice.project.read",
+        "backoffice.agent.read",
+      ],
+    },
+    {
+      key: "org_admin",
+      name: "Organization Admin",
+      scopeType: "organization" as const,
+      permissions: [
+        "organization.read",
+        "organization.update",
+        "project.create",
+        "user.read",
+        "backoffice.organization.read",
+        "backoffice.project.read",
+        "backoffice.agent.read",
+      ],
+    },
+    {
+      key: "org_member",
+      name: "Organization Member",
+      scopeType: "organization" as const,
+      permissions: ["organization.read"],
+    },
+    {
+      key: "project_owner",
+      name: "Project Owner",
+      scopeType: "project" as const,
+      permissions: [
+        "project.read",
+        "project.update",
+        "project.delete",
+        "agent.create",
+        "agent.read",
+        "user.read",
+        "backoffice.project.read",
+        "backoffice.project.update",
+        "backoffice.agent.read",
+      ],
+    },
+    {
+      key: "project_admin",
+      name: "Project Admin",
+      scopeType: "project" as const,
+      permissions: [
+        "project.read",
+        "project.update",
+        "project.delete",
+        "agent.create",
+        "agent.read",
+        "user.read",
+        "backoffice.project.read",
+        "backoffice.project.update",
+        "backoffice.agent.read",
+      ],
+    },
+    {
+      key: "project_member",
+      name: "Project Member",
+      scopeType: "project" as const,
+      permissions: ["project.read"],
+    },
+    {
+      key: "agent_owner",
+      name: "Agent Owner",
+      scopeType: "agent" as const,
+      permissions: [
+        "agent.read",
+        "agent.update",
+        "agent.delete",
+        "user.read",
+        "backoffice.agent.read",
+      ],
+    },
+    {
+      key: "agent_admin",
+      name: "Agent Admin",
+      scopeType: "agent" as const,
+      permissions: [
+        "agent.read",
+        "agent.update",
+        "agent.delete",
+        "user.read",
+        "backoffice.agent.read",
+      ],
+    },
+    {
+      key: "agent_member",
+      name: "Agent Member",
+      scopeType: "agent" as const,
+      permissions: ["agent.read"],
+    },
+  ],
+  permissions: params.permissions ?? [
+    { key: "agent.create", description: "Create agents in a project" },
+    { key: "agent.delete", description: "Delete an agent" },
+    { key: "agent.read", description: "See an agent" },
+    { key: "agent.update", description: "Update an agent" },
+    { key: "backoffice.agent.read", description: "See agents in the backoffice" },
+    { key: "backoffice.organization.read", description: "See organizations in the backoffice" },
+    { key: "backoffice.project.read", description: "See projects in the backoffice" },
+    {
+      key: "backoffice.project.update",
+      description: "Mutate a project from the backoffice (e.g. feature flags)",
+    },
+    { key: "backoffice.read", description: "Access /backoffice routes" },
+    { key: "backoffice.terms.update", description: "Manage terms documents" },
+    { key: "backoffice.user.read", description: "See every user in the backoffice" },
+    { key: "organization.create", description: "Create organizations" },
+    { key: "organization.delete", description: "Delete an organization" },
+    { key: "organization.read", description: "See an organization" },
+    { key: "organization.update", description: "Update an organization" },
+    { key: "project.create", description: "Create projects in an organization" },
+    { key: "project.delete", description: "Delete a project" },
+    { key: "project.read", description: "See a project" },
+    { key: "project.update", description: "Update a project" },
+    { key: "trace.read", description: "See Langfuse trace links" },
+    { key: "user.read", description: "See the users who are members of a resource" },
+  ],
+}))
 
 function termsDocument(type: TermsDocumentType) {
   return {

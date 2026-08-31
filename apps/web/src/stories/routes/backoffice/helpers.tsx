@@ -5,7 +5,14 @@ import {
   backofficeOrganizationFactory,
   backofficeProjectDetailFactory,
   backofficeProjectListItemFactory,
+  backofficeRbacCatalogFactory,
+  backofficeUserAgentMembershipFactory,
+  backofficeUserDetailFactory,
   backofficeUserFactory,
+  backofficeUserGlobalRoleFactory,
+  backofficeUserOrganizationMembershipFactory,
+  backofficeUserProjectMembershipFactory,
+  backofficeUserReviewCampaignMembershipFactory,
   paginatedBackofficeAgentsFactory,
   paginatedBackofficeOrganizationsFactory,
   paginatedBackofficeProjectsFactory,
@@ -19,7 +26,9 @@ import type {
   BackofficeOrganizationDetail,
   BackofficeProjectDetail,
   BackofficeProjectListItem,
+  BackofficeRbacCatalog,
   BackofficeUser,
+  BackofficeUserDetail,
   PaginatedBackofficeAgents,
   PaginatedBackofficeOrganizations,
   PaginatedBackofficeProjects,
@@ -156,6 +165,8 @@ export function buildMockBackofficeService(overrides: {
   projects?: PaginatedBackofficeProjects
   projectDetails?: Record<string, BackofficeProjectDetail>
   users?: PaginatedBackofficeUsers
+  userDetails?: Record<string, BackofficeUserDetail>
+  rbacCatalog?: BackofficeRbacCatalog | null
   termsDocuments?: TermsDocuments | null
 }): IBackofficeSpi {
   const organizations =
@@ -178,6 +189,8 @@ export function buildMockBackofficeService(overrides: {
   const users =
     overrides.users ??
     paginatedBackofficeUsersFactory.build({ users: [], total: 0, page: 0, limit: 10 })
+  const userDetails = overrides.userDetails ?? {}
+  const rbacCatalog = overrides.rbacCatalog ?? null
   const termsDocuments = overrides.termsDocuments ?? null
   return {
     async listOrganizations() {
@@ -217,7 +230,15 @@ export function buildMockBackofficeService(overrides: {
       return users
     },
     async getUser(userId) {
-      throw new Error(`getUser(${userId}) not implemented in mock service`)
+      const detail = userDetails[userId]
+      if (!detail) {
+        return backofficeUserDetailFactory.build({ id: userId })
+      }
+      return detail
+    },
+    async getRbacCatalog() {
+      if (!rbacCatalog) return backofficeRbacCatalogFactory.build()
+      return rbacCatalog
     },
     async addFeatureFlag() {},
     async removeFeatureFlag() {},
@@ -230,4 +251,110 @@ export function buildMockBackofficeService(overrides: {
       return termsDocuments
     },
   }
+}
+
+export const BACKOFFICE_STORY_USER_ID = "b8a70b5a-e63a-46f9-9699-fd51dab6f24a"
+
+export function buildInspectorUserDetail(): BackofficeUserDetail {
+  const organization = backofficeOrganizationFactory.build({ name: "Acme Corp" })
+  const project = backofficeProjectListItemFactory.build({
+    name: "Sample project",
+    organizationId: organization.id,
+    organizationName: organization.name,
+  })
+  return backofficeUserDetailFactory.build({
+    id: BACKOFFICE_STORY_USER_ID,
+    email: "didier@example.com",
+    name: "Didier",
+    globalRoles: [
+      backofficeUserGlobalRoleFactory.build({
+        key: "platform_superadmin",
+        name: "Platform Superadmin",
+        permissions: [
+          "backoffice.read",
+          "trace.read",
+          "backoffice.terms.update",
+          "backoffice.organization.read",
+          "backoffice.project.read",
+          "backoffice.project.update",
+          "backoffice.agent.read",
+          "backoffice.user.read",
+          "organization.create",
+        ],
+      }),
+    ],
+    organizationMemberships: [
+      backofficeUserOrganizationMembershipFactory.transient({ organization }).build({
+        role: "owner",
+        roleKey: "org_owner",
+        permissions: [
+          "organization.read",
+          "organization.update",
+          "organization.delete",
+          "project.create",
+          "user.read",
+          "backoffice.organization.read",
+          "backoffice.project.read",
+          "backoffice.agent.read",
+        ],
+      }),
+    ],
+    projectMemberships: [
+      backofficeUserProjectMembershipFactory
+        .transient({
+          project: {
+            id: project.id,
+            name: project.name,
+            organizationId: project.organizationId,
+            createdAt: project.createdAt,
+            updatedAt: project.createdAt,
+            featureFlags: project.featureFlags,
+          },
+        })
+        .build({
+          role: "owner",
+          roleKey: "project_owner",
+          permissions: [
+            "project.read",
+            "project.update",
+            "project.delete",
+            "agent.create",
+            "agent.read",
+            "user.read",
+            "backoffice.project.read",
+            "backoffice.project.update",
+            "backoffice.agent.read",
+          ],
+        }),
+    ],
+    agentMemberships: [
+      backofficeUserAgentMembershipFactory.build({
+        agentName: "Helpful Assistant",
+        role: "owner",
+        roleKey: "agent_owner",
+        permissions: [
+          "agent.read",
+          "agent.update",
+          "agent.delete",
+          "user.read",
+          "backoffice.agent.read",
+        ],
+      }),
+      backofficeUserAgentMembershipFactory.build({
+        agentName: "Support Agent",
+        role: "admin",
+        roleKey: "agent_admin",
+        permissions: [
+          "agent.read",
+          "agent.update",
+          "agent.delete",
+          "user.read",
+          "backoffice.agent.read",
+        ],
+      }),
+    ],
+    reviewCampaignMemberships: [
+      backofficeUserReviewCampaignMembershipFactory.build({ role: "reviewer" }),
+    ],
+  })
 }

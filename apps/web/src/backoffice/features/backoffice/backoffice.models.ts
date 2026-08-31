@@ -12,9 +12,14 @@ import type {
   BackofficeProjectDto,
   BackofficeProjectListItemDto,
   BackofficeProjectMemberDto,
+  BackofficeRbacCatalogDto,
+  BackofficeRbacPermissionDto,
+  BackofficeRbacRoleDto,
+  BackofficeRoleScopeDto,
   BackofficeUserAgentMembershipDto,
   BackofficeUserDetailDto,
   BackofficeUserDto,
+  BackofficeUserGlobalRoleDto,
   BackofficeUserOrganizationMembershipDto,
   BackofficeUserProjectMembershipDto,
   BackofficeUserReviewCampaignMembershipDto,
@@ -227,22 +232,34 @@ export type BackofficeUser = {
   createdAt: TimeType
 }
 
+export type BackofficeUserGlobalRole = {
+  key: string
+  name: string
+  permissions: string[]
+}
+
 export type BackofficeUserOrganizationMembership = {
   organizationId: string
   organizationName: string
   role: OrganizationMembershipRoleDto
+  roleKey: string | null
+  permissions: string[]
 }
 
 export type BackofficeUserProjectMembership = {
   projectId: string
   projectName: string
   role: ProjectMembershipRoleDto
+  roleKey: string | null
+  permissions: string[]
 }
 
 export type BackofficeUserAgentMembership = {
   agentId: string
   agentName: string
   role: AgentMembershipRoleDto
+  roleKey: string | null
+  permissions: string[]
 }
 
 export type BackofficeUserReviewCampaignMembership = {
@@ -256,10 +273,28 @@ export type BackofficeUserDetail = {
   email: string
   name: string | null
   createdAt: TimeType
+  globalRoles: BackofficeUserGlobalRole[]
   organizationMemberships: BackofficeUserOrganizationMembership[]
   projectMemberships: BackofficeUserProjectMembership[]
   agentMemberships: BackofficeUserAgentMembership[]
   reviewCampaignMemberships: BackofficeUserReviewCampaignMembership[]
+}
+
+export type BackofficeRbacPermission = {
+  key: string
+  description: string
+}
+
+export type BackofficeRbacRole = {
+  key: string
+  name: string
+  scopeType: BackofficeRoleScopeDto
+  permissions: string[]
+}
+
+export type BackofficeRbacCatalog = {
+  roles: BackofficeRbacRole[]
+  permissions: BackofficeRbacPermission[]
 }
 
 export const toBackofficeProject = (dto: BackofficeProjectDto): BackofficeProject => ({
@@ -351,6 +386,8 @@ const toBackofficeUserOrganizationMembership = (
   organizationId: dto.organizationId,
   organizationName: dto.organizationName,
   role: dto.role,
+  roleKey: dto.roleKey,
+  permissions: dto.permissions,
 })
 
 const toBackofficeUserProjectMembership = (
@@ -359,6 +396,8 @@ const toBackofficeUserProjectMembership = (
   projectId: dto.projectId,
   projectName: dto.projectName,
   role: dto.role,
+  roleKey: dto.roleKey,
+  permissions: dto.permissions,
 })
 
 const toBackofficeUserAgentMembership = (
@@ -367,6 +406,8 @@ const toBackofficeUserAgentMembership = (
   agentId: dto.agentId,
   agentName: dto.agentName,
   role: dto.role,
+  roleKey: dto.roleKey,
+  permissions: dto.permissions,
 })
 
 const toBackofficeUserReviewCampaignMembership = (
@@ -377,17 +418,45 @@ const toBackofficeUserReviewCampaignMembership = (
   role: dto.role,
 })
 
+const toBackofficeUserGlobalRole = (
+  dto: BackofficeUserGlobalRoleDto,
+): BackofficeUserGlobalRole => ({
+  key: dto.key,
+  name: dto.name,
+  permissions: dto.permissions,
+})
+
 export const toBackofficeUserDetail = (dto: BackofficeUserDetailDto): BackofficeUserDetail => ({
   id: dto.id,
   email: dto.email,
   name: dto.name,
   createdAt: dto.createdAt,
+  globalRoles: dto.globalRoles.map(toBackofficeUserGlobalRole),
   organizationMemberships: dto.organizationMemberships.map(toBackofficeUserOrganizationMembership),
   projectMemberships: dto.projectMemberships.map(toBackofficeUserProjectMembership),
   agentMemberships: dto.agentMemberships.map(toBackofficeUserAgentMembership),
   reviewCampaignMemberships: dto.reviewCampaignMemberships.map(
     toBackofficeUserReviewCampaignMembership,
   ),
+})
+
+const toBackofficeRbacPermission = (
+  dto: BackofficeRbacPermissionDto,
+): BackofficeRbacPermission => ({
+  key: dto.key,
+  description: dto.description,
+})
+
+const toBackofficeRbacRole = (dto: BackofficeRbacRoleDto): BackofficeRbacRole => ({
+  key: dto.key,
+  name: dto.name,
+  scopeType: dto.scopeType,
+  permissions: dto.permissions,
+})
+
+export const toBackofficeRbacCatalog = (dto: BackofficeRbacCatalogDto): BackofficeRbacCatalog => ({
+  roles: dto.roles.map(toBackofficeRbacRole),
+  permissions: dto.permissions.map(toBackofficeRbacPermission),
 })
 
 export type TermsDocuments = CurrentTermsDto

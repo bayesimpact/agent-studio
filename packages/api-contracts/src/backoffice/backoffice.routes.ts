@@ -6,6 +6,7 @@ import type {
   BackofficeOrganizationDetailDto,
   BackofficeOrganizationDto,
   BackofficeProjectDetailDto,
+  BackofficeRbacCatalogDto,
   BackofficeUserDetailDto,
   CreateBackofficeOrganizationRequestDto,
   ListTermsDocumentsResponseDto,
@@ -66,6 +67,10 @@ export const BackofficeRoutes = {
   removeFeatureFlag: defineRoute<ResponseData<SuccessResponseDTO>>({
     method: "delete",
     path: "backoffice/projects/:projectId/feature-flags/:featureFlagKey",
+  }),
+  getRbacCatalog: defineRoute<ResponseData<BackofficeRbacCatalogDto>>({
+    method: "get",
+    path: "backoffice/rbac/catalog",
   }),
   listTermsDocuments: defineRoute<ResponseData<ListTermsDocumentsResponseDto>>({
     method: "get",

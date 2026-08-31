@@ -178,12 +178,20 @@ export class BackofficeController {
     return {
       data: toBackofficeUserDetailDto(
         result.user,
+        result.globalRoles,
         result.organizationMemberships,
         result.projectMemberships,
         result.agentMemberships,
         result.reviewCampaignMemberships,
+        result.roleGrantsByRoleId,
       ),
     }
+  }
+
+  @Get(BackofficeRoutes.getRbacCatalog.path)
+  async getRbacCatalog(): Promise<typeof BackofficeRoutes.getRbacCatalog.response> {
+    const catalog = await this.backofficeService.getRbacCatalog()
+    return { data: catalog }
   }
 
   @Get(BackofficeRoutes.listProjects.path)

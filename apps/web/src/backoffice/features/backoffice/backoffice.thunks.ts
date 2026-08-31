@@ -7,6 +7,7 @@ import type {
   BackofficeOrganization,
   BackofficeOrganizationDetail,
   BackofficeProjectDetail,
+  BackofficeRbacCatalog,
   BackofficeUserDetail,
   PaginatedBackofficeAgents,
   PaginatedBackofficeOrganizations,
@@ -85,6 +86,11 @@ const getUser = createAsyncThunk<BackofficeUserDetail, string, ThunkConfig>(
   },
 )
 
+const getRbacCatalog = createAsyncThunk<BackofficeRbacCatalog, void, ThunkConfig>(
+  "backoffice/getRbacCatalog",
+  async (_, { extra: { services } }) => services.backoffice.getRbacCatalog(),
+)
+
 const addFeatureFlag = createAsyncThunk<
   { projectId: string; featureFlagKey: FeatureFlagKey },
   { projectId: string; featureFlagKey: FeatureFlagKey },
@@ -126,6 +132,7 @@ export const backofficeThunks = {
   getProject,
   listUsers,
   getUser,
+  getRbacCatalog,
   addFeatureFlag,
   removeFeatureFlag,
   listTermsDocuments,

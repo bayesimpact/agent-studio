@@ -2,13 +2,16 @@ import { Injectable } from "@nestjs/common"
 import { InjectDataSource } from "@nestjs/typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DataSource } from "typeorm"
-import type { PermissionResource, PermissionResourceType } from "./permission.types"
+import type { PermissionResource, PermissionResourceType, RoleGrant } from "./permission.types"
 import {
   BACKOFFICE_USER_READ_PERMISSION,
+  CATALOG_ROLE_KEYS,
   PARENT_RESOURCE_TYPE_MAP,
+  PERMISSION_DESCRIPTIONS,
   READ_PERMISSION_RESOURCE_TYPE_MAP,
   RESOURCE_TYPE_PERMISSIONS_MAP,
   type ResourceReadPermission,
+  type RoleScopeType,
   USER_READ_PERMISSION,
 } from "./rbac.constants"
 
@@ -17,6 +20,23 @@ type ResourcePermissionRow = { resourceId: string; permissionKey: string }
 type ResourceIdRow = { resourceId: string }
 type ChildResourceRow = { resourceId: string; parentResourceId: string }
 type UserIdRow = { userId: string }
+type RoleGrantRow = {
+  roleId: string
+  roleKey: string
+  roleName: string
+  permissionKey: string | null
+}
+type CatalogRoleRow = {
+  roleKey: string
+  roleName: string
+  scopeType: RoleScopeType
+  permissionKey: string | null
+}
+type GlobalRoleGrantRow = {
+  roleKey: string
+  roleName: string
+  permissionKey: string | null
+}
 
 /**
  * Scope of visible users: holders of `backoffice.user.read` globally see the
@@ -56,6 +76,114 @@ export class PermissionService {
     )
 
     return rows.map((row) => row.permissionKey)
+  }
+
+  /**
+   * Global roles held by the user (platform_staff / platform_superadmin),
+   * each with the permission keys granted by that role.
+   */
+  async listGlobalRolesForUser(userId: string): Promise<RoleGrant[]> {
+    const rows: GlobalRoleGrantRow[] = await this.dataSource.query(
+      `SELECT role.key AS "roleKey",
+              role.name AS "roleName",
+              role_permission.permission_key AS "permissionKey"
+       FROM user_membership membership
+       INNER JOIN role ON role.id = membership.role_id
+       LEFT JOIN role_permission ON role_permission.role_id = role.id
+       WHERE membership.user_id = $1
+         AND membership.resource_type = 'global'
+         AND membership.role_id IS NOT NULL
+         AND membership.deleted_at IS NULL
+       ORDER BY role.key, role_permission.permission_key`,
+      [userId],
+    )
+
+    return this.groupGlobalRoleGrants(rows)
+  }
+
+  /**
+   * Catalog grants for the given role ids: key, display name, and permission keys.
+   * Missing / unknown ids are omitted from the map.
+   */
+  async listRoleGrants(roleIds: string[]): Promise<Map<string, RoleGrant>> {
+    const uniqueRoleIds = [...new Set(roleIds.filter((roleId) => roleId.length > 0))]
+    if (uniqueRoleIds.length === 0) {
+      return new Map()
+    }
+
+    const rows: RoleGrantRow[] = await this.dataSource.query(
+      `SELECT role.id AS "roleId",
+              role.key AS "roleKey",
+              role.name AS "roleName",
+              role_permission.permission_key AS "permissionKey"
+       FROM role
+       LEFT JOIN role_permission ON role_permission.role_id = role.id
+       WHERE role.id = ANY($1)
+       ORDER BY role.key, role_permission.permission_key`,
+      [uniqueRoleIds],
+    )
+
+    return this.groupRoleGrantsByRoleId(rows)
+  }
+
+  /**
+   * Official RBAC catalog: seeded roles and their permission keys, plus
+   * descriptions for every known permission. Ad-hoc / leftover roles are omitted.
+   */
+  async getCatalog(): Promise<{
+    roles: { key: string; name: string; scopeType: RoleScopeType; permissions: string[] }[]
+    permissions: { key: string; description: string }[]
+  }> {
+    const catalogRoleKeys = [...CATALOG_ROLE_KEYS]
+    const rows: CatalogRoleRow[] = await this.dataSource.query(
+      `SELECT role.key AS "roleKey",
+              role.name AS "roleName",
+              role.scope_type AS "scopeType",
+              role_permission.permission_key AS "permissionKey"
+       FROM role
+       LEFT JOIN role_permission ON role_permission.role_id = role.id
+       WHERE role.key = ANY($1)
+       ORDER BY role.key, role_permission.permission_key`,
+      [catalogRoleKeys],
+    )
+
+    const grantsByKey = new Map<
+      string,
+      { key: string; name: string; scopeType: RoleScopeType; permissions: string[] }
+    >()
+    for (const row of rows) {
+      const existing = grantsByKey.get(row.roleKey) ?? {
+        key: row.roleKey,
+        name: row.roleName,
+        scopeType: row.scopeType,
+        permissions: [],
+      }
+      if (row.permissionKey) {
+        existing.permissions.push(row.permissionKey)
+      }
+      grantsByKey.set(row.roleKey, existing)
+    }
+
+    const catalogRoles = catalogRoleKeys.flatMap((roleKey) => {
+      const role = grantsByKey.get(roleKey)
+      return role ? [role] : []
+    })
+
+    const permissionKeys = new Set<string>(Object.keys(PERMISSION_DESCRIPTIONS))
+    for (const catalogRole of catalogRoles) {
+      for (const permissionKey of catalogRole.permissions) {
+        permissionKeys.add(permissionKey)
+      }
+    }
+
+    const permissions = [...permissionKeys]
+      .sort((left, right) => left.localeCompare(right))
+      .map((permissionKey) => ({
+        key: permissionKey,
+        description: PERMISSION_DESCRIPTIONS[permissionKey] ?? "",
+      }))
+
+    return { roles: catalogRoles, permissions }
   }
 
   /**
@@ -388,6 +516,40 @@ export class PermissionService {
     }
 
     return permissionsByResourceId
+  }
+
+  private groupRoleGrantsByRoleId(rows: RoleGrantRow[]): Map<string, RoleGrant> {
+    const grantsByRoleId = new Map<string, RoleGrant>()
+    for (const row of rows) {
+      const existing = grantsByRoleId.get(row.roleId) ?? {
+        key: row.roleKey,
+        name: row.roleName,
+        permissions: [],
+      }
+      if (row.permissionKey) {
+        existing.permissions.push(row.permissionKey)
+      }
+      grantsByRoleId.set(row.roleId, existing)
+    }
+
+    return grantsByRoleId
+  }
+
+  private groupGlobalRoleGrants(rows: GlobalRoleGrantRow[]): RoleGrant[] {
+    const grantsByKey = new Map<string, RoleGrant>()
+    for (const row of rows) {
+      const existing = grantsByKey.get(row.roleKey) ?? {
+        key: row.roleKey,
+        name: row.roleName,
+        permissions: [],
+      }
+      if (row.permissionKey) {
+        existing.permissions.push(row.permissionKey)
+      }
+      grantsByKey.set(row.roleKey, existing)
+    }
+
+    return [...grantsByKey.values()]
   }
 
   /**

@@ -1,4 +1,3 @@
-import { Badge } from "@caseai-connect/ui/shad/badge"
 import { Button } from "@caseai-connect/ui/shad/button"
 import { ArrowLeftIcon, ExternalLinkIcon } from "lucide-react"
 import { useEffect } from "react"
@@ -8,6 +7,7 @@ import { AsyncRoute } from "@/common/routes/AsyncRoute"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { selectBackofficeUserDetail } from "../features/backoffice/backoffice.selectors"
 import { backofficeActions } from "../features/backoffice/backoffice.slice"
+import { RolePermissionBadge } from "../features/backoffice/components/RolePermissionBadge"
 import {
   BackofficeAgentRoutes,
   BackofficeOrganizationRoutes,
@@ -59,6 +59,23 @@ function WithData() {
         {user.name && <p className="text-muted-foreground">{user.name}</p>}
       </div>
 
+      {user.globalRoles.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium text-muted-foreground">Global roles</h3>
+          <p className="text-xs text-muted-foreground">These roles apply everywhere.</p>
+          <div className="flex flex-wrap gap-2">
+            {user.globalRoles.map((globalRole) => (
+              <RolePermissionBadge
+                key={globalRole.key}
+                role={globalRole.name}
+                roleKey={globalRole.key}
+                permissions={globalRole.permissions}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         <MembershipSection
           title="Organizations"
@@ -66,6 +83,8 @@ function WithData() {
             key: membership.organizationId,
             label: membership.organizationName,
             role: membership.role,
+            roleKey: membership.roleKey,
+            permissions: membership.permissions,
             to: BackofficeOrganizationRoutes.organization.build({
               organizationId: membership.organizationId,
             }),
@@ -78,6 +97,8 @@ function WithData() {
             key: membership.projectId,
             label: membership.projectName,
             role: membership.role,
+            roleKey: membership.roleKey,
+            permissions: membership.permissions,
             to: BackofficeProjectRoutes.project.build({ projectId: membership.projectId }),
           }))}
           emptyText="No project memberships"
@@ -88,6 +109,8 @@ function WithData() {
             key: membership.agentId,
             label: membership.agentName,
             role: membership.role,
+            roleKey: membership.roleKey,
+            permissions: membership.permissions,
             to: BackofficeAgentRoutes.agent.build({ agentId: membership.agentId }),
           }))}
           emptyText="No agent memberships"
@@ -106,7 +129,14 @@ function WithData() {
   )
 }
 
-type MembershipItem = { key: string; label: string; role: string; to?: string }
+type MembershipItem = {
+  key: string
+  label: string
+  role: string
+  roleKey?: string | null
+  permissions?: string[]
+  to?: string
+}
 
 function MembershipSection({
   title,
@@ -126,31 +156,26 @@ function MembershipSection({
         <p className="px-4 py-6 text-sm text-muted-foreground text-center italic">{emptyText}</p>
       ) : (
         <ul className="divide-y">
-          {items.map((item) =>
-            item.to ? (
-              <li key={item.key}>
+          {items.map((item) => (
+            <li key={item.key} className="flex items-center justify-between gap-3 px-4 py-3">
+              {item.to ? (
                 <Link
                   to={item.to}
-                  className="flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors group"
+                  className="text-sm font-medium flex items-center gap-1.5 min-w-0 hover:underline group"
                 >
-                  <span className="text-sm font-medium flex items-center gap-1.5">
-                    {item.label}
-                    <ExternalLinkIcon className="size-3 opacity-0 group-hover:opacity-60 transition-opacity" />
-                  </span>
-                  <Badge variant="secondary" className="text-xs">
-                    {item.role}
-                  </Badge>
+                  <span className="truncate">{item.label}</span>
+                  <ExternalLinkIcon className="size-3 shrink-0 opacity-0 group-hover:opacity-60 transition-opacity" />
                 </Link>
-              </li>
-            ) : (
-              <li key={item.key} className="flex items-center justify-between px-4 py-3">
-                <span className="text-sm font-medium">{item.label}</span>
-                <Badge variant="secondary" className="text-xs">
-                  {item.role}
-                </Badge>
-              </li>
-            ),
-          )}
+              ) : (
+                <span className="text-sm font-medium truncate">{item.label}</span>
+              )}
+              <RolePermissionBadge
+                role={item.role}
+                roleKey={item.roleKey}
+                permissions={item.permissions}
+              />
+            </li>
+          ))}
         </ul>
       )}
     </div>

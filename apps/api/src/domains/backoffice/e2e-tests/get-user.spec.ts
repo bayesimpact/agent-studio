@@ -9,6 +9,15 @@ import {
   teardownE2eTestDatabase,
 } from "@/common/test/test-database"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
+import {
+  AGENT_ROLE_PERMISSIONS,
+  AGENT_ROLES,
+  ORGANIZATION_ROLE_PERMISSIONS,
+  ORGANIZATION_ROLES,
+  PLATFORM_SUPERADMIN_ROLE,
+  PROJECT_ROLE_PERMISSIONS,
+  PROJECT_ROLES,
+} from "@/domains/rbac/rbac.constants"
 import { RbacModule } from "@/domains/rbac/rbac.module"
 import {
   reviewCampaignMembershipFactory,
@@ -86,11 +95,21 @@ describe("Backoffice - get user", () => {
     const returned = response.body.data
     expect(returned.id).toBe(user.id)
     expect(returned.email).toBe(user.email)
+    expect(returned.globalRoles).toEqual([
+      expect.objectContaining({
+        key: PLATFORM_SUPERADMIN_ROLE,
+        permissions: expect.arrayContaining([
+          ...ORGANIZATION_ROLE_PERMISSIONS[PLATFORM_SUPERADMIN_ROLE],
+        ]),
+      }),
+    ])
     expect(returned.organizationMemberships).toEqual([
       {
         organizationId: organization.id,
         organizationName: organization.name,
         role: "owner",
+        roleKey: ORGANIZATION_ROLES.owner,
+        permissions: expect.arrayContaining([...ORGANIZATION_ROLE_PERMISSIONS.org_owner]),
       },
     ])
     expect(returned.projectMemberships).toEqual([
@@ -98,6 +117,8 @@ describe("Backoffice - get user", () => {
         projectId: project.id,
         projectName: project.name,
         role: "owner",
+        roleKey: PROJECT_ROLES.owner,
+        permissions: expect.arrayContaining([...PROJECT_ROLE_PERMISSIONS.project_owner]),
       },
     ])
     expect(returned.agentMemberships).toEqual([
@@ -105,6 +126,8 @@ describe("Backoffice - get user", () => {
         agentId: agent.id,
         agentName: agent.name,
         role: "owner",
+        roleKey: AGENT_ROLES.owner,
+        permissions: expect.arrayContaining([...AGENT_ROLE_PERMISSIONS.agent_owner]),
       },
     ])
     expect(returned.reviewCampaignMemberships).toEqual([
@@ -114,6 +137,15 @@ describe("Backoffice - get user", () => {
         role: "reviewer",
       },
     ])
+    expect(returned.organizationMemberships[0]?.permissions).toHaveLength(
+      ORGANIZATION_ROLE_PERMISSIONS.org_owner.length,
+    )
+    expect(returned.projectMemberships[0]?.permissions).toHaveLength(
+      PROJECT_ROLE_PERMISSIONS.project_owner.length,
+    )
+    expect(returned.agentMemberships[0]?.permissions).toHaveLength(
+      AGENT_ROLE_PERMISSIONS.agent_owner.length,
+    )
   })
 
   it("returns empty membership lists for a user with no memberships", async () => {
@@ -132,6 +164,7 @@ describe("Backoffice - get user", () => {
       token: "token",
     })
     expectResponse(response, 200)
+    expect(response.body.data.globalRoles).toEqual([])
     expect(response.body.data.organizationMemberships).toEqual([])
     expect(response.body.data.projectMemberships).toEqual([])
     expect(response.body.data.agentMemberships).toEqual([])

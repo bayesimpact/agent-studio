@@ -145,22 +145,53 @@ export type PaginatedBackofficeUsersDto = {
   limit: number
 }
 
+export type BackofficeRoleScopeDto = "organization" | "project" | "agent" | "global"
+
+export type BackofficeRbacPermissionDto = {
+  key: string
+  description: string
+}
+
+export type BackofficeRbacRoleDto = {
+  key: string
+  name: string
+  scopeType: BackofficeRoleScopeDto
+  permissions: string[]
+}
+
+export type BackofficeRbacCatalogDto = {
+  roles: BackofficeRbacRoleDto[]
+  permissions: BackofficeRbacPermissionDto[]
+}
+
+export type BackofficeUserGlobalRoleDto = {
+  key: string
+  name: string
+  permissions: string[]
+}
+
 export type BackofficeUserOrganizationMembershipDto = {
   organizationId: string
   organizationName: string
   role: OrganizationMembershipRoleDto
+  roleKey: string | null
+  permissions: string[]
 }
 
 export type BackofficeUserProjectMembershipDto = {
   projectId: string
   projectName: string
   role: ProjectMembershipRoleDto
+  roleKey: string | null
+  permissions: string[]
 }
 
 export type BackofficeUserAgentMembershipDto = {
   agentId: string
   agentName: string
   role: AgentMembershipRoleDto
+  roleKey: string | null
+  permissions: string[]
 }
 
 export type BackofficeUserReviewCampaignMembershipDto = {
@@ -174,6 +205,7 @@ export type BackofficeUserDetailDto = {
   email: string
   name: string | null
   createdAt: TimeType
+  globalRoles: BackofficeUserGlobalRoleDto[]
   organizationMemberships: BackofficeUserOrganizationMembershipDto[]
   projectMemberships: BackofficeUserProjectMembershipDto[]
   agentMemberships: BackofficeUserAgentMembershipDto[]

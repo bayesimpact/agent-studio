@@ -203,3 +203,43 @@ export const PARENT_RESOURCE_TYPE_MAP = {
   project: ["organization"],
   agent: ["organization", "project"],
 } as const satisfies Record<PermissionResourceType, readonly PermissionResourceType[]>
+
+/** Official catalog role keys, in display order within each scope. */
+export const CATALOG_ROLE_KEYS = [
+  PLATFORM_STAFF_ROLE,
+  PLATFORM_SUPERADMIN_ROLE,
+  ORGANIZATION_ROLES.owner,
+  ORGANIZATION_ROLES.admin,
+  ORGANIZATION_ROLES.member,
+  PROJECT_ROLES.owner,
+  PROJECT_ROLES.admin,
+  PROJECT_ROLES.member,
+  AGENT_ROLES.owner,
+  AGENT_ROLES.admin,
+  AGENT_ROLES.member,
+] as const
+
+export const PERMISSION_DESCRIPTIONS: Record<string, string> = {
+  [ORGANIZATION_CREATE_PERMISSION]: "Create organizations",
+  "organization.read": "See an organization",
+  "organization.update": "Update an organization",
+  "organization.delete": "Delete an organization",
+  [PROJECT_CREATE_PERMISSION]: "Create projects in an organization",
+  [PROJECT_READ_PERMISSION]: "See a project",
+  "project.update": "Update a project",
+  "project.delete": "Delete a project",
+  "agent.create": "Create agents in a project",
+  "agent.read": "See an agent",
+  "agent.update": "Update an agent",
+  "agent.delete": "Delete an agent",
+  [USER_READ_PERMISSION]: "See the users who are members of a resource",
+  [TRACE_READ_PERMISSION]: "See Langfuse trace links",
+  [BACKOFFICE_READ_PERMISSION]: "Access /backoffice routes",
+  [BACKOFFICE_TERMS_UPDATE_PERMISSION]: "Manage terms documents",
+  [BACKOFFICE_ORGANIZATION_READ_PERMISSION]: "See organizations in the backoffice",
+  [BACKOFFICE_PROJECT_READ_PERMISSION]: "See projects in the backoffice",
+  [BACKOFFICE_PROJECT_UPDATE_PERMISSION]:
+    "Mutate a project from the backoffice (e.g. feature flags)",
+  [BACKOFFICE_AGENT_READ_PERMISSION]: "See agents in the backoffice",
+  [BACKOFFICE_USER_READ_PERMISSION]: "See every user in the backoffice",
+}
