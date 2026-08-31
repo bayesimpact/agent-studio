@@ -91,6 +91,8 @@ function injectModalWidget({ position, color, iframeSrc, hint }: WidgetOptions) 
     isRight ? "align-items: flex-end" : "align-items: flex-start",
     "gap: 12px",
     "font-family: sans-serif",
+    // Let clicks over empty container space (e.g. the hint) reach the host page.
+    "pointer-events: none",
   ].join(";")
 
   const iframe = document.createElement("iframe")
@@ -104,6 +106,7 @@ function injectModalWidget({ position, color, iframeSrc, hint }: WidgetOptions) 
     "box-shadow: 0 8px 32px rgba(0,0,0,0.18)",
     "display: none",
     "background: white",
+    "pointer-events: auto",
   ].join(";")
   iframe.setAttribute("allow", "microphone; clipboard-write")
   iframe.setAttribute("title", "Chat")
@@ -195,7 +198,10 @@ function injectDrawerWidget({ position, color, iframeSrc, hint }: WidgetOptions)
   const open = () => {
     iframe.style.transform = "translateX(0)"
     row.style.opacity = "0"
-    row.style.pointerEvents = "none"
+    // Row stays pointer-events: none so the hint never captures clicks. Disable
+    // the FAB itself — children with pointer-events: auto still receive events
+    // under a none parent.
+    button.style.pointerEvents = "none"
     // Lock host-page scroll and compensate for scrollbar disappearing to avoid layout shift.
     const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
     savedBodyOverflow = document.body.style.overflow
@@ -210,7 +216,7 @@ function injectDrawerWidget({ position, color, iframeSrc, hint }: WidgetOptions)
   const close = () => {
     iframe.style.transform = translateOut
     row.style.opacity = "1"
-    row.style.pointerEvents = "auto"
+    button.style.pointerEvents = "auto"
     document.body.style.overflow = savedBodyOverflow
     document.body.style.paddingRight = savedBodyPaddingRight
     isOpen = false
@@ -242,7 +248,14 @@ function makeFabRow(
   isRight: boolean,
 ): { row: HTMLDivElement } {
   const row = document.createElement("div")
-  row.style.cssText = ["display: flex", "align-items: center", "gap: 10px"].join(";")
+  row.style.cssText = [
+    "display: flex",
+    "align-items: center",
+    "gap: 10px",
+    // The hint is decorative and hidden with opacity, so it would otherwise
+    // keep swallowing clicks on the host page. Re-enable on the FAB only.
+    "pointer-events: none",
+  ].join(";")
 
   if (hint) {
     const bubble = document.createElement("div")
@@ -321,6 +334,7 @@ function makeFabButton(color: string): HTMLButtonElement {
     "justify-content: center",
     "box-shadow: 0 4px 12px rgba(0,0,0,0.25)",
     "transition: transform 0.15s ease",
+    "pointer-events: auto",
   ].join(";")
   button.innerHTML = chatIconSvg()
   return button
