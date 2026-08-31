@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common"
-import { In, type Repository } from "typeorm"
+import type { Repository } from "typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { TransactionService } from "@/common/transaction/transaction.service"
 import { Organization } from "./organization.entity"
@@ -25,10 +25,11 @@ export class OrganizationRepository {
       return []
     }
 
-    const organizations = await this.organizationRepo().find({
-      where: { id: In(organizationIds) },
-      order: { createdAt: "DESC" },
-    })
+    const organizations = await this.organizationRepo()
+      .createQueryBuilder("organization")
+      .where("organization.id IN (:...organizationIds)", { organizationIds })
+      .orderBy("LOWER(organization.name)", "ASC")
+      .getMany()
 
     return organizations.map((organization) =>
       OrganizationModel.fromEntity(

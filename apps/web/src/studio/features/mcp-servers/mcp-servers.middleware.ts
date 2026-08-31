@@ -1,5 +1,5 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
-import { listAgents } from "@/common/features/agents/agents.thunks"
+import { listAgentSettings } from "@/common/features/agents/agent-settings/agent-settings.thunks"
 import { notificationsActions } from "@/common/features/notifications/notifications.slice"
 import { projectsActions } from "@/common/features/projects/projects.slice"
 import type { AppDispatch, RootState } from "@/common/store/types"
@@ -69,8 +69,8 @@ function registerListeners() {
   })
   listenerMiddleware.startListening({
     actionCreator: enableMcpServerForAgent.fulfilled,
-    effect: async (_, listenerApi) => {
-      listenerApi.dispatch(listAgents())
+    effect: async (action, listenerApi) => {
+      listenerApi.dispatch(listAgentSettings({ agentId: action.meta.arg.agentId }))
       listenerApi.dispatch(
         notificationsActions.show({ title: "MCP server enabled", type: "success" }),
       )
@@ -79,8 +79,8 @@ function registerListeners() {
 
   listenerMiddleware.startListening({
     actionCreator: disableMcpServerForAgent.fulfilled,
-    effect: async (_, listenerApi) => {
-      listenerApi.dispatch(listAgents())
+    effect: async (action, listenerApi) => {
+      listenerApi.dispatch(listAgentSettings({ agentId: action.meta.arg.agentId }))
       listenerApi.dispatch(
         notificationsActions.show({ title: "MCP server disabled", type: "success" }),
       )

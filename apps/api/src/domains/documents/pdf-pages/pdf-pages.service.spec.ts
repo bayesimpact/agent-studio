@@ -107,6 +107,60 @@ describe("PdfPagesService", () => {
     expect(onPageCountUpdate).not.toHaveBeenCalled()
   })
 
+  it("rejects when the converter returns a 200 without a valid pageCount", async () => {
+    process.env.PDF_CONVERTER_URL = "http://pdf-converter.test"
+    jest
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(JSON.stringify({ pages: 2 }), { status: 200 }))
+    const onPageCountUpdate = jest.fn()
+
+    await expect(
+      buildService().getImageUrls({
+        document: { storageRelativePath: "org1/proj1/doc1.pdf", pdfPageCount: null },
+        onPageCountUpdate,
+        fileStorageService: buildFileStorageService(),
+      }),
+    ).rejects.toThrow(
+      "pdf-converter response from /render-document did not include a valid pageCount",
+    )
+    expect(onPageCountUpdate).not.toHaveBeenCalled()
+  })
+
+  it("rejects with a descriptive error when the converter returns a non-json 200", async () => {
+    process.env.PDF_CONVERTER_URL = "http://pdf-converter.test"
+    jest
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response("<html>proxy error</html>", { status: 200 }))
+    const onPageCountUpdate = jest.fn()
+
+    await expect(
+      buildService().getImageUrls({
+        document: { storageRelativePath: "org1/proj1/doc1.pdf", pdfPageCount: null },
+        onPageCountUpdate,
+        fileStorageService: buildFileStorageService(),
+      }),
+    ).rejects.toThrow("pdf-converter returned a non-json response from /render-document")
+    expect(onPageCountUpdate).not.toHaveBeenCalled()
+  })
+
+  it("reports a timeout when the request times out while reading the response body", async () => {
+    process.env.PDF_CONVERTER_URL = "http://pdf-converter.test"
+    jest.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      json: () => Promise.reject(new DOMException("The operation timed out", "TimeoutError")),
+    } as unknown as Response)
+    const onPageCountUpdate = jest.fn()
+
+    await expect(
+      buildService().getImageUrls({
+        document: { storageRelativePath: "org1/proj1/doc1.pdf", pdfPageCount: null },
+        onPageCountUpdate,
+        fileStorageService: buildFileStorageService(),
+      }),
+    ).rejects.toThrow("pdf-converter request to /render-document timed out after 120000ms")
+    expect(onPageCountUpdate).not.toHaveBeenCalled()
+  })
+
   it("surfaces the converter's error message", async () => {
     process.env.PDF_CONVERTER_URL = "http://pdf-converter.test"
     jest

@@ -9,8 +9,15 @@ import {
   setupE2eTestDatabase,
   teardownE2eTestDatabase,
 } from "@/common/test/test-database"
-import { addUserToOrganization } from "@/domains/organizations/memberships/organization-membership.factory"
-import { createOrganizationWithOwner } from "@/domains/organizations/organization.factory"
+import {
+  addUserToOrganization,
+  organizationMembershipFactory,
+  saveOrgMembership,
+} from "@/domains/organizations/memberships/organization-membership.factory"
+import {
+  createOrganizationWithOwner,
+  organizationFactory,
+} from "@/domains/organizations/organization.factory"
 import { RbacModule } from "@/domains/rbac/rbac.module"
 import { userFactory } from "@/domains/users/user.factory"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
@@ -113,6 +120,42 @@ describe("Organizations - listOrganizations", () => {
       id: organization.id,
       permissions: ["organization.read"],
     })
+  })
+
+  it("returns organizations sorted by name, case-insensitively", async () => {
+    const { user } = await createOrganizationWithOwner(repositories, {
+      user: { auth0Id },
+      organization: { name: "zebra" },
+    })
+    const acme = await repositories.organizationRepository.save(
+      organizationFactory.build({ name: "Acme" }),
+    )
+    const northwind = await repositories.organizationRepository.save(
+      organizationFactory.build({ name: "Northwind" }),
+    )
+    await saveOrgMembership({
+      repositories,
+      membership: organizationMembershipFactory
+        .owner()
+        .transient({ user, organization: acme })
+        .build(),
+    })
+    await saveOrgMembership({
+      repositories,
+      membership: organizationMembershipFactory
+        .owner()
+        .transient({ user, organization: northwind })
+        .build(),
+    })
+
+    const response = await subject()
+
+    expectResponse(response, 200)
+    expect(response.body.data.map((organization) => organization.name)).toEqual([
+      "Acme",
+      "Northwind",
+      "zebra",
+    ])
   })
 
   it("does not expose global organization.create on listed organizations", async () => {

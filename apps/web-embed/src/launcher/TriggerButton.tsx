@@ -28,7 +28,7 @@ export function TriggerButton({
       onClick={onClick}
       style={{ backgroundColor: primaryColor }}
       className={cn(
-        "flex size-14 items-center justify-center rounded-full text-white shadow-lg",
+        "pointer-events-auto flex size-14 items-center justify-center rounded-full text-white shadow-lg",
         "transition-all duration-200 hover:brightness-90 hover:scale-105 active:scale-95",
         position === "bottom-right" ? "self-end" : "self-start",
         className,

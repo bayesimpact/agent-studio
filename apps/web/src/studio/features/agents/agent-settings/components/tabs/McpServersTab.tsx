@@ -61,8 +61,8 @@ export function McpServersTab({
           <EmptyMedia variant="icon">
             <ServerIcon />
           </EmptyMedia>
-          <EmptyTitle>{t("agent:mcpServers.emptyTitle")}</EmptyTitle>
-          <EmptyDescription>{t("agent:mcpServers.emptyDescription")}</EmptyDescription>
+          <EmptyTitle>{t("agentSettings:mcpServers.emptyTitle")}</EmptyTitle>
+          <EmptyDescription>{t("agentSettings:mcpServers.emptyDescription")}</EmptyDescription>
         </EmptyHeader>
       </Empty>
     )
@@ -71,14 +71,14 @@ export function McpServersTab({
   return (
     <FieldGroup>
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">{t("agent:mcpServers.label")}</span>
+        <span className="text-sm font-medium">{t("agentSettings:mcpServers.label")}</span>
         <Link
           to={managerPath}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
-          {t("agent:mcpServers.manage")}
+          {t("agentSettings:mcpServers.manage")}
           <ExternalLinkIcon className="size-3.5" />
         </Link>
       </div>
