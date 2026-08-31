@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common"
-import { GoogleAuth } from "google-auth-library"
+import { GoogleAuth, type IdTokenClient } from "google-auth-library"
 import { PdfPageLimitExceededError } from "./pdf-page-limit-exceeded.error"
 
 // Guards against oversized vision requests: each page becomes one image sent
@@ -24,6 +24,10 @@ const GOOGLE_IAM_AUTH_MODE = "google-iam"
 @Injectable()
 export class PdfConverterClient {
   private googleAuth: GoogleAuth | undefined
+  // Cached per audience: IdTokenClient reuses its minted ID token until expiry
+  // (~1h), but only when requests go through getRequestHeaders on the same
+  // client instance.
+  private readonly idTokenClients = new Map<string, IdTokenClient>()
 
   // Returns the number of pages of a PDF document without rendering it.
   async getPageCount({ sourceObject }: { sourceObject: string }): Promise<number> {
@@ -103,10 +107,22 @@ export class PdfConverterClient {
     }
     // The audience must be the Cloud Run service root URL, not the full path.
     const audience = new URL(converterUrl).origin
+    const idTokenClient = await this.getIdTokenClient(audience)
+    const requestHeaders = await idTokenClient.getRequestHeaders()
+    const authorization = requestHeaders.get("authorization")
+    if (!authorization) {
+      throw new Error(`could not obtain a Google ID token for audience ${audience}`)
+    }
+    return { Authorization: authorization }
+  }
+
+  private async getIdTokenClient(audience: string): Promise<IdTokenClient> {
+    const cachedClient = this.idTokenClients.get(audience)
+    if (cachedClient) return cachedClient
     this.googleAuth ??= new GoogleAuth()
     const idTokenClient = await this.googleAuth.getIdTokenClient(audience)
-    const idToken = await idTokenClient.idTokenProvider.fetchIdToken(audience)
-    return { Authorization: `Bearer ${idToken}` }
+    this.idTokenClients.set(audience, idTokenClient)
+    return idTokenClient
   }
 
   private async extractErrorMessage(response: Response): Promise<string> {
