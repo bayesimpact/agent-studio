@@ -299,7 +299,11 @@ export class AgentLlmRequestService extends ServiceWithLLM {
               fileStorageService: this.fileStorageService,
             })
             const content = llmMessage.content as Array<ImagePart>
-            imageUrls.map((url) => content.push({ type: "image", image: new URL(url) }))
+            content.push(
+              ...imageUrls.map(
+                (imageUrl): ImagePart => ({ type: "image", image: new URL(imageUrl) }),
+              ),
+            )
           } else {
             // Other models accept pdf file parts directly (signed URL; the AI
             // SDK downloads it when the provider doesn't support URLs).
