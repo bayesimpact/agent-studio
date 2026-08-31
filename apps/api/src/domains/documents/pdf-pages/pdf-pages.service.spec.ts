@@ -25,6 +25,10 @@ describe("PdfPagesService", () => {
     )
   })
 
+  it("derives a root-level pages prefix when the source path has no directory", () => {
+    expect(buildService().derivedPagesPrefix("doc1.pdf")).toBe("derived/doc1/")
+  })
+
   it("builds the page object path", () => {
     expect(buildService().pageObjectPath("org1/proj1/doc1.pdf", 3)).toBe(
       "org1/proj1/derived/doc1/page-3.png",
@@ -49,7 +53,7 @@ describe("PdfPagesService", () => {
     expect(onPageCountUpdate).not.toHaveBeenCalled()
   })
 
-  it("checks the page count, renders the document and reports the count when it is not cached", async () => {
+  it("renders the document and reports the count when it is not cached", async () => {
     process.env.PDF_CONVERTER_URL = "http://pdf-converter.test"
     const fetchSpy = jest
       .spyOn(globalThis, "fetch")
@@ -68,13 +72,8 @@ describe("PdfPagesService", () => {
       "https://storage.example.test/org1/proj1/derived/doc1/page-1.png?signature=abc",
       "https://storage.example.test/org1/proj1/derived/doc1/page-2.png?signature=abc",
     ])
-    expect(fetchSpy).toHaveBeenCalledTimes(2)
-    const [pageCountUrl, pageCountInit] = fetchSpy.mock.calls[0]!
-    expect(String(pageCountUrl)).toBe("http://pdf-converter.test/page-count")
-    expect(JSON.parse(String(pageCountInit?.body))).toEqual({
-      sourceObject: "org1/proj1/doc1.pdf",
-    })
-    const [renderUrl, renderInit] = fetchSpy.mock.calls[1]!
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+    const [renderUrl, renderInit] = fetchSpy.mock.calls[0]!
     expect(String(renderUrl)).toBe("http://pdf-converter.test/render-document")
     expect(JSON.parse(String(renderInit?.body))).toEqual({
       sourceObject: "org1/proj1/doc1.pdf",
@@ -85,11 +84,17 @@ describe("PdfPagesService", () => {
     expect(onPageCountUpdate).toHaveBeenCalledWith(2)
   })
 
-  it("throws a user-facing error without rendering when the pdf exceeds the page limit", async () => {
+  it("throws a user-facing error when the converter rejects the pdf over the page limit", async () => {
     process.env.PDF_CONVERTER_URL = "http://pdf-converter.test"
-    const fetchSpy = jest
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(new Response(JSON.stringify({ pageCount: 25 }), { status: 200 }))
+    const fetchSpy = jest.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          message: "page limit exceeded: pdf has 25 pages, max is 20",
+          pageCount: 25,
+        }),
+        { status: 422 },
+      ),
+    )
     const onPageCountUpdate = jest.fn()
 
     const imageUrlsPromise = buildService().getImageUrls({
@@ -103,11 +108,11 @@ describe("PdfPagesService", () => {
       "This PDF has 25 pages; the maximum is 20 pages.",
     )
     expect(fetchSpy).toHaveBeenCalledTimes(1)
-    expect(String(fetchSpy.mock.calls[0]![0])).toBe("http://pdf-converter.test/page-count")
+    expect(String(fetchSpy.mock.calls[0]![0])).toBe("http://pdf-converter.test/render-document")
     expect(onPageCountUpdate).not.toHaveBeenCalled()
   })
 
-  it("throws a user-facing error without rendering or caching when the pdf has no pages", async () => {
+  it("throws a user-facing error without caching the count when the pdf has no pages", async () => {
     process.env.PDF_CONVERTER_URL = "http://pdf-converter.test"
     const fetchSpy = jest
       .spyOn(globalThis, "fetch")
@@ -123,7 +128,7 @@ describe("PdfPagesService", () => {
     await expect(imageUrlsPromise).rejects.toBeInstanceOf(PdfHasNoPagesError)
     await expect(imageUrlsPromise).rejects.toThrow("This PDF has no pages that can be rendered.")
     expect(fetchSpy).toHaveBeenCalledTimes(1)
-    expect(String(fetchSpy.mock.calls[0]![0])).toBe("http://pdf-converter.test/page-count")
+    expect(String(fetchSpy.mock.calls[0]![0])).toBe("http://pdf-converter.test/render-document")
     expect(onPageCountUpdate).not.toHaveBeenCalled()
   })
 
@@ -142,7 +147,7 @@ describe("PdfPagesService", () => {
 
     await expect(imageUrlsPromise).rejects.toBeInstanceOf(PdfHasNoPagesError)
     expect(fetchSpy).toHaveBeenCalledTimes(1)
-    expect(String(fetchSpy.mock.calls[0]![0])).toBe("http://pdf-converter.test/page-count")
+    expect(String(fetchSpy.mock.calls[0]![0])).toBe("http://pdf-converter.test/render-document")
     expect(onPageCountUpdate).not.toHaveBeenCalled()
   })
 
@@ -159,7 +164,9 @@ describe("PdfPagesService", () => {
         onPageCountUpdate,
         fileStorageService: buildFileStorageService(),
       }),
-    ).rejects.toThrow("pdf-converter response from /page-count did not include a valid pageCount")
+    ).rejects.toThrow(
+      "pdf-converter response from /render-document did not include a valid pageCount",
+    )
     expect(onPageCountUpdate).not.toHaveBeenCalled()
   })
 
@@ -176,7 +183,7 @@ describe("PdfPagesService", () => {
         onPageCountUpdate,
         fileStorageService: buildFileStorageService(),
       }),
-    ).rejects.toThrow("pdf-converter returned a non-json response from /page-count")
+    ).rejects.toThrow("pdf-converter returned a non-json response from /render-document")
     expect(onPageCountUpdate).not.toHaveBeenCalled()
   })
 
@@ -194,20 +201,17 @@ describe("PdfPagesService", () => {
         onPageCountUpdate,
         fileStorageService: buildFileStorageService(),
       }),
-    ).rejects.toThrow("pdf-converter request to /page-count timed out after 120000ms")
+    ).rejects.toThrow("pdf-converter request to /render-document timed out after 120000ms")
     expect(onPageCountUpdate).not.toHaveBeenCalled()
   })
 
   it("surfaces the converter's error message", async () => {
     process.env.PDF_CONVERTER_URL = "http://pdf-converter.test"
-    jest.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(
-        JSON.stringify({ message: "page limit exceeded: pdf has 30 pages, max is 20" }),
-        {
-          status: 422,
-        },
-      ),
-    )
+    jest
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(
+        new Response(JSON.stringify({ message: "invalid pdf: bad header" }), { status: 400 }),
+      )
     const onPageCountUpdate = jest.fn()
 
     await expect(
@@ -216,7 +220,7 @@ describe("PdfPagesService", () => {
         onPageCountUpdate,
         fileStorageService: buildFileStorageService(),
       }),
-    ).rejects.toThrow("page limit exceeded")
+    ).rejects.toThrow("invalid pdf: bad header")
     expect(onPageCountUpdate).not.toHaveBeenCalled()
   })
 })

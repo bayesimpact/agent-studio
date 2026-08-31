@@ -96,28 +96,10 @@ func (renderer *Renderer) withInstance(
 	}
 }
 
-// GetPageCount opens the document and returns its page count without
-// rendering any page.
-func (renderer *Renderer) GetPageCount(ctx context.Context, pdfBytes []byte) (int, error) {
-	return renderer.withInstance(ctx, func(instance pdfium.Pdfium) (int, error) {
-		document, err := instance.OpenDocument(&requests.OpenDocument{File: &pdfBytes})
-		if err != nil {
-			return 0, fmt.Errorf("%w: %v", ErrInvalidPdf, err)
-		}
-		defer instance.FPDF_CloseDocument(&requests.FPDF_CloseDocument{Document: document.Document})
-
-		pageCountResponse, err := instance.FPDF_GetPageCount(&requests.FPDF_GetPageCount{
-			Document: document.Document,
-		})
-		if err != nil {
-			return 0, fmt.Errorf("%w: %v", ErrInvalidPdf, err)
-		}
-		return pageCountResponse.PageCount, nil
-	})
-}
-
 // RenderPages rasterizes every page as PNG and hands each to emit with a
-// 1-based page number. Returns the page count.
+// 1-based page number. Returns the page count — also alongside
+// ErrTooManyPages, so callers can report how many pages the rejected
+// document has.
 func (renderer *Renderer) RenderPages(
 	ctx context.Context,
 	pdfBytes []byte,
@@ -140,7 +122,7 @@ func (renderer *Renderer) RenderPages(
 		}
 		pageCount := pageCountResponse.PageCount
 		if pageCount > maxPages {
-			return 0, fmt.Errorf("%w: pdf has %d pages, max is %d", ErrTooManyPages, pageCount, maxPages)
+			return pageCount, fmt.Errorf("%w: pdf has %d pages, max is %d", ErrTooManyPages, pageCount, maxPages)
 		}
 
 		for pageIndex := 0; pageIndex < pageCount; pageIndex++ {

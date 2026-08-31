@@ -16,9 +16,11 @@ export class PdfPagesService {
 
   derivedPagesPrefix(storageRelativePath: string): string {
     const lastSlashIndex = storageRelativePath.lastIndexOf("/")
-    const directory = storageRelativePath.slice(0, lastSlashIndex)
+    // lastIndexOf returns -1 for a bare filename: keep the derived tree at the root then.
+    const directoryPrefix =
+      lastSlashIndex === -1 ? "" : `${storageRelativePath.slice(0, lastSlashIndex)}/`
     const baseName = storageRelativePath.slice(lastSlashIndex + 1).replace(/\.[^.]+$/, "")
-    return `${directory}/derived/${baseName}/`
+    return `${directoryPrefix}derived/${baseName}/`
   }
 
   pageObjectPath(storageRelativePath: string, pageNumber: number): string {

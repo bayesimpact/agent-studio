@@ -1,4 +1,4 @@
-// Thrown before rendering when a pdf reports zero pages (empty or corrupt
+// Thrown when the converter reports a zero-page pdf (empty or corrupt
 // document): a zero count must fail loudly, otherwise the model would be
 // called with no page images and hallucinate from the bare prompt. The
 // message is user-facing: it is shown verbatim in the chat error bubble and
