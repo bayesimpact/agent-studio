@@ -25,16 +25,11 @@ const GOOGLE_IAM_AUTH_MODE = "google-iam"
 export class PdfConverterClient {
   private googleAuth: GoogleAuth | undefined
 
-  // Returns the number of pages of a PDF document without rendering it.
-  async getPageCount({ sourceObject }: { sourceObject: string }): Promise<number> {
-    const { pageCount } = await this.postToConverter("page-count", { sourceObject })
-    return pageCount
-  }
-
   // Renders a PDF document into individual page images.
   // Returns the number of pages rendered. Throws PdfPageLimitExceededError
-  // (user-facing message) without rendering anything when the document has
-  // more pages than image-only models accept.
+  // (user-facing message) when the document has more pages than image-only
+  // models accept: the converter counts pages first and rejects with a 422
+  // before rendering anything.
   async generatePdfPageImages({
     sourceObject,
     outputPrefix,
@@ -42,10 +37,6 @@ export class PdfConverterClient {
     sourceObject: string
     outputPrefix: string
   }): Promise<number> {
-    const pageCount = await this.getPageCount({ sourceObject })
-    if (pageCount > MAX_PDF_PAGES_FOR_IMAGE_CONVERSION) {
-      throw new PdfPageLimitExceededError(pageCount, MAX_PDF_PAGES_FOR_IMAGE_CONVERSION)
-    }
     const rendered = await this.postToConverter("render-document", {
       sourceObject,
       outputPrefix,
@@ -82,7 +73,7 @@ export class PdfConverterClient {
       throw new Error(`could not reach pdf-converter at ${converterUrl}: ${reason}`)
     }
     if (!response.ok) {
-      throw new Error(await this.extractErrorMessage(response))
+      throw await this.buildErrorFromResponse(response)
     }
     return (await response.json()) as { pageCount: number }
   }
@@ -109,15 +100,20 @@ export class PdfConverterClient {
     return { Authorization: `Bearer ${idToken}` }
   }
 
-  private async extractErrorMessage(response: Response): Promise<string> {
-    const fallback = `pdf-converter responded with HTTP ${response.status}`
+  private async buildErrorFromResponse(response: Response): Promise<Error> {
+    let body: { message?: string | string[]; pageCount?: number } = {}
     try {
-      const body = (await response.json()) as { message?: string | string[] }
-      if (typeof body.message === "string") return body.message
-      if (Array.isArray(body.message)) return body.message.join(", ")
+      body = (await response.json()) as typeof body
     } catch {
       // Non-json error body: fall through to the generic message.
     }
-    return fallback
+    // 422 is the converter's page-limit rejection; its body carries the
+    // document's page count so the typed error can name it.
+    if (response.status === 422 && typeof body.pageCount === "number") {
+      return new PdfPageLimitExceededError(body.pageCount, MAX_PDF_PAGES_FOR_IMAGE_CONVERSION)
+    }
+    if (typeof body.message === "string") return new Error(body.message)
+    if (Array.isArray(body.message)) return new Error(body.message.join(", "))
+    return new Error(`pdf-converter responded with HTTP ${response.status}`)
   }
 }
