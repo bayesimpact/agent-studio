@@ -16,6 +16,8 @@ import {
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { agentFactory } from "@/domains/agents/agent.factory"
 import { agentSettingsFactory } from "@/domains/agents/settings/agent.settings.factory"
+import { agentMcpServerFactory } from "@/domains/mcp-servers/agent-mcp-server.factory"
+import { mcpServerFactory } from "@/domains/mcp-servers/mcp-server.factory"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
@@ -187,6 +189,23 @@ describe("Agent Settings - getAll", () => {
       updatedAt: storedRevision2.updatedAt.getTime(),
       priorityCallsEnabled: false,
     })
+  })
+
+  it("should include enabled MCP servers on each revision", async () => {
+    const { project, agent } = await createContext()
+
+    const mcpServer = mcpServerFactory.build({ name: "Helpful Tools", projectId: project.id })
+    await repositories.mcpServerRepository.save(mcpServer)
+    await repositories.agentMcpServerRepository.save(
+      agentMcpServerFactory.transient({ agent, mcpServer }).build(),
+    )
+
+    const response = await subject()
+
+    expectResponse(response, 200)
+    expect(response.body.data[0]?.mcpServers).toEqual([
+      { id: mcpServer.id, name: "Helpful Tools", enabled: true },
+    ])
   })
 
   it("should omit archived revisions from the history", async () => {
