@@ -21,6 +21,18 @@ const RENDER_REQUEST_TIMEOUT_MS = 120_000
 // converter runs open and no header is sent.
 const GOOGLE_IAM_AUTH_MODE = "google-iam"
 
+// AbortSignal.timeout can fire while awaiting fetch() or later while reading
+// the response body; both reject with a DOMException named TimeoutError. The
+// DOMException may come from another realm (e.g. under Jest's VM sandbox), so
+// match on name instead of instanceof.
+const isTimeoutError = (error: unknown): boolean =>
+  typeof error === "object" &&
+  error !== null &&
+  (error as { name?: unknown }).name === "TimeoutError"
+
+const timeoutError = (path: string): Error =>
+  new Error(`pdf-converter request to /${path} timed out after ${RENDER_REQUEST_TIMEOUT_MS}ms`)
+
 @Injectable()
 export class PdfConverterClient {
   private googleAuth: GoogleAuth | undefined
@@ -77,18 +89,28 @@ export class PdfConverterClient {
         signal: AbortSignal.timeout(RENDER_REQUEST_TIMEOUT_MS),
       })
     } catch (error) {
-      if (error instanceof Error && error.name === "TimeoutError") {
-        throw new Error(
-          `pdf-converter request to /${path} timed out after ${RENDER_REQUEST_TIMEOUT_MS}ms`,
-        )
-      }
+      if (isTimeoutError(error)) throw timeoutError(path)
       const reason = error instanceof Error ? error.message : String(error)
       throw new Error(`could not reach pdf-converter at ${converterUrl}: ${reason}`)
     }
     if (!response.ok) {
       throw new Error(await this.extractErrorMessage(response))
     }
-    return (await response.json()) as { pageCount: number }
+    let body: unknown
+    try {
+      body = await response.json()
+    } catch (error) {
+      if (isTimeoutError(error)) throw timeoutError(path)
+      throw new Error(`pdf-converter returned a non-json response from /${path}`)
+    }
+    // A misconfigured PDF_CONVERTER_URL or intercepting proxy can return a 200
+    // with a different shape; an undefined pageCount would pass the page-limit
+    // check and silently render zero pages, so it must fail loudly here.
+    const pageCount = (body as { pageCount?: unknown } | null)?.pageCount
+    if (typeof pageCount !== "number" || !Number.isInteger(pageCount) || pageCount < 0) {
+      throw new Error(`pdf-converter response from /${path} did not include a valid pageCount`)
+    }
+    return { pageCount }
   }
 
   private resolveConverterUrl(): string {
