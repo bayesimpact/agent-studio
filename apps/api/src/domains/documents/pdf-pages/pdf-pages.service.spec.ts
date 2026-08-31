@@ -24,6 +24,10 @@ describe("PdfPagesService", () => {
     )
   })
 
+  it("derives a root-level pages prefix when the source path has no directory", () => {
+    expect(buildService().derivedPagesPrefix("doc1.pdf")).toBe("derived/doc1/")
+  })
+
   it("builds the page object path", () => {
     expect(buildService().pageObjectPath("org1/proj1/doc1.pdf", 3)).toBe(
       "org1/proj1/derived/doc1/page-3.png",
