@@ -1,5 +1,6 @@
 import type { IFileStorage } from "../storage/file-storage.interface"
 import { PdfConverterClient } from "./pdf-converter.client"
+import { PdfHasNoPagesError } from "./pdf-has-no-pages.error"
 import { PdfPageLimitExceededError } from "./pdf-page-limit-exceeded.error"
 import { PdfPagesService } from "./pdf-pages.service"
 
@@ -106,6 +107,45 @@ describe("PdfPagesService", () => {
     await expect(imageUrlsPromise).rejects.toThrow(
       "This PDF has 25 pages; the maximum is 20 pages.",
     )
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+    expect(String(fetchSpy.mock.calls[0]![0])).toBe("http://pdf-converter.test/render-document")
+    expect(onPageCountUpdate).not.toHaveBeenCalled()
+  })
+
+  it("throws a user-facing error without caching the count when the pdf has no pages", async () => {
+    process.env.PDF_CONVERTER_URL = "http://pdf-converter.test"
+    const fetchSpy = jest
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(JSON.stringify({ pageCount: 0 }), { status: 200 }))
+    const onPageCountUpdate = jest.fn()
+
+    const imageUrlsPromise = buildService().getImageUrls({
+      document: { storageRelativePath: "org1/proj1/doc1.pdf", pdfPageCount: null },
+      onPageCountUpdate,
+      fileStorageService: buildFileStorageService(),
+    })
+
+    await expect(imageUrlsPromise).rejects.toBeInstanceOf(PdfHasNoPagesError)
+    await expect(imageUrlsPromise).rejects.toThrow("This PDF has no pages that can be rendered.")
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+    expect(String(fetchSpy.mock.calls[0]![0])).toBe("http://pdf-converter.test/render-document")
+    expect(onPageCountUpdate).not.toHaveBeenCalled()
+  })
+
+  it("re-checks the converter instead of trusting a cached zero page count", async () => {
+    process.env.PDF_CONVERTER_URL = "http://pdf-converter.test"
+    const fetchSpy = jest
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(JSON.stringify({ pageCount: 0 }), { status: 200 }))
+    const onPageCountUpdate = jest.fn()
+
+    const imageUrlsPromise = buildService().getImageUrls({
+      document: { storageRelativePath: "org1/proj1/doc1.pdf", pdfPageCount: 0 },
+      onPageCountUpdate,
+      fileStorageService: buildFileStorageService(),
+    })
+
+    await expect(imageUrlsPromise).rejects.toBeInstanceOf(PdfHasNoPagesError)
     expect(fetchSpy).toHaveBeenCalledTimes(1)
     expect(String(fetchSpy.mock.calls[0]![0])).toBe("http://pdf-converter.test/render-document")
     expect(onPageCountUpdate).not.toHaveBeenCalled()

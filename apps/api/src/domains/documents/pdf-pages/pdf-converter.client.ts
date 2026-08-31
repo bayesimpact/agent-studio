@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common"
 import { GoogleAuth, type IdTokenClient } from "google-auth-library"
+import { PdfHasNoPagesError } from "./pdf-has-no-pages.error"
 import { PdfPageLimitExceededError } from "./pdf-page-limit-exceeded.error"
 
 // Guards against oversized vision requests: each page becomes one image sent
@@ -45,7 +46,8 @@ export class PdfConverterClient {
   // Returns the number of pages rendered. Throws PdfPageLimitExceededError
   // (user-facing message) when the document has more pages than image-only
   // models accept: the converter counts pages first and rejects with a 422
-  // before rendering anything.
+  // before rendering anything. Throws PdfHasNoPagesError (also user-facing)
+  // when the converter reports a zero-page pdf, so 0 is never returned.
   async generatePdfPageImages({
     sourceObject,
     outputPrefix,
@@ -59,6 +61,12 @@ export class PdfConverterClient {
       maxPages: MAX_PDF_PAGES_FOR_IMAGE_CONVERSION,
       maxPixelsPerPage: MAX_RENDERED_PIXELS_PER_PAGE,
     })
+    // The converter returns a 200 with pageCount 0 for a zero-page pdf; if
+    // that were returned, the caller would cache it and every later run would
+    // silently send the model no page images at all.
+    if (rendered.pageCount === 0) {
+      throw new PdfHasNoPagesError()
+    }
     return rendered.pageCount
   }
 

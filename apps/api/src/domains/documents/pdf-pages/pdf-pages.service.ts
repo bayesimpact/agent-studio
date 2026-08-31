@@ -36,7 +36,10 @@ export class PdfPagesService {
     onPageCountUpdate: (pdfPageCount: number) => Promise<void>
     fileStorageService: IFileStorage
   }): Promise<string[]> {
-    if (pdfPageCount === null) {
+    // A zero count is never trusted: the converter client throws on zero-page
+    // pdfs before anything is persisted, so a cached 0 predates that guard
+    // and must be re-checked instead of silently producing zero image parts.
+    if (pdfPageCount === null || pdfPageCount === 0) {
       // If the PDF page count is not known, render the document to determine it.
       pdfPageCount = await this.pdfConverterClient.generatePdfPageImages({
         sourceObject: storageRelativePath,
