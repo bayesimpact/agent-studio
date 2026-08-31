@@ -120,6 +120,35 @@ func TestCapsPixelsPerPage(t *testing.T) {
 	}
 }
 
+func TestRendersDegenerateTinyPageAsOnePixel(t *testing.T) {
+	renderer := newTestRenderer(t)
+	// 0.2pt at scale 2 truncates to 0x0 pixels; the render must clamp to 1x1
+	// instead of failing the whole document.
+	_, rendered := collectPages(t, renderer, pdftest.BuildPdfWithPageDimensions(1, 0.2, 0.2), 20, 4_000_000)
+	image, err := png.Decode(bytes.NewReader(rendered[0]))
+	if err != nil {
+		t.Fatalf("page is not a png: %v", err)
+	}
+	if image.Bounds().Dx() < 1 || image.Bounds().Dy() < 1 {
+		t.Fatalf("expected at least 1x1, got %v", image.Bounds())
+	}
+}
+
+func TestCapsPixelsOnExtremeAspectRatioPage(t *testing.T) {
+	renderer := newTestRenderer(t)
+	// 40000x0.4pt: the pixel budget scales the height below one pixel, and the
+	// clamp to one pixel must not let the width blow past the budget.
+	_, rendered := collectPages(t, renderer, pdftest.BuildPdfWithPageDimensions(1, 40000, 0.4), 20, 10_000)
+	image, err := png.Decode(bytes.NewReader(rendered[0]))
+	if err != nil {
+		t.Fatalf("page is not a png: %v", err)
+	}
+	pixels := image.Bounds().Dx() * image.Bounds().Dy()
+	if pixels > 10_000 {
+		t.Fatalf("expected <= 10000 pixels, got %d (%v)", pixels, image.Bounds())
+	}
+}
+
 func TestRejectsTooManyPages(t *testing.T) {
 	renderer := newTestRenderer(t)
 	_, err := renderer.RenderPages(context.Background(), pdftest.BuildPdfWithPages(3, 200), 2, 4_000_000,
