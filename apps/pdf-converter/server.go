@@ -10,8 +10,14 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/bayesimpact/bayes-platform/apps/pdf-converter/internal/render"
 )
+
+// uploadConcurrency bounds parallel page uploads per request; enough to hide
+// GCS latency behind rendering without holding many page buffers in memory.
+const uploadConcurrency = 4
 
 type renderDocumentRequest struct {
 	SourceObject     string `json:"sourceObject"`
@@ -38,8 +44,8 @@ func validObjectPath(path string) bool {
 	return path != "" && !strings.HasPrefix(path, "/") && !strings.Contains(path, "..")
 }
 
-// fetchSourcePdf stats and downloads the source pdf, writing the error
-// response and returning ok=false when it cannot.
+// fetchSourcePdf downloads the source pdf, writing the error response and
+// returning ok=false when it cannot.
 func fetchSourcePdf(
 	response http.ResponseWriter,
 	request *http.Request,
@@ -47,25 +53,15 @@ func fetchSourcePdf(
 	sourceObject string,
 	maxSourceBytes int64,
 ) ([]byte, bool) {
-	size, err := store.Size(request.Context(), sourceObject)
+	pdfBytes, err := store.Download(request.Context(), sourceObject, maxSourceBytes)
 	if errors.Is(err, errObjectNotFound) {
 		writeError(response, http.StatusNotFound, "source pdf not found")
 		return nil, false
 	}
-	if err != nil {
-		log.Printf("size check failed: %v", err)
-		writeError(response, http.StatusInternalServerError, "failed to stat source pdf")
-		return nil, false
-	}
-	if size > maxSourceBytes {
+	var tooLarge *objectTooLargeError
+	if errors.As(err, &tooLarge) {
 		writeError(response, http.StatusRequestEntityTooLarge,
-			fmt.Sprintf("source pdf is %dMB, max is %dMB", size/1024/1024, maxSourceBytes/1024/1024))
-		return nil, false
-	}
-
-	pdfBytes, err := store.Download(request.Context(), sourceObject)
-	if errors.Is(err, errObjectNotFound) {
-		writeError(response, http.StatusNotFound, "source pdf not found")
+			fmt.Sprintf("source pdf is %dMB, max is %dMB", tooLarge.size/1024/1024, tooLarge.maxBytes/1024/1024))
 		return nil, false
 	}
 	if err != nil {
@@ -112,21 +108,40 @@ func newServer(
 
 		renderCtx, cancelRender := context.WithTimeout(request.Context(), renderTimeout)
 		defer cancelRender()
+		// Pages upload concurrently with rendering: emit hands each PNG to a
+		// bounded errgroup so GCS round trips overlap with pdfium instead of
+		// blocking it. SetLimit gives backpressure — at most
+		// uploadConcurrency page buffers are in flight at once.
+		uploads, uploadCtx := errgroup.WithContext(renderCtx)
+		uploads.SetLimit(uploadConcurrency)
 		pageCount, err := renderer.RenderPages(renderCtx, pdfBytes, body.MaxPages, body.MaxPixelsPerPage,
 			func(pageNumber int, pngBytes []byte) error {
-				object := fmt.Sprintf("%spage-%d.png", body.OutputPrefix, pageNumber)
-				return store.Upload(renderCtx, object, "image/png", pngBytes)
+				// Stop rendering as soon as any upload has failed.
+				if uploadErr := uploadCtx.Err(); uploadErr != nil {
+					return uploadErr
+				}
+				uploads.Go(func() error {
+					object := fmt.Sprintf("%spage-%d.png", body.OutputPrefix, pageNumber)
+					return store.Upload(uploadCtx, object, "image/png", pngBytes)
+				})
+				return nil
 			})
+		uploadErr := uploads.Wait()
 		if errors.Is(err, render.ErrTooManyPages) {
 			writeError(response, http.StatusUnprocessableEntity, err.Error())
 			return
 		}
-		if errors.Is(err, render.ErrAborted) {
+		if errors.Is(err, render.ErrAborted) || (uploadErr != nil && renderCtx.Err() != nil) {
 			writeError(response, http.StatusGatewayTimeout, "pdf rendering timed out or was cancelled")
 			return
 		}
 		if errors.Is(err, render.ErrInvalidPdf) {
 			writeError(response, http.StatusBadRequest, err.Error())
+			return
+		}
+		if uploadErr != nil {
+			log.Printf("upload failed: %v", uploadErr)
+			writeError(response, http.StatusInternalServerError, "failed to upload page images")
 			return
 		}
 		if err != nil {
