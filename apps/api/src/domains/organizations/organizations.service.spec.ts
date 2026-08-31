@@ -236,5 +236,38 @@ describe("OrganizationsService", () => {
         [ownedOrganization.id, joinedOrganization.id].sort(),
       )
     })
+
+    it("returns organizations sorted by name, case-insensitively", async () => {
+      const repositories = setup.getAllRepositories()
+      const { user } = await createOrganizationWithOwner(repositories, {
+        organization: { name: "zebra" },
+      })
+      const acme = await organizationRepository.save(organizationFactory.build({ name: "Acme" }))
+      const northwind = await organizationRepository.save(
+        organizationFactory.build({ name: "Northwind" }),
+      )
+      await saveOrgMembership({
+        repositories,
+        membership: organizationMembershipFactory
+          .owner()
+          .transient({ user, organization: acme })
+          .build(),
+      })
+      await saveOrgMembership({
+        repositories,
+        membership: organizationMembershipFactory
+          .owner()
+          .transient({ user, organization: northwind })
+          .build(),
+      })
+
+      const result = await service.listOrganizations(user.id)
+
+      expect(result.map((organization) => organization.name)).toEqual([
+        "Acme",
+        "Northwind",
+        "zebra",
+      ])
+    })
   })
 })
