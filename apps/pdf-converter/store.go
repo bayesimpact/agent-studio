@@ -13,9 +13,19 @@ import (
 // test fakes so the handler can map it to a 404.
 var errObjectNotFound = errors.New("object not found")
 
+// objectTooLargeError reports an object exceeding the caller's byte cap, so
+// the handler can map it to a 413 with the actual size.
+type objectTooLargeError struct {
+	size     int64
+	maxBytes int64
+}
+
+func (err *objectTooLargeError) Error() string {
+	return fmt.Sprintf("object is %d bytes, max is %d", err.size, err.maxBytes)
+}
+
 type objectStore interface {
-	Size(ctx context.Context, object string) (int64, error)
-	Download(ctx context.Context, object string) ([]byte, error)
+	Download(ctx context.Context, object string, maxBytes int64) ([]byte, error)
 	Upload(ctx context.Context, object string, contentType string, data []byte) error
 }
 
@@ -23,18 +33,10 @@ type gcsStore struct {
 	bucket *storage.BucketHandle
 }
 
-func (store *gcsStore) Size(ctx context.Context, object string) (int64, error) {
-	attrs, err := store.bucket.Object(object).Attrs(ctx)
-	if errors.Is(err, storage.ErrObjectNotExist) {
-		return 0, errObjectNotFound
-	}
-	if err != nil {
-		return 0, fmt.Errorf("stat %s: %w", object, err)
-	}
-	return attrs.Size, nil
-}
-
-func (store *gcsStore) Download(ctx context.Context, object string) ([]byte, error) {
+// Download enforces maxBytes on the same object generation it reads: the size
+// in reader.Attrs comes from the read response itself, so it cannot diverge
+// from the bytes (unlike a separate Attrs call, which races with overwrites).
+func (store *gcsStore) Download(ctx context.Context, object string, maxBytes int64) ([]byte, error) {
 	reader, err := store.bucket.Object(object).NewReader(ctx)
 	if errors.Is(err, storage.ErrObjectNotExist) {
 		return nil, errObjectNotFound
@@ -43,9 +45,15 @@ func (store *gcsStore) Download(ctx context.Context, object string) ([]byte, err
 		return nil, fmt.Errorf("open %s: %w", object, err)
 	}
 	defer reader.Close()
-	data, err := io.ReadAll(reader)
+	if reader.Attrs.Size > maxBytes {
+		return nil, &objectTooLargeError{size: reader.Attrs.Size, maxBytes: maxBytes}
+	}
+	data, err := io.ReadAll(io.LimitReader(reader, maxBytes+1))
 	if err != nil {
 		return nil, fmt.Errorf("read %s: %w", object, err)
+	}
+	if int64(len(data)) > maxBytes {
+		return nil, &objectTooLargeError{size: int64(len(data)), maxBytes: maxBytes}
 	}
 	return data, nil
 }

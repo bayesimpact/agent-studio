@@ -38,8 +38,8 @@ func validObjectPath(path string) bool {
 	return path != "" && !strings.HasPrefix(path, "/") && !strings.Contains(path, "..")
 }
 
-// fetchSourcePdf stats and downloads the source pdf, writing the error
-// response and returning ok=false when it cannot.
+// fetchSourcePdf downloads the source pdf under the size cap, writing the
+// error response and returning ok=false when it cannot.
 func fetchSourcePdf(
 	response http.ResponseWriter,
 	request *http.Request,
@@ -47,25 +47,15 @@ func fetchSourcePdf(
 	sourceObject string,
 	maxSourceBytes int64,
 ) ([]byte, bool) {
-	size, err := store.Size(request.Context(), sourceObject)
+	pdfBytes, err := store.Download(request.Context(), sourceObject, maxSourceBytes)
 	if errors.Is(err, errObjectNotFound) {
 		writeError(response, http.StatusNotFound, "source pdf not found")
 		return nil, false
 	}
-	if err != nil {
-		log.Printf("size check failed: %v", err)
-		writeError(response, http.StatusInternalServerError, "failed to stat source pdf")
-		return nil, false
-	}
-	if size > maxSourceBytes {
+	var tooLarge *objectTooLargeError
+	if errors.As(err, &tooLarge) {
 		writeError(response, http.StatusRequestEntityTooLarge,
-			fmt.Sprintf("source pdf is %dMB, max is %dMB", size/1024/1024, maxSourceBytes/1024/1024))
-		return nil, false
-	}
-
-	pdfBytes, err := store.Download(request.Context(), sourceObject)
-	if errors.Is(err, errObjectNotFound) {
-		writeError(response, http.StatusNotFound, "source pdf not found")
+			fmt.Sprintf("source pdf is %dMB, max is %dMB", tooLarge.size/1024/1024, tooLarge.maxBytes/1024/1024))
 		return nil, false
 	}
 	if err != nil {
