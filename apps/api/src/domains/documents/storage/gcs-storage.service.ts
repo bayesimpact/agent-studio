@@ -7,11 +7,18 @@ import type { RequiredConnectScope } from "@/common/entities/connect-required-fi
 import type { MulterFile } from "@/common/types"
 import type { IFileStorage } from "./file-storage.interface"
 
+// Signed read URL cache configuration
+const SIGNED_READ_URL_LIFETIME_MS = 15 * 60 * 1000 // 15 minutes
+// Shorter than the URL lifetime so a cache hit always has at least 5 minutes of validity left.
+const SIGNED_READ_URL_CACHE_TTL_MS = 10 * 60 * 1000 // 10 minutes
+const SIGNED_READ_URL_CACHE_MAX_ENTRIES = 5000 // Maximum number of cached signed read URLs
+
 @Injectable()
 export class GcsStorageService implements IFileStorage {
   private readonly logger = new Logger(GcsStorageService.name)
   private readonly storage: Storage
   private readonly bucketName: string
+  private readonly signedReadUrlCache = new Map<string, { url: string; expiresAtMs: number }>()
 
   constructor(private readonly configService: ConfigService) {
     this.storage = new Storage({
@@ -35,6 +42,7 @@ export class GcsStorageService implements IFileStorage {
   }
 
   async deleteFile(storageRelativePath: string): Promise<void> {
+    this.signedReadUrlCache.delete(storageRelativePath)
     await this.storage
       .bucket(this.bucketName)
       .file(storageRelativePath)
@@ -54,18 +62,44 @@ export class GcsStorageService implements IFileStorage {
   }
 
   async getTemporaryUrl(storageRelativePath: string): Promise<string> {
-    // Construct the temporary URL for the file in GCS
-    // Generate a signed URL for temporary access (default: 15 minutes)
+    // With keyless (IAM-based) signing, every getSignedUrl is a signBlob HTTP call, and page-image
+    // consumers request the same objects on every turn — so cache signed read URLs per object path.
+    const cached = this.signedReadUrlCache.get(storageRelativePath)
+    if (cached && cached.expiresAtMs > Date.now()) {
+      return cached.url
+    }
+
     const bucket = this.storage.bucket(this.bucketName)
     const file = bucket.file(storageRelativePath)
-    const expires = Date.now() + 15 * 60 * 1000 // 15 minutes
     // V4: same keyless IAM signing path as the upload URLs; V2 is legacy.
     const [url] = await file.getSignedUrl({
       version: "v4",
       action: "read",
-      expires,
+      expires: Date.now() + SIGNED_READ_URL_LIFETIME_MS,
     })
+    this.cacheSignedReadUrl(storageRelativePath, url)
     return url
+  }
+
+  private cacheSignedReadUrl(storageRelativePath: string, url: string): void {
+    if (this.signedReadUrlCache.size >= SIGNED_READ_URL_CACHE_MAX_ENTRIES) {
+      const now = Date.now()
+      for (const [cachedPath, entry] of this.signedReadUrlCache) {
+        if (entry.expiresAtMs <= now) {
+          this.signedReadUrlCache.delete(cachedPath)
+        }
+      }
+      // Still full after dropping expired entries: evict oldest-inserted first.
+      while (this.signedReadUrlCache.size >= SIGNED_READ_URL_CACHE_MAX_ENTRIES) {
+        const oldestPath = this.signedReadUrlCache.keys().next().value
+        if (oldestPath === undefined) break
+        this.signedReadUrlCache.delete(oldestPath)
+      }
+    }
+    this.signedReadUrlCache.set(storageRelativePath, {
+      url,
+      expiresAtMs: Date.now() + SIGNED_READ_URL_CACHE_TTL_MS,
+    })
   }
 
   async generateSignedUploadUrl({
