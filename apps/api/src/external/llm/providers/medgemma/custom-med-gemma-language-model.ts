@@ -262,14 +262,29 @@ export class CustomMedGemmaLanguageModel implements LanguageModelV3 {
           .map((c) => `<tool_result name="${c.toolName}">${JSON.stringify(c.result)}</tool_result>`)
           .join("\n")
         messages.push({ role: "user", content: resultsText })
-      } else {
-        let content = ""
-        if (Array.isArray(msg.content)) {
-          content = msg.content.map((c) => c.text || "").join("")
+      } else if (Array.isArray(msg.content)) {
+        // Image parts must reach the request body as OpenAI-style content
+        // parts; text-only messages keep the plain-string shape vLLM already
+        // handles.
+        if (msg.content.some((part) => part.type === "image_url")) {
+          const contentParts = msg.content
+            .map((part) =>
+              part.type === "image_url"
+                ? part
+                : part.text
+                  ? { type: "text", text: part.text }
+                  : undefined,
+            )
+            .filter(Boolean)
+          messages.push({ role: msg.role, content: contentParts })
         } else {
-          content = msg.content || ""
+          messages.push({
+            role: msg.role,
+            content: msg.content.map((part) => part.text || "").join(""),
+          })
         }
-        messages.push({ role: msg.role, content })
+      } else {
+        messages.push({ role: msg.role, content: msg.content || "" })
       }
     }
     return messages

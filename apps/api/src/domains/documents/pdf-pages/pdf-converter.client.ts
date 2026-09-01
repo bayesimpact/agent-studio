@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common"
-import { GoogleAuth } from "google-auth-library"
+import { GoogleAuth, type IdTokenClient } from "google-auth-library"
+import { PdfHasNoPagesError } from "./pdf-has-no-pages.error"
 import { PdfPageLimitExceededError } from "./pdf-page-limit-exceeded.error"
 
 // Guards against oversized vision requests: each page becomes one image sent
@@ -21,20 +22,32 @@ const RENDER_REQUEST_TIMEOUT_MS = 120_000
 // converter runs open and no header is sent.
 const GOOGLE_IAM_AUTH_MODE = "google-iam"
 
+// AbortSignal.timeout can fire while awaiting fetch() or later while reading
+// the response body; both reject with a DOMException named TimeoutError. The
+// DOMException may come from another realm (e.g. under Jest's VM sandbox), so
+// match on name instead of instanceof.
+const isTimeoutError = (error: unknown): boolean =>
+  typeof error === "object" &&
+  error !== null &&
+  (error as { name?: unknown }).name === "TimeoutError"
+
+const timeoutError = (path: string): Error =>
+  new Error(`pdf-converter request to /${path} timed out after ${RENDER_REQUEST_TIMEOUT_MS}ms`)
+
 @Injectable()
 export class PdfConverterClient {
   private googleAuth: GoogleAuth | undefined
-
-  // Returns the number of pages of a PDF document without rendering it.
-  async getPageCount({ sourceObject }: { sourceObject: string }): Promise<number> {
-    const { pageCount } = await this.postToConverter("page-count", { sourceObject })
-    return pageCount
-  }
+  // Cached per audience: IdTokenClient reuses its minted ID token until expiry
+  // (~1h), but only when requests go through getRequestHeaders on the same
+  // client instance.
+  private readonly idTokenClients = new Map<string, IdTokenClient>()
 
   // Renders a PDF document into individual page images.
   // Returns the number of pages rendered. Throws PdfPageLimitExceededError
-  // (user-facing message) without rendering anything when the document has
-  // more pages than image-only models accept.
+  // (user-facing message) when the document has more pages than image-only
+  // models accept: the converter counts pages first and rejects with a 422
+  // before rendering anything. Throws PdfHasNoPagesError (also user-facing)
+  // when the converter reports a zero-page pdf, so 0 is never returned.
   async generatePdfPageImages({
     sourceObject,
     outputPrefix,
@@ -42,16 +55,18 @@ export class PdfConverterClient {
     sourceObject: string
     outputPrefix: string
   }): Promise<number> {
-    const pageCount = await this.getPageCount({ sourceObject })
-    if (pageCount > MAX_PDF_PAGES_FOR_IMAGE_CONVERSION) {
-      throw new PdfPageLimitExceededError(pageCount, MAX_PDF_PAGES_FOR_IMAGE_CONVERSION)
-    }
     const rendered = await this.postToConverter("render-document", {
       sourceObject,
       outputPrefix,
       maxPages: MAX_PDF_PAGES_FOR_IMAGE_CONVERSION,
       maxPixelsPerPage: MAX_RENDERED_PIXELS_PER_PAGE,
     })
+    // The converter returns a 200 with pageCount 0 for a zero-page pdf; if
+    // that were returned, the caller would cache it and every later run would
+    // silently send the model no page images at all.
+    if (rendered.pageCount === 0) {
+      throw new PdfHasNoPagesError()
+    }
     return rendered.pageCount
   }
 
@@ -73,18 +88,28 @@ export class PdfConverterClient {
         signal: AbortSignal.timeout(RENDER_REQUEST_TIMEOUT_MS),
       })
     } catch (error) {
-      if (error instanceof Error && error.name === "TimeoutError") {
-        throw new Error(
-          `pdf-converter request to /${path} timed out after ${RENDER_REQUEST_TIMEOUT_MS}ms`,
-        )
-      }
+      if (isTimeoutError(error)) throw timeoutError(path)
       const reason = error instanceof Error ? error.message : String(error)
       throw new Error(`could not reach pdf-converter at ${converterUrl}: ${reason}`)
     }
     if (!response.ok) {
-      throw new Error(await this.extractErrorMessage(response))
+      throw await this.buildErrorFromResponse(response)
     }
-    return (await response.json()) as { pageCount: number }
+    let body: unknown
+    try {
+      body = await response.json()
+    } catch (error) {
+      if (isTimeoutError(error)) throw timeoutError(path)
+      throw new Error(`pdf-converter returned a non-json response from /${path}`)
+    }
+    // A misconfigured PDF_CONVERTER_URL or intercepting proxy can return a 200
+    // with a different shape; an undefined pageCount would pass the page-limit
+    // check and silently render zero pages, so it must fail loudly here.
+    const pageCount = (body as { pageCount?: unknown } | null)?.pageCount
+    if (typeof pageCount !== "number" || !Number.isInteger(pageCount) || pageCount < 0) {
+      throw new Error(`pdf-converter response from /${path} did not include a valid pageCount`)
+    }
+    return { pageCount }
   }
 
   private resolveConverterUrl(): string {
@@ -103,21 +128,38 @@ export class PdfConverterClient {
     }
     // The audience must be the Cloud Run service root URL, not the full path.
     const audience = new URL(converterUrl).origin
-    this.googleAuth ??= new GoogleAuth()
-    const idTokenClient = await this.googleAuth.getIdTokenClient(audience)
-    const idToken = await idTokenClient.idTokenProvider.fetchIdToken(audience)
-    return { Authorization: `Bearer ${idToken}` }
+    const idTokenClient = await this.getIdTokenClient(audience)
+    const requestHeaders = await idTokenClient.getRequestHeaders()
+    const authorization = requestHeaders.get("authorization")
+    if (!authorization) {
+      throw new Error(`could not obtain a Google ID token for audience ${audience}`)
+    }
+    return { Authorization: authorization }
   }
 
-  private async extractErrorMessage(response: Response): Promise<string> {
-    const fallback = `pdf-converter responded with HTTP ${response.status}`
+  private async getIdTokenClient(audience: string): Promise<IdTokenClient> {
+    const cachedClient = this.idTokenClients.get(audience)
+    if (cachedClient) return cachedClient
+    this.googleAuth ??= new GoogleAuth()
+    const idTokenClient = await this.googleAuth.getIdTokenClient(audience)
+    this.idTokenClients.set(audience, idTokenClient)
+    return idTokenClient
+  }
+
+  private async buildErrorFromResponse(response: Response): Promise<Error> {
+    let body: { message?: string | string[]; pageCount?: number } = {}
     try {
-      const body = (await response.json()) as { message?: string | string[] }
-      if (typeof body.message === "string") return body.message
-      if (Array.isArray(body.message)) return body.message.join(", ")
+      body = (await response.json()) as typeof body
     } catch {
       // Non-json error body: fall through to the generic message.
     }
-    return fallback
+    // 422 is the converter's page-limit rejection; its body carries the
+    // document's page count so the typed error can name it.
+    if (response.status === 422 && typeof body.pageCount === "number") {
+      return new PdfPageLimitExceededError(body.pageCount, MAX_PDF_PAGES_FOR_IMAGE_CONVERSION)
+    }
+    if (typeof body.message === "string") return new Error(body.message)
+    if (Array.isArray(body.message)) return new Error(body.message.join(", "))
+    return new Error(`pdf-converter responded with HTTP ${response.status}`)
   }
 }

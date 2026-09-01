@@ -10,18 +10,20 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/bayesimpact/bayes-platform/apps/pdf-converter/internal/render"
 )
+
+// uploadConcurrency bounds parallel page uploads per request; enough to hide
+// GCS latency behind rendering without holding many page buffers in memory.
+const uploadConcurrency = 4
 
 type renderDocumentRequest struct {
 	SourceObject     string `json:"sourceObject"`
 	OutputPrefix     string `json:"outputPrefix"`
 	MaxPages         int    `json:"maxPages"`
 	MaxPixelsPerPage int    `json:"maxPixelsPerPage"`
-}
-
-type pageCountRequest struct {
-	SourceObject string `json:"sourceObject"`
 }
 
 func writeJSON(response http.ResponseWriter, status int, payload any) {
@@ -102,16 +104,35 @@ func newServer(
 
 		renderCtx, cancelRender := context.WithTimeout(request.Context(), renderTimeout)
 		defer cancelRender()
+		// Pages upload concurrently with rendering: emit hands each PNG to a
+		// bounded errgroup so GCS round trips overlap with pdfium instead of
+		// blocking it. SetLimit gives backpressure — at most
+		// uploadConcurrency page buffers are in flight at once.
+		uploads, uploadCtx := errgroup.WithContext(renderCtx)
+		uploads.SetLimit(uploadConcurrency)
 		pageCount, err := renderer.RenderPages(renderCtx, pdfBytes, body.MaxPages, body.MaxPixelsPerPage,
 			func(pageNumber int, pngBytes []byte) error {
-				object := fmt.Sprintf("%spage-%d.png", body.OutputPrefix, pageNumber)
-				return store.Upload(renderCtx, object, "image/png", pngBytes)
+				// Stop rendering as soon as any upload has failed.
+				if uploadErr := uploadCtx.Err(); uploadErr != nil {
+					return uploadErr
+				}
+				uploads.Go(func() error {
+					object := fmt.Sprintf("%spage-%d.png", body.OutputPrefix, pageNumber)
+					return store.Upload(uploadCtx, object, "image/png", pngBytes)
+				})
+				return nil
 			})
+		uploadErr := uploads.Wait()
 		if errors.Is(err, render.ErrTooManyPages) {
-			writeError(response, http.StatusUnprocessableEntity, err.Error())
+			// pageCount rides along so the API can raise its typed, user-facing
+			// page-limit error without a separate page-count request.
+			writeJSON(response, http.StatusUnprocessableEntity, map[string]any{
+				"message":   err.Error(),
+				"pageCount": pageCount,
+			})
 			return
 		}
-		if errors.Is(err, render.ErrAborted) {
+		if errors.Is(err, render.ErrAborted) || (uploadErr != nil && renderCtx.Err() != nil) {
 			writeError(response, http.StatusGatewayTimeout, "pdf rendering timed out or was cancelled")
 			return
 		}
@@ -119,44 +140,14 @@ func newServer(
 			writeError(response, http.StatusBadRequest, err.Error())
 			return
 		}
+		if uploadErr != nil {
+			log.Printf("upload failed: %v", uploadErr)
+			writeError(response, http.StatusInternalServerError, "failed to upload page images")
+			return
+		}
 		if err != nil {
 			log.Printf("render failed: %v", err)
 			writeError(response, http.StatusInternalServerError, "pdf rendering failed")
-			return
-		}
-		writeJSON(response, http.StatusOK, map[string]int{"pageCount": pageCount})
-	})
-
-	mux.HandleFunc("POST /page-count", func(response http.ResponseWriter, request *http.Request) {
-		var body pageCountRequest
-		if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
-			writeError(response, http.StatusBadRequest, "invalid json body")
-			return
-		}
-		if !validObjectPath(body.SourceObject) {
-			writeError(response, http.StatusBadRequest, "sourceObject must be a relative object path")
-			return
-		}
-
-		pdfBytes, ok := fetchSourcePdf(response, request, store, body.SourceObject, maxSourceBytes)
-		if !ok {
-			return
-		}
-
-		countCtx, cancelCount := context.WithTimeout(request.Context(), renderTimeout)
-		defer cancelCount()
-		pageCount, err := renderer.GetPageCount(countCtx, pdfBytes)
-		if errors.Is(err, render.ErrInvalidPdf) {
-			writeError(response, http.StatusBadRequest, err.Error())
-			return
-		}
-		if errors.Is(err, render.ErrAborted) {
-			writeError(response, http.StatusGatewayTimeout, "pdf page count timed out or was cancelled")
-			return
-		}
-		if err != nil {
-			log.Printf("page count failed: %v", err)
-			writeError(response, http.StatusInternalServerError, "pdf page count failed")
 			return
 		}
 		writeJSON(response, http.StatusOK, map[string]int{"pageCount": pageCount})

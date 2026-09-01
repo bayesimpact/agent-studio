@@ -35,7 +35,12 @@ export class AgentContextResolver implements ContextResolver {
           organizationId: requestWithProject.organizationId,
           projectId: requestWithProject.project.id,
         },
-        relations: ["documentTags", "sessionCategories", "resourceLibraries"],
+        relations: {
+          documentTags: true,
+          sessionCategories: true,
+          resourceLibraries: true,
+          agentMcpServers: { mcpServer: true },
+        },
       })) ?? undefined
     if (!agent) throw new NotFoundException()
 

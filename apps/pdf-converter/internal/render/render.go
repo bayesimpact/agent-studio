@@ -96,28 +96,10 @@ func (renderer *Renderer) withInstance(
 	}
 }
 
-// GetPageCount opens the document and returns its page count without
-// rendering any page.
-func (renderer *Renderer) GetPageCount(ctx context.Context, pdfBytes []byte) (int, error) {
-	return renderer.withInstance(ctx, func(instance pdfium.Pdfium) (int, error) {
-		document, err := instance.OpenDocument(&requests.OpenDocument{File: &pdfBytes})
-		if err != nil {
-			return 0, fmt.Errorf("%w: %v", ErrInvalidPdf, err)
-		}
-		defer instance.FPDF_CloseDocument(&requests.FPDF_CloseDocument{Document: document.Document})
-
-		pageCountResponse, err := instance.FPDF_GetPageCount(&requests.FPDF_GetPageCount{
-			Document: document.Document,
-		})
-		if err != nil {
-			return 0, fmt.Errorf("%w: %v", ErrInvalidPdf, err)
-		}
-		return pageCountResponse.PageCount, nil
-	})
-}
-
 // RenderPages rasterizes every page as PNG and hands each to emit with a
-// 1-based page number. Returns the page count.
+// 1-based page number. Returns the page count — also alongside
+// ErrTooManyPages, so callers can report how many pages the rejected
+// document has.
 func (renderer *Renderer) RenderPages(
 	ctx context.Context,
 	pdfBytes []byte,
@@ -140,7 +122,7 @@ func (renderer *Renderer) RenderPages(
 		}
 		pageCount := pageCountResponse.PageCount
 		if pageCount > maxPages {
-			return 0, fmt.Errorf("%w: pdf has %d pages, max is %d", ErrTooManyPages, pageCount, maxPages)
+			return pageCount, fmt.Errorf("%w: pdf has %d pages, max is %d", ErrTooManyPages, pageCount, maxPages)
 		}
 
 		for pageIndex := 0; pageIndex < pageCount; pageIndex++ {
@@ -156,10 +138,24 @@ func (renderer *Renderer) RenderPages(
 			if size.Width*size.Height*scale*scale > float64(maxPixelsPerPage) {
 				scale = math.Sqrt(float64(maxPixelsPerPage) / (size.Width * size.Height))
 			}
+			// Floor to 1px: a dimension truncated to 0 would either fail the
+			// render (0x0) or be silently recomputed from the page aspect
+			// ratio by go-pdfium (single 0), bypassing maxPixelsPerPage.
+			width := max(1, int(size.Width*scale))
+			height := max(1, int(size.Height*scale))
+			// Flooring a sub-pixel dimension to 1 can leave the other past
+			// the budget on extreme aspect ratios; cap it.
+			if width*height > maxPixelsPerPage {
+				if width > height {
+					width = maxPixelsPerPage / height
+				} else {
+					height = maxPixelsPerPage / width
+				}
+			}
 			rendered, err := instance.RenderPageInPixels(&requests.RenderPageInPixels{
 				Page:   page,
-				Width:  int(size.Width * scale),
-				Height: int(size.Height * scale),
+				Width:  width,
+				Height: height,
 			})
 			if err != nil {
 				return 0, fmt.Errorf("render page %d: %w", pageIndex+1, err)

@@ -182,20 +182,24 @@ function FullWidget({
           </div>
         )
       )}
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: hover-only listeners for hint bubble visibility */}
       <div
-        className="fixed bottom-6 flex items-center gap-[10px]"
+        className="pointer-events-none fixed bottom-6 flex items-center gap-[10px]"
         style={isRight ? { right: 24 } : { left: 24 }}
-        onMouseEnter={() => setButtonHovered(true)}
-        onMouseLeave={() => setButtonHovered(false)}
       >
         {hint && <HintBubble text={hint} isRight={isRight} hovered={buttonHovered} />}
-        <TriggerButton
-          isOpen={isOpen}
-          onClick={() => setIsOpen((prev) => !prev)}
-          primaryColor={primaryColor}
-          position={position}
-        />
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: hover-only listeners for hint bubble visibility */}
+        <div
+          className="pointer-events-auto"
+          onMouseEnter={() => setButtonHovered(true)}
+          onMouseLeave={() => setButtonHovered(false)}
+        >
+          <TriggerButton
+            isOpen={isOpen}
+            onClick={() => setIsOpen((prev) => !prev)}
+            primaryColor={primaryColor}
+            position={position}
+          />
+        </div>
       </div>
     </>
   )
@@ -303,20 +307,24 @@ function DrawerDemo({
       </div>
 
       {/* FAB button */}
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: hover-only listeners for hint bubble visibility */}
       <div
-        className="absolute bottom-6 flex items-center gap-[10px]"
+        className="pointer-events-none absolute bottom-6 flex items-center gap-[10px]"
         style={isRight ? { right: 24 } : { left: 24 }}
-        onMouseEnter={() => setButtonHovered(true)}
-        onMouseLeave={() => setButtonHovered(false)}
       >
         {hint && !isOpen && <HintBubble text={hint} isRight={isRight} hovered={buttonHovered} />}
-        <TriggerButton
-          isOpen={isOpen}
-          onClick={() => setIsOpen((prev) => !prev)}
-          primaryColor={primaryColor}
-          position={position}
-        />
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: hover-only listeners for hint bubble visibility */}
+        <div
+          className="pointer-events-auto"
+          onMouseEnter={() => setButtonHovered(true)}
+          onMouseLeave={() => setButtonHovered(false)}
+        >
+          <TriggerButton
+            isOpen={isOpen}
+            onClick={() => setIsOpen((prev) => !prev)}
+            primaryColor={primaryColor}
+            position={position}
+          />
+        </div>
       </div>
     </div>
   )

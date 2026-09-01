@@ -61,6 +61,10 @@ func (store *gcsStore) Download(ctx context.Context, object string, maxBytes int
 func (store *gcsStore) Upload(ctx context.Context, object string, contentType string, data []byte) error {
 	writer := store.bucket.Object(object).NewWriter(ctx)
 	writer.ContentType = contentType
+	// The payload is fully in memory and small (a page PNG); ChunkSize 0
+	// uploads it in a single request instead of staging a 16MiB resumable
+	// buffer.
+	writer.ChunkSize = 0
 	if _, err := writer.Write(data); err != nil {
 		writer.Close()
 		return fmt.Errorf("write %s: %w", object, err)

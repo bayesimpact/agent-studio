@@ -9,6 +9,14 @@ import (
 // BuildPdfWithPages returns a minimal but valid PDF containing pageCount empty
 // pages of pageSizePoints x pageSizePoints.
 func BuildPdfWithPages(pageCount int, pageSizePoints int) []byte {
+	size := float64(pageSizePoints)
+	return BuildPdfWithPageDimensions(pageCount, size, size)
+}
+
+// BuildPdfWithPageDimensions returns a minimal but valid PDF containing
+// pageCount empty pages of widthPoints x heightPoints, allowing degenerate
+// (sub-point) and extreme aspect-ratio pages.
+func BuildPdfWithPageDimensions(pageCount int, widthPoints, heightPoints float64) []byte {
 	kids := make([]string, pageCount)
 	for pageIndex := range kids {
 		kids[pageIndex] = fmt.Sprintf("%d 0 R", pageIndex+3)
@@ -20,8 +28,8 @@ func BuildPdfWithPages(pageCount int, pageSizePoints int) []byte {
 	}
 	for pageIndex := 0; pageIndex < pageCount; pageIndex++ {
 		objects = append(objects, fmt.Sprintf(
-			"%d 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %d %d] >>\nendobj\n",
-			pageIndex+3, pageSizePoints, pageSizePoints))
+			"%d 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %g %g] >>\nendobj\n",
+			pageIndex+3, widthPoints, heightPoints))
 	}
 	body := "%PDF-1.4\n"
 	offsets := make([]int, 0, len(objects))

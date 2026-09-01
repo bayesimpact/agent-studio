@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -15,10 +16,13 @@ import (
 )
 
 type fakeStore struct {
+	mutex   sync.Mutex
 	objects map[string][]byte
 }
 
 func (store *fakeStore) Download(ctx context.Context, object string, maxBytes int64) ([]byte, error) {
+	store.mutex.Lock()
+	defer store.mutex.Unlock()
 	data, found := store.objects[object]
 	if !found {
 		return nil, errObjectNotFound
@@ -30,6 +34,8 @@ func (store *fakeStore) Download(ctx context.Context, object string, maxBytes in
 }
 
 func (store *fakeStore) Upload(ctx context.Context, object string, contentType string, data []byte) error {
+	store.mutex.Lock()
+	defer store.mutex.Unlock()
 	store.objects[object] = data
 	return nil
 }
@@ -84,6 +90,19 @@ func TestRenderDocumentPageLimit(t *testing.T) {
 		`{"sourceObject":"org1/proj1/doc1.pdf","outputPrefix":"org1/proj1/derived/doc1/","maxPages":2,"maxPixelsPerPage":4000000}`)
 	if response.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("expected 422, got %d", response.Code)
+	}
+	var parsed struct {
+		Message   string `json:"message"`
+		PageCount int    `json:"pageCount"`
+	}
+	if err := json.Unmarshal(response.Body.Bytes(), &parsed); err != nil || parsed.PageCount != 3 {
+		t.Fatalf("expected pageCount 3 in the 422 body, got %s", response.Body.String())
+	}
+	if parsed.Message == "" {
+		t.Fatalf("expected a message in the 422 body, got %s", response.Body.String())
+	}
+	if len(store.objects) != 1 {
+		t.Fatalf("expected no uploads, store has %d objects", len(store.objects))
 	}
 }
 
@@ -168,62 +187,6 @@ func TestRenderDocumentTimesOutWhenRenderingStalls(t *testing.T) {
 	}
 	if !strings.Contains(response.Body.String(), "timed out") {
 		t.Fatalf("expected a timeout message, got %s", response.Body.String())
-	}
-}
-
-func postPageCount(handler http.Handler, body string) *httptest.ResponseRecorder {
-	request := httptest.NewRequest(http.MethodPost, "/page-count", strings.NewReader(body))
-	request.Header.Set("Content-Type", "application/json")
-	recorder := httptest.NewRecorder()
-	handler.ServeHTTP(recorder, request)
-	return recorder
-}
-
-func TestPageCountHappyPath(t *testing.T) {
-	store := &fakeStore{objects: map[string][]byte{
-		"org1/proj1/doc1.pdf": pdftest.BuildPdfWithPages(3, 200),
-	}}
-	response := postPageCount(newTestServer(t, store), `{"sourceObject":"org1/proj1/doc1.pdf"}`)
-	if response.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d: %s", response.Code, response.Body.String())
-	}
-	var parsed struct {
-		PageCount int `json:"pageCount"`
-	}
-	if err := json.Unmarshal(response.Body.Bytes(), &parsed); err != nil || parsed.PageCount != 3 {
-		t.Fatalf("expected pageCount 3, got %s", response.Body.String())
-	}
-	if len(store.objects) != 1 {
-		t.Fatalf("expected no uploads, store has %d objects", len(store.objects))
-	}
-}
-
-func TestPageCountSourceMissing(t *testing.T) {
-	response := postPageCount(newTestServer(t, &fakeStore{objects: map[string][]byte{}}),
-		`{"sourceObject":"org1/proj1/nope.pdf"}`)
-	if response.Code != http.StatusNotFound {
-		t.Fatalf("expected 404, got %d", response.Code)
-	}
-}
-
-func TestPageCountInvalidPdf(t *testing.T) {
-	store := &fakeStore{objects: map[string][]byte{"org1/proj1/doc1.pdf": []byte("not a pdf")}}
-	response := postPageCount(newTestServer(t, store), `{"sourceObject":"org1/proj1/doc1.pdf"}`)
-	if response.Code != http.StatusBadRequest {
-		t.Fatalf("expected 400, got %d", response.Code)
-	}
-}
-
-func TestPageCountValidation(t *testing.T) {
-	handler := newTestServer(t, &fakeStore{objects: map[string][]byte{}})
-	for _, body := range []string{
-		`{`,
-		`{"sourceObject":""}`,
-		`{"sourceObject":"../etc/x.pdf"}`,
-	} {
-		if response := postPageCount(handler, body); response.Code != http.StatusBadRequest {
-			t.Fatalf("expected 400 for %q, got %d", body, response.Code)
-		}
 	}
 }
 

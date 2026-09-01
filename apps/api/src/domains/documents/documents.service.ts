@@ -222,14 +222,14 @@ export class DocumentsService {
     documentId: string
     pdfPageCount: number
   }): Promise<void> {
-    await this.documentRepository.update(
-      {
-        id: documentId,
-        organizationId: connectScope.organizationId,
-        projectId: connectScope.projectId,
-      },
-      { pdfPageCount },
-    )
+    const { success } = await this.documentConnectRepository.updateOneById({
+      connectScope,
+      id: documentId,
+      fields: { pdfPageCount },
+    })
+    if (!success) {
+      throw new NotFoundException(`Document with id ${documentId} not found`)
+    }
   }
 
   async updateEmbeddingStatus({

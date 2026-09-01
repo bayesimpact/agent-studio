@@ -16,6 +16,10 @@ export function useInitStore({
   useEffect(() => {
     if (!condition) return
     inject()
+    // combineSlices().inject() does not materialize the new slice state in
+    // getState() until the next dispatch — force one before children mount,
+    // otherwise their selectors read undefined slice state.
+    dispatch({ type: "@@init-store/slices-injected" })
     setDone(true)
     return () => {
       reset(dispatch)

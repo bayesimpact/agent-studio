@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { tool } from "@ai-sdk/provider-utils"
-import type { ToolSet } from "ai"
+import type { FilePart, ImagePart, ToolSet } from "ai"
 import { v4 } from "uuid"
 import { z } from "zod"
 import type {
@@ -12,6 +12,7 @@ import type {
 } from "@/common/interfaces/llm-provider.interface"
 import { castToolInputParameters, zNullableType } from "@/common/zod-helper"
 import { LOOKUP_KNOWLEDGE_BASE_DESCRIPTION } from "@/domains/agents/shared/agent-session-messages/streaming/tools/lookup-knowledge-base.tool"
+import { modelRequiresPdfAsImages } from "@/external/llm/agent-provider"
 import {
   expectIncludes,
   expectIncludesAtLeastOne,
@@ -672,7 +673,22 @@ DO NOT HALLUCINATE VALUES, return only values that you find in the file; if no v
     const metadata = ProviderSpecs.getMetadata()
     const schema = z.object({ adresse: z.string(), telephone: z.string(), courriel: z.string() })
     const filename = "test-pdf.pdf"
-    const buffer = await readFile(join(__dirname, `files`, filename))
+    // Image-only models (Gemma, MedGemma) never receive pdf file parts:
+    // production renders pdfs upstream into one page image per page
+    // (PdfPagesService + pdf-converter). Mirror that flow with the checked-in
+    // fixture test-pdf-page-1.png (test-pdf.pdf rendered at scale 2 / ~144dpi,
+    // like the pdf-converter output).
+    const documentPart: FilePart | ImagePart = modelRequiresPdfAsImages(model)
+      ? {
+          type: "image",
+          image: await readFile(join(__dirname, `files`, "test-pdf-page-1.png")),
+        }
+      : {
+          type: "file",
+          filename,
+          mediaType: "application/pdf",
+          data: await readFile(join(__dirname, `files`, filename)),
+        }
     const message: LLMChatMessage = {
       role: "user",
       content: [
@@ -680,12 +696,7 @@ DO NOT HALLUCINATE VALUES, return only values that you find in the file; if no v
           type: "text",
           text: prompt,
         },
-        {
-          type: "file",
-          filename,
-          mediaType: "application/pdf",
-          data: buffer,
-        },
+        documentPart,
       ],
     }
     const config = {

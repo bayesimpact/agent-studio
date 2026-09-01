@@ -80,11 +80,12 @@ func TestInterruptedRendersDoNotExhaustThePool(t *testing.T) {
 	}
 }
 
-func TestGetPageCountReturnsAbortedWhenContextAlreadyCancelled(t *testing.T) {
+func TestRenderPagesReturnsAbortedWhenContextAlreadyCancelled(t *testing.T) {
 	renderer := newTestRenderer(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	_, err := renderer.GetPageCount(ctx, pdftest.BuildPdfWithPages(3, 200))
+	_, err := renderer.RenderPages(ctx, pdftest.BuildPdfWithPages(3, 200), 20, 4_000_000,
+		func(pageNumber int, pngBytes []byte) error { return nil })
 	if !errors.Is(err, ErrAborted) {
 		t.Fatalf("expected ErrAborted, got %v", err)
 	}
@@ -120,12 +121,44 @@ func TestCapsPixelsPerPage(t *testing.T) {
 	}
 }
 
+func TestRendersDegenerateTinyPageAsOnePixel(t *testing.T) {
+	renderer := newTestRenderer(t)
+	// 0.2pt at scale 2 truncates to 0x0 pixels; the render must clamp to 1x1
+	// instead of failing the whole document.
+	_, rendered := collectPages(t, renderer, pdftest.BuildPdfWithPageDimensions(1, 0.2, 0.2), 20, 4_000_000)
+	image, err := png.Decode(bytes.NewReader(rendered[0]))
+	if err != nil {
+		t.Fatalf("page is not a png: %v", err)
+	}
+	if image.Bounds().Dx() < 1 || image.Bounds().Dy() < 1 {
+		t.Fatalf("expected at least 1x1, got %v", image.Bounds())
+	}
+}
+
+func TestCapsPixelsOnExtremeAspectRatioPage(t *testing.T) {
+	renderer := newTestRenderer(t)
+	// 40000x0.4pt: the pixel budget scales the height below one pixel, and the
+	// clamp to one pixel must not let the width blow past the budget.
+	_, rendered := collectPages(t, renderer, pdftest.BuildPdfWithPageDimensions(1, 40000, 0.4), 20, 10_000)
+	image, err := png.Decode(bytes.NewReader(rendered[0]))
+	if err != nil {
+		t.Fatalf("page is not a png: %v", err)
+	}
+	pixels := image.Bounds().Dx() * image.Bounds().Dy()
+	if pixels > 10_000 {
+		t.Fatalf("expected <= 10000 pixels, got %d (%v)", pixels, image.Bounds())
+	}
+}
+
 func TestRejectsTooManyPages(t *testing.T) {
 	renderer := newTestRenderer(t)
-	_, err := renderer.RenderPages(context.Background(), pdftest.BuildPdfWithPages(3, 200), 2, 4_000_000,
+	pageCount, err := renderer.RenderPages(context.Background(), pdftest.BuildPdfWithPages(3, 200), 2, 4_000_000,
 		func(pageNumber int, pngBytes []byte) error { return nil })
 	if !errors.Is(err, ErrTooManyPages) {
 		t.Fatalf("expected ErrTooManyPages, got %v", err)
+	}
+	if pageCount != 3 {
+		t.Fatalf("expected the rejected page count 3 alongside the error, got %d", pageCount)
 	}
 }
 
@@ -133,25 +166,6 @@ func TestRejectsInvalidPdf(t *testing.T) {
 	renderer := newTestRenderer(t)
 	_, err := renderer.RenderPages(context.Background(), []byte("not a pdf at all"), 20, 4_000_000,
 		func(pageNumber int, pngBytes []byte) error { return nil })
-	if !errors.Is(err, ErrInvalidPdf) {
-		t.Fatalf("expected ErrInvalidPdf, got %v", err)
-	}
-}
-
-func TestGetPageCount(t *testing.T) {
-	renderer := newTestRenderer(t)
-	pageCount, err := renderer.GetPageCount(context.Background(), pdftest.BuildPdfWithPages(3, 200))
-	if err != nil {
-		t.Fatalf("GetPageCount: %v", err)
-	}
-	if pageCount != 3 {
-		t.Fatalf("expected 3 pages, got %d", pageCount)
-	}
-}
-
-func TestGetPageCountRejectsInvalidPdf(t *testing.T) {
-	renderer := newTestRenderer(t)
-	_, err := renderer.GetPageCount(context.Background(), []byte("not a pdf at all"))
 	if !errors.Is(err, ErrInvalidPdf) {
 		t.Fatalf("expected ErrInvalidPdf, got %v", err)
 	}
