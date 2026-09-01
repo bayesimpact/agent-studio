@@ -1,4 +1,6 @@
 import type {
+  BackofficeRbacCatalog,
+  BackofficeUserDetail,
   PaginatedBackofficeAgents,
   PaginatedBackofficeOrganizations,
   PaginatedBackofficeProjects,
@@ -419,6 +421,14 @@ export const seed = {
           usersQuery: { page: users.page, limit: users.limit, search: "" },
         },
       }
+    },
+
+    userDetail(userDetail: BackofficeUserDetail): StoryPreloadedState {
+      return { backoffice: { userDetail: ads.fulfilled(userDetail) } }
+    },
+
+    rbacCatalog(catalog: BackofficeRbacCatalog): StoryPreloadedState {
+      return { backoffice: { rbacCatalog: ads.fulfilled(catalog) } }
     },
 
     termsDocuments(termsDocuments: TermsDocuments): StoryPreloadedState {

@@ -4,6 +4,7 @@ import type {
   BackofficeAgentDetail,
   BackofficeOrganizationDetail,
   BackofficeProjectDetail,
+  BackofficeRbacCatalog,
   BackofficeUserDetail,
   PaginatedBackofficeAgents,
   PaginatedBackofficeOrganizations,
@@ -32,6 +33,7 @@ interface State {
   users: AsyncData<PaginatedBackofficeUsers>
   usersQuery: ListQuery
   userDetail: AsyncData<BackofficeUserDetail>
+  rbacCatalog: AsyncData<BackofficeRbacCatalog>
   termsDocuments: AsyncData<TermsDocuments>
 }
 
@@ -50,6 +52,7 @@ const initialState: State = {
   users: defaultAsyncData,
   usersQuery: defaultListQuery,
   userDetail: defaultAsyncData,
+  rbacCatalog: defaultAsyncData,
   termsDocuments: defaultAsyncData,
 }
 
@@ -68,6 +71,8 @@ const slice = createSlice({
     projectsPanelUnmount: () => {},
     usersPanelMount: () => {},
     usersPanelUnmount: () => {},
+    rbacCatalogMount: () => {},
+    rbacCatalogUnmount: () => {},
     resetOrganizationDetail: (state) => {
       state.organizationDetail = defaultAsyncData
     },
@@ -266,6 +271,22 @@ const slice = createSlice({
         state.userDetail = {
           status: ADS.Error,
           error: action.error.message || "Failed to fetch user",
+          value: null,
+        }
+      })
+
+    builder
+      .addCase(backofficeThunks.getRbacCatalog.pending, (state) => {
+        if (!ADS.isFulfilled(state.rbacCatalog)) state.rbacCatalog.status = ADS.Loading
+        state.rbacCatalog.error = null
+      })
+      .addCase(backofficeThunks.getRbacCatalog.fulfilled, (state, action) => {
+        state.rbacCatalog = { status: ADS.Fulfilled, error: null, value: action.payload }
+      })
+      .addCase(backofficeThunks.getRbacCatalog.rejected, (state, action) => {
+        state.rbacCatalog = {
+          status: ADS.Error,
+          error: action.error.message || "Failed to fetch RBAC catalog",
           value: null,
         }
       })

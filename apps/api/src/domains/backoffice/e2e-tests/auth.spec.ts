@@ -109,6 +109,31 @@ describe("Backoffice - Auth", () => {
     })
   })
 
+  describe("BackofficeRoutes.getRbacCatalog", () => {
+    const subject = async () =>
+      request({
+        route: BackofficeRoutes.getRbacCatalog,
+        token: accessToken ?? undefined,
+      })
+
+    it("requires an authentication token", async () => {
+      accessToken = null
+      expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
+    })
+
+    it("rejects users without the backoffice.read permission", async () => {
+      await createOrganizationWithOwner(repositories, {
+        user: { auth0Id, email: mockAuth0EmailForSub(auth0Id) },
+      })
+      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+    })
+
+    it("allows authorized users to read the RBAC catalog", async () => {
+      await createAuthorizedUser()
+      expectResponse(await subject(), 200)
+    })
+  })
+
   describe("BackofficeRoutes.createOrganization", () => {
     const subject = async () =>
       request({

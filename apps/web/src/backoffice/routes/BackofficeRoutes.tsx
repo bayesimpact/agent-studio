@@ -3,6 +3,7 @@ import { BackofficeAgentDetailRoute } from "./BackofficeAgentDetailRoute"
 import { BackofficeAgentsListRoute } from "./BackofficeAgentsListRoute"
 import { BackofficeOrganizationDetailRoute } from "./BackofficeOrganizationDetailRoute"
 import { BackofficeOrganizationsRoute } from "./BackofficeOrganizationsRoute"
+import { BackofficePermissionsRoute } from "./BackofficePermissionsRoute"
 import { BackofficeProjectDetailRoute } from "./BackofficeProjectDetailRoute"
 import { BackofficeProjectsListRoute } from "./BackofficeProjectsListRoute"
 import { BackofficeRoute } from "./BackofficeRoute"
@@ -50,6 +51,10 @@ export const backofficeRoutes = {
     {
       path: "users/:userId",
       element: <BackofficeUserDetailRoute />,
+    },
+    {
+      path: "permissions",
+      element: <BackofficePermissionsRoute />,
     },
     {
       path: "terms",

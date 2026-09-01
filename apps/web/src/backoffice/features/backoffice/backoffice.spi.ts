@@ -4,6 +4,7 @@ import type {
   BackofficeOrganization,
   BackofficeOrganizationDetail,
   BackofficeProjectDetail,
+  BackofficeRbacCatalog,
   BackofficeUserDetail,
   PaginatedBackofficeAgents,
   PaginatedBackofficeOrganizations,
@@ -39,6 +40,7 @@ export interface IBackofficeSpi {
     search?: string
   }) => Promise<PaginatedBackofficeUsers>
   getUser: (userId: string) => Promise<BackofficeUserDetail>
+  getRbacCatalog: () => Promise<BackofficeRbacCatalog>
   addFeatureFlag: (params: { projectId: string; featureFlagKey: FeatureFlagKey }) => Promise<void>
   removeFeatureFlag: (params: {
     projectId: string

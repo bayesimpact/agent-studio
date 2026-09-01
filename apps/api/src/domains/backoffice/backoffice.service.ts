@@ -13,6 +13,7 @@ import type { ProjectMembershipModel } from "@/domains/projects/memberships/proj
 import { ProjectMembershipsService } from "@/domains/projects/memberships/project-memberships.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { PermissionService, type ResourceIdsScope } from "@/domains/rbac/permission.service"
+import type { RoleGrant } from "@/domains/rbac/permission.types"
 import {
   BACKOFFICE_AGENT_READ_PERMISSION,
   BACKOFFICE_ORGANIZATION_READ_PERMISSION,
@@ -395,10 +396,12 @@ export class BackofficeService {
     targetUserId: string
   }): Promise<{
     user: User
+    globalRoles: RoleGrant[]
     organizationMemberships: OrganizationMembershipModel[]
     projectMemberships: ProjectMembershipModel[]
     agentMemberships: AgentMembershipModel[]
     reviewCampaignMemberships: ReviewCampaignMembershipModel[]
+    roleGrantsByRoleId: Map<string, RoleGrant>
   } | null> {
     const visibleUsers = await this.findVisibleUserIds(requestingUserId)
     if (visibleUsers.scope === "ids" && !visibleUsers.ids.includes(targetUserId)) {
@@ -413,6 +416,7 @@ export class BackofficeService {
       projectMemberships,
       agentMemberships,
       reviewCampaignMemberships,
+      globalRoles,
     ] = await Promise.all([
       this.organizationMembershipsService
         .listMembershipsForUser(targetUserId)
@@ -426,15 +430,29 @@ export class BackofficeService {
       this.reviewCampaignMembershipsService
         .listMembershipsForUser(targetUserId)
         .then(sortReviewCampaignMembershipsByCampaignName),
+      this.permissionService.listGlobalRolesForUser(targetUserId),
     ])
+
+    const membershipRoleIds = [
+      ...organizationMemberships,
+      ...projectMemberships,
+      ...agentMemberships,
+    ].flatMap((membership) => (membership.roleId ? [membership.roleId] : []))
+    const roleGrantsByRoleId = await this.permissionService.listRoleGrants(membershipRoleIds)
 
     return {
       user,
+      globalRoles,
       organizationMemberships,
       projectMemberships,
       agentMemberships,
       reviewCampaignMemberships,
+      roleGrantsByRoleId,
     }
+  }
+
+  async getRbacCatalog() {
+    return this.permissionService.getCatalog()
   }
 
   /**

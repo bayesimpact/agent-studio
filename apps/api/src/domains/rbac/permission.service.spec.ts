@@ -21,9 +21,11 @@ import {
   BACKOFFICE_READ_PERMISSION,
   BACKOFFICE_TERMS_UPDATE_PERMISSION,
   BACKOFFICE_USER_READ_PERMISSION,
+  CATALOG_ROLE_KEYS,
   ORGANIZATION_CREATE_PERMISSION,
   ORGANIZATION_ROLE_PERMISSIONS,
   ORGANIZATION_ROLES,
+  PERMISSION_DESCRIPTIONS,
   PLATFORM_STAFF_ROLE,
   PLATFORM_SUPERADMIN_ROLE,
   PROJECT_CREATE_PERMISSION,
@@ -107,6 +109,78 @@ describe("PermissionService", () => {
     expect(permissions.length).toBe(ORGANIZATION_ROLE_PERMISSIONS[ORGANIZATION_ROLES.owner].length)
     expect(new Set(permissions)).toEqual(
       new Set(ORGANIZATION_ROLE_PERMISSIONS[ORGANIZATION_ROLES.owner]),
+    )
+  })
+
+  it("lists global roles held by a user with their permission keys", async () => {
+    const repositories = setup.getAllRepositories()
+    const user = userFactory.build()
+    await repositories.userRepository.save(user)
+    const superadminRole = await repositories.roleRepository.findOneOrFail({
+      where: { key: PLATFORM_SUPERADMIN_ROLE },
+    })
+    await repositories.userMembershipRepository.save(
+      userMembershipFactory.build({
+        userId: user.id,
+        resourceType: "global",
+        resourceId: null,
+        role: "member",
+        roleId: superadminRole.id,
+      }),
+    )
+
+    const globalRoles = await service.listGlobalRolesForUser(user.id)
+
+    expect(globalRoles).toHaveLength(1)
+    expect(globalRoles[0]?.key).toBe(PLATFORM_SUPERADMIN_ROLE)
+    expect(new Set(globalRoles[0]?.permissions)).toEqual(
+      new Set(ORGANIZATION_ROLE_PERMISSIONS[PLATFORM_SUPERADMIN_ROLE]),
+    )
+  })
+
+  it("returns no global roles for a user without a platform membership", async () => {
+    const repositories = setup.getAllRepositories()
+    const { user } = await createOrganizationWithOwner(repositories)
+
+    await expect(service.listGlobalRolesForUser(user.id)).resolves.toEqual([])
+  })
+
+  it("lists catalog grants for the given role ids", async () => {
+    const repositories = setup.getAllRepositories()
+    const ownerRole = await repositories.roleRepository.findOneOrFail({
+      where: { key: ORGANIZATION_ROLES.owner },
+    })
+    const memberRole = await repositories.roleRepository.findOneOrFail({
+      where: { key: ORGANIZATION_ROLES.member },
+    })
+
+    const grants = await service.listRoleGrants([ownerRole.id, memberRole.id])
+
+    expect(grants.get(ownerRole.id)?.key).toBe(ORGANIZATION_ROLES.owner)
+    expect(new Set(grants.get(ownerRole.id)?.permissions)).toEqual(
+      new Set(ORGANIZATION_ROLE_PERMISSIONS[ORGANIZATION_ROLES.owner]),
+    )
+    expect(grants.get(memberRole.id)?.key).toBe(ORGANIZATION_ROLES.member)
+    expect(new Set(grants.get(memberRole.id)?.permissions)).toEqual(
+      new Set(ORGANIZATION_ROLE_PERMISSIONS[ORGANIZATION_ROLES.member]),
+    )
+  })
+
+  it("returns an empty map when listing grants for no role ids", async () => {
+    await expect(service.listRoleGrants([])).resolves.toEqual(new Map())
+  })
+
+  it("returns the official catalog roles in display order", async () => {
+    const catalog = await service.getCatalog()
+
+    expect(catalog.roles.map((role) => role.key)).toEqual([...CATALOG_ROLE_KEYS])
+    const owner = catalog.roles.find((role) => role.key === ORGANIZATION_ROLES.owner)
+    expect(owner?.scopeType).toBe("organization")
+    expect(new Set(owner?.permissions)).toEqual(
+      new Set(ORGANIZATION_ROLE_PERMISSIONS[ORGANIZATION_ROLES.owner]),
+    )
+    expect(catalog.permissions.map((permission) => permission.key)).toEqual(
+      expect.arrayContaining(Object.keys(PERMISSION_DESCRIPTIONS)),
     )
   })
 

@@ -50,6 +50,13 @@ function registerListeners() {
   })
 
   listenerMiddleware.startListening({
+    actionCreator: backofficeActions.rbacCatalogMount,
+    effect: async (_, listenerApi) => {
+      listenerApi.dispatch(backofficeActions.getRbacCatalog())
+    },
+  })
+
+  listenerMiddleware.startListening({
     actionCreator: backofficeActions.createOrganization.fulfilled,
     effect: async (_, listenerApi) => {
       listenerApi.dispatch(

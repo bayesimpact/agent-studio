@@ -14,6 +14,7 @@ import type {
   BackofficeUserAgentMembershipDto,
   BackofficeUserDetailDto,
   BackofficeUserDto,
+  BackofficeUserGlobalRoleDto,
   BackofficeUserOrganizationMembershipDto,
   BackofficeUserProjectMembershipDto,
   BackofficeUserReviewCampaignMembershipDto,
@@ -28,6 +29,7 @@ import type { OrganizationMembershipModel } from "@/domains/organizations/member
 import type { Organization } from "@/domains/organizations/organization.entity"
 import type { ProjectMembershipModel } from "@/domains/projects/memberships/project-membership.model"
 import type { Project } from "@/domains/projects/project.entity"
+import type { RoleGrant } from "@/domains/rbac/permission.types"
 import type { User } from "@/domains/users/user.entity"
 import type { ReviewCampaignMembershipModel } from "../review-campaigns/memberships/review-campaign-membership.model"
 
@@ -180,31 +182,40 @@ export function toBackofficeUserDto(user: User): BackofficeUserDto {
 
 export function toBackofficeUserOrganizationMembershipDto(
   membership: OrganizationMembershipModel,
+  roleGrant: RoleGrant | undefined,
 ): BackofficeUserOrganizationMembershipDto {
   return {
     organizationId: membership.organizationId,
     organizationName: membership.organization?.name ?? "",
     role: membership.role,
+    roleKey: roleGrant?.key ?? null,
+    permissions: roleGrant?.permissions ?? [],
   }
 }
 
 export function toBackofficeUserProjectMembershipDto(
   membership: ProjectMembershipModel,
+  roleGrant: RoleGrant | undefined,
 ): BackofficeUserProjectMembershipDto {
   return {
     projectId: membership.projectId,
     projectName: membership.project?.name ?? "",
     role: membership.role,
+    roleKey: roleGrant?.key ?? null,
+    permissions: roleGrant?.permissions ?? [],
   }
 }
 
 export function toBackofficeUserAgentMembershipDto(
   membership: AgentMembershipModel,
+  roleGrant: RoleGrant | undefined,
 ): BackofficeUserAgentMembershipDto {
   return {
     agentId: membership.agentId,
     agentName: membership.agent?.name ?? "",
     role: membership.role,
+    roleKey: roleGrant?.key ?? null,
+    permissions: roleGrant?.permissions ?? [],
   }
 }
 
@@ -218,21 +229,47 @@ export function toBackofficeUserReviewCampaignMembershipDto(
   }
 }
 
+export function toBackofficeUserGlobalRoleDto(roleGrant: RoleGrant): BackofficeUserGlobalRoleDto {
+  return {
+    key: roleGrant.key,
+    name: roleGrant.name,
+    permissions: roleGrant.permissions,
+  }
+}
+
 export function toBackofficeUserDetailDto(
   user: User,
+  globalRoles: RoleGrant[],
   organizationMemberships: OrganizationMembershipModel[],
   projectMemberships: ProjectMembershipModel[],
   agentMemberships: AgentMembershipModel[],
   reviewCampaignMemberships: ReviewCampaignMembershipModel[],
+  roleGrantsByRoleId: Map<string, RoleGrant>,
 ): BackofficeUserDetailDto {
   return {
     id: user.id,
     email: user.email,
     name: user.name,
     createdAt: user.createdAt.getTime() as TimeType,
-    organizationMemberships: organizationMemberships.map(toBackofficeUserOrganizationMembershipDto),
-    projectMemberships: projectMemberships.map(toBackofficeUserProjectMembershipDto),
-    agentMemberships: agentMemberships.map(toBackofficeUserAgentMembershipDto),
+    globalRoles: globalRoles.map(toBackofficeUserGlobalRoleDto),
+    organizationMemberships: organizationMemberships.map((membership) =>
+      toBackofficeUserOrganizationMembershipDto(
+        membership,
+        membership.roleId ? roleGrantsByRoleId.get(membership.roleId) : undefined,
+      ),
+    ),
+    projectMemberships: projectMemberships.map((membership) =>
+      toBackofficeUserProjectMembershipDto(
+        membership,
+        membership.roleId ? roleGrantsByRoleId.get(membership.roleId) : undefined,
+      ),
+    ),
+    agentMemberships: agentMemberships.map((membership) =>
+      toBackofficeUserAgentMembershipDto(
+        membership,
+        membership.roleId ? roleGrantsByRoleId.get(membership.roleId) : undefined,
+      ),
+    ),
     reviewCampaignMemberships: reviewCampaignMemberships.map(
       toBackofficeUserReviewCampaignMembershipDto,
     ),

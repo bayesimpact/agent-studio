@@ -5,6 +5,7 @@ import {
   toBackofficeOrganization,
   toBackofficeOrganizationDetail,
   toBackofficeProjectDetail,
+  toBackofficeRbacCatalog,
   toBackofficeUserDetail,
   toPaginatedBackofficeAgents,
   toPaginatedBackofficeOrganizations,
@@ -101,6 +102,13 @@ export default {
       BackofficeRoutes.getUser.getPath({ userId }),
     )
     return toBackofficeUserDetail(response.data.data)
+  },
+  getRbacCatalog: async () => {
+    const axios = getAxiosInstance()
+    const response = await axios.get<typeof BackofficeRoutes.getRbacCatalog.response>(
+      BackofficeRoutes.getRbacCatalog.getPath(),
+    )
+    return toBackofficeRbacCatalog(response.data.data)
   },
   addFeatureFlag: async ({ projectId, featureFlagKey }) => {
     const axios = getAxiosInstance()

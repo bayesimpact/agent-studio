@@ -23,3 +23,7 @@ export const BackofficeProjectRoutes = {
   projects: home.extend("/projects"),
   project: home.extend("/projects/:projectId"),
 }
+
+export const BackofficePermissionsRoutes = {
+  permissions: home.extend("/permissions"),
+}
