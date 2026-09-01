@@ -9,20 +9,18 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 
 ### Added
 - Backoffice staff can review user roles and browse a catalog of role permissions.
-- Conversation retention: conversations are now kept 30 days by default, configurable per workspace.
+- Conversation retention: conversations are kept 30 days by default, configurable per workspace.
 - (beta) Gemma and MedGemma agents accept PDF documents in chat and extraction.
 - (beta) Embedded public chat shows the MCP App UI for tools that provide one.
 
 ### Changed
-- PDF documents sent to Gemma and MedGemma agents are now converted to images by a dedicated service, so heavy PDF processing no longer slows down the platform.
 
 ### Fixed
 - The chat widget hint no longer blocks clicks on the page underneath.
 - (beta) The MCP Servers tab on the agent editor shows translated labels and each server's saved state.
 - Chat shows an error message instead of an empty reply when the model fails.
 - Agent replies no longer show a leaked internal tool-call tag; the platform hides it and still runs the tool.
-- Chat: a server error carrying no message now ends the reply with an error instead of being dropped.
-- Agent and session pages now display correctly on small screens.
+- Agent and session pages display correctly on small screens.
 - Opening a workspace no longer intermittently shows an unexpected error page.
 
 ### Security
