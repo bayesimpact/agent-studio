@@ -115,18 +115,20 @@ func TestRenderDocumentSourceMissing(t *testing.T) {
 }
 
 func TestRenderDocumentSourceTooLarge(t *testing.T) {
-	store := &fakeStore{objects: map[string][]byte{
-		"org1/proj1/doc1.pdf": pdftest.BuildPdfWithPages(1, 200),
-	}}
+	pdfBytes := pdftest.BuildPdfWithPages(1, 200)
+	store := &fakeStore{objects: map[string][]byte{"org1/proj1/doc1.pdf": pdfBytes}}
 	renderer, err := render.NewRenderer()
 	if err != nil {
 		t.Fatalf("NewRenderer: %v", err)
 	}
-	handler := newServer(store, renderer, 1, time.Minute)
+	handler := newServer(store, renderer, int64(len(pdfBytes))-1, time.Minute)
 	response := postRender(handler,
 		`{"sourceObject":"org1/proj1/doc1.pdf","outputPrefix":"org1/proj1/derived/doc1/","maxPages":20,"maxPixelsPerPage":4000000}`)
 	if response.Code != http.StatusRequestEntityTooLarge {
 		t.Fatalf("expected 413, got %d: %s", response.Code, response.Body.String())
+	}
+	if len(store.objects) != 1 {
+		t.Fatalf("expected no uploads, store has %d objects", len(store.objects))
 	}
 }
 

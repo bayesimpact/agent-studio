@@ -40,8 +40,8 @@ func validObjectPath(path string) bool {
 	return path != "" && !strings.HasPrefix(path, "/") && !strings.Contains(path, "..")
 }
 
-// fetchSourcePdf downloads the source pdf, writing the error response and
-// returning ok=false when it cannot.
+// fetchSourcePdf downloads the source pdf under the size cap, writing the
+// error response and returning ok=false when it cannot.
 func fetchSourcePdf(
 	response http.ResponseWriter,
 	request *http.Request,
