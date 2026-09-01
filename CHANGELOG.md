@@ -8,6 +8,16 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+### Security
+
+## [26.09.0] - 2026-09-01
+
+### Added
 - Backoffice staff can review user roles and browse a catalog of role permissions.
 - Conversation retention: conversations are kept 30 days by default, configurable per workspace.
 - (beta) Gemma and MedGemma agents accept PDF documents in chat and extraction.
