@@ -1,3 +1,4 @@
+import type { McpServerAuthStatus } from "@caseai-connect/api-contracts"
 import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
@@ -16,10 +17,41 @@ export type McpServerConfig = {
    * context is applied after them and cannot be overridden here.
    */
   headers?: Record<string, string>
+  oauth?: McpServerOauthState
 }
 
 export type EnabledMcpServer = McpServerConfig & {
   id: string
+}
+
+export type McpServerOauthTokens = {
+  accessToken: string
+  refreshToken?: string
+  /** Epoch ms after which accessToken must be refreshed. */
+  expiresAt: number
+}
+
+export type McpServerOauthPendingAuth = {
+  state: string
+  codeVerifier: string
+  redirectUri: string
+  /** Epoch ms; a pending authorization is single-use and short-lived. */
+  expiresAt: number
+}
+
+/**
+ * OAuth 2.1 state for servers using the MCP Authorization spec. Lives in the
+ * encrypted config blob, so adding fields needs no migration.
+ */
+export type McpServerOauthState = {
+  clientId: string
+  authorizationEndpoint: string
+  tokenEndpoint: string
+  /** Canonical resource URI (RFC 8707), sent on authorize and token calls. */
+  resource: string
+  scope?: string
+  tokens?: McpServerOauthTokens
+  pendingAuth?: McpServerOauthPendingAuth
 }
 
 @Injectable()
@@ -112,6 +144,17 @@ export class McpServersService {
 
   decryptUrl(mcpServer: McpServer): string {
     return this.decryptConfig(mcpServer).url
+  }
+
+  getConfig(mcpServer: McpServer): McpServerConfig {
+    return this.decryptConfig(mcpServer)
+  }
+
+  getAuthStatus(config: McpServerConfig): McpServerAuthStatus {
+    if (config.oauth?.tokens) return "oauthConnected"
+    if (config.oauth) return "oauthPending"
+    if (config.apiKey) return "apiKey"
+    return "none"
   }
 
   private decryptConfig(mcpServer: McpServer): McpServerConfig {

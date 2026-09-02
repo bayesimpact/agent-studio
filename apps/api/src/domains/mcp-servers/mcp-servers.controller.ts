@@ -1,5 +1,6 @@
 import {
   createMcpServerSchema,
+  type McpServerAuthStatus,
   type McpServerDto,
   McpServersRoutes,
 } from "@caseai-connect/api-contracts"
@@ -26,6 +27,7 @@ import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import type { McpServer } from "./mcp-server.entity"
 import { McpServerGuard } from "./mcp-server.guard"
+import type { McpServerConfig } from "./mcp-servers.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { McpServersService } from "./mcp-servers.service"
 
@@ -42,12 +44,15 @@ export class McpServersController {
     @Req() request: EndpointRequestWithProject,
     @Body() { payload }: typeof McpServersRoutes.createOne.request,
   ): Promise<typeof McpServersRoutes.createOne.response> {
+    const config = { url: payload.url, apiKey: payload.apiKey, headers: payload.headers }
     const mcpServer = await this.mcpServersService.createMcpServer({
       projectId: request.project.id,
       name: payload.name,
-      config: { url: payload.url, apiKey: payload.apiKey },
+      config,
     })
-    return { data: toMcpServerDto(mcpServer, payload.url) }
+    return {
+      data: toMcpServerDto(mcpServer, config, this.mcpServersService.getAuthStatus(config)),
+    }
   }
 
   @Get(McpServersRoutes.getAll.path)
@@ -57,9 +62,10 @@ export class McpServersController {
   ): Promise<typeof McpServersRoutes.getAll.response> {
     const mcpServers = await this.mcpServersService.listMcpServers(request.project.id)
     return {
-      data: mcpServers.map((server) =>
-        toMcpServerDto(server, this.mcpServersService.decryptUrl(server)),
-      ),
+      data: mcpServers.map((server) => {
+        const config = this.mcpServersService.getConfig(server)
+        return toMcpServerDto(server, config, this.mcpServersService.getAuthStatus(config))
+      }),
     }
   }
 
@@ -96,12 +102,17 @@ export class McpServersController {
   }
 }
 
-function toMcpServerDto(entity: McpServer, url: string): McpServerDto {
+function toMcpServerDto(
+  entity: McpServer,
+  config: McpServerConfig,
+  authStatus: McpServerAuthStatus,
+): McpServerDto {
   return {
     id: entity.id,
     name: entity.name,
-    url,
+    url: config.url,
     projectId: entity.projectId!,
+    authStatus,
     createdAt: entity.createdAt.getTime(),
     updatedAt: entity.updatedAt.getTime(),
   }

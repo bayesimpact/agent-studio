@@ -49,6 +49,7 @@ const toMcpServer = (dto: McpServerDto): McpServer => ({
   name: dto.name,
   url: dto.url,
   projectId: dto.projectId,
+  authStatus: dto.authStatus,
   createdAt: dto.createdAt,
   updatedAt: dto.updatedAt,
 })

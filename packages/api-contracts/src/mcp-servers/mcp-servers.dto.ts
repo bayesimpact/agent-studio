@@ -6,6 +6,7 @@ export type McpServerDto = {
   name: string
   url: string
   projectId: string
+  authStatus: McpServerAuthStatus
   createdAt: TimeType
   updatedAt: TimeType
 }
@@ -22,3 +23,16 @@ export const createMcpServerSchema = z.object({
 })
 
 export type CreateMcpServerDto = z.infer<typeof createMcpServerSchema>
+
+export type McpServerAuthStatus = "none" | "apiKey" | "oauthPending" | "oauthConnected"
+
+export type McpServerOauthInitiationDto = {
+  authorizationUrl: string
+}
+
+export const completeMcpServerOauthSchema = z.object({
+  code: z.string().min(1),
+  state: z.string().min(1),
+})
+
+export type CompleteMcpServerOauthDto = z.infer<typeof completeMcpServerOauthSchema>
