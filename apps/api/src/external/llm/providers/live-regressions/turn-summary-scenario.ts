@@ -174,11 +174,12 @@ export async function runFatPromptTurnScenario({
     onExecute,
   })
 
-  // The protocol is appended AFTER the fat prompt (recency), mirroring the
-  // production layout; the toolsSection stays empty of it.
-  const systemPrompt = `${buildFatSystemPrompt({ toolsSection: "" })}
-
-${mandatoryToolInstruction()}`
+  // The protocol is the last authored section, just before the date line,
+  // mirroring the production layout; the toolsSection stays empty of it.
+  const systemPrompt = buildFatSystemPrompt({
+    toolsSection: "",
+    epilogue: mandatoryToolInstruction(),
+  })
 
   const chunks = provider.streamChatResponse({
     messages: [

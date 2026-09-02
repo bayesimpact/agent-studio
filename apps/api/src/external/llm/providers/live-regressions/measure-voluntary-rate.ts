@@ -104,9 +104,10 @@ const SCENARIOS: Record<
   }
 > = {
   fat: {
-    systemPrompt: `${buildFatSystemPrompt({ toolsSection: "" })}
-
-${mandatoryToolInstruction()}`,
+    systemPrompt: buildFatSystemPrompt({
+      toolsSection: "",
+      epilogue: mandatoryToolInstruction(),
+    }),
     tools: { [ToolName.MandatoryTool]: summaryCategoriesOnly },
     cases: [
       { label: "greeting", userMessage: "hello" },
