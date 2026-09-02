@@ -16,6 +16,7 @@ import { McpServer } from "./mcp-server.entity"
 import { McpServerGuard } from "./mcp-server.guard"
 import { McpServersController } from "./mcp-servers.controller"
 import { McpServersService } from "./mcp-servers.service"
+import { McpOauthService } from "./oauth/mcp-oauth.service"
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { McpServersService } from "./mcp-servers.service"
   ],
   providers: [
     McpServersService,
+    McpOauthService,
     EncryptionService,
     McpServerGuard,
     ResourceContextGuard,
@@ -36,6 +38,6 @@ import { McpServersService } from "./mcp-servers.service"
     McpServerContextResolver,
   ],
   controllers: [McpServersController],
-  exports: [McpServersService],
+  exports: [McpServersService, McpOauthService],
 })
 export class McpServersModule {}
