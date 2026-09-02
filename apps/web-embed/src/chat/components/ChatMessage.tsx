@@ -7,6 +7,11 @@ import { ChatBotMessage, ChatUserMessage } from "./index"
 import { MarkdownWrapper } from "./MarkdownWrapper"
 import { McpAppView } from "./McpAppView"
 import { getRenderableMcpApp, hasRenderableMcpApp } from "./mcp-app-view"
+import {
+  findSurfaceResourcesTool,
+  hasSurfacedResources,
+  SurfaceResourcesTool,
+} from "./SurfaceResourcesTool"
 
 export function ChatMessage({ message }: { message: AgentSessionMessageDto }) {
   switch (message.role) {
@@ -17,8 +22,12 @@ export function ChatMessage({ message }: { message: AgentSessionMessageDto }) {
         return view ? [{ toolCall, view }] : []
       })
       const hideMarkdownRecap = !isStreaming && hasRenderableMcpApp(message.toolCalls)
+      const surfaceResourcesTool = findSurfaceResourcesTool(message.toolCalls)
       const isEmpty =
-        message.content.trim().length === 0 && message.status === "completed" && !hideMarkdownRecap
+        message.content.trim().length === 0 &&
+        message.status === "completed" &&
+        !hideMarkdownRecap &&
+        !hasSurfacedResources(message.toolCalls)
       const isError = message.status === "error" || isEmpty
       const showTextBubble =
         isError || isStreaming || (!hideMarkdownRecap && message.content.trim().length > 0)
@@ -45,6 +54,10 @@ export function ChatMessage({ message }: { message: AgentSessionMessageDto }) {
                 </div>
               )}
             </ChatBotMessage>
+          )}
+
+          {!isStreaming && surfaceResourcesTool && (
+            <SurfaceResourcesTool toolCall={surfaceResourcesTool} />
           )}
 
           {!isStreaming &&
