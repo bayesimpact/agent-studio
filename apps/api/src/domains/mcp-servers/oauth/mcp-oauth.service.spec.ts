@@ -149,6 +149,12 @@ describe("McpOauthService", () => {
     return repositories.mcpServerRepository.findOneByOrFail({ id: mcpServer.id })
   }
 
+  const getValidAccessTokenFor = (mcpServer: McpServer): Promise<string | null> => {
+    const { oauth } = mcpServersService.getConfig(mcpServer)
+    if (!oauth) throw new Error("Expected oauth state on the seeded server")
+    return mcpOauthService.getValidAccessToken(mcpServer.id, oauth)
+  }
+
   it("stores oauth state and returns the authorization URL with PKCE, state, resource and scope", async () => {
     mockFullDiscoveryAndRegistration()
     const mcpServer = await createServer({ url: MCP_URL })
@@ -328,7 +334,7 @@ describe("McpOauthService", () => {
         expiresAt: Date.now() + 3600_000,
       })
 
-      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+      const token = await getValidAccessTokenFor(mcpServer)
 
       expect(token).toBe("at-1")
       expect(fetchMock).not.toHaveBeenCalled()
@@ -337,7 +343,7 @@ describe("McpOauthService", () => {
     it("treats a token without a known expiry as fresh", async () => {
       const mcpServer = await seedServerWithOauth({ accessToken: "at-1" })
 
-      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+      const token = await getValidAccessTokenFor(mcpServer)
 
       expect(token).toBe("at-1")
       expect(fetchMock).not.toHaveBeenCalled()
@@ -349,7 +355,7 @@ describe("McpOauthService", () => {
         expiresAt: Date.now() - 1000,
       })
 
-      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+      const token = await getValidAccessTokenFor(mcpServer)
 
       expect(token).toBeNull()
       expect(fetchMock).not.toHaveBeenCalled()
@@ -369,7 +375,7 @@ describe("McpOauthService", () => {
         json({ access_token: "at-2", refresh_token: "rt-2", expires_in: 3600 }),
       )
 
-      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+      const token = await getValidAccessTokenFor(mcpServer)
 
       expect(token).toBe("at-2")
       const [tokenUrl, init] = fetchMock.mock.calls.at(-1)!
@@ -394,7 +400,7 @@ describe("McpOauthService", () => {
       })
       fetchMock.mockResolvedValueOnce(json({ access_token: "at-2", expires_in: 3600 }))
 
-      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+      const token = await getValidAccessTokenFor(mcpServer)
 
       expect(token).toBe("at-2")
       const reloaded = await repositories.mcpServerRepository.findOneByOrFail({ id: mcpServer.id })
@@ -412,7 +418,7 @@ describe("McpOauthService", () => {
         new Response(JSON.stringify({ error: "invalid_grant" }), { status: 400 }),
       )
 
-      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+      const token = await getValidAccessTokenFor(mcpServer)
 
       expect(token).toBeNull()
       const reloaded = await repositories.mcpServerRepository.findOneByOrFail({ id: mcpServer.id })
@@ -429,7 +435,7 @@ describe("McpOauthService", () => {
       })
       fetchMock.mockRejectedValueOnce(new TypeError("fetch failed"))
 
-      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+      const token = await getValidAccessTokenFor(mcpServer)
 
       expect(token).toBeNull()
       const reloaded = await repositories.mcpServerRepository.findOneByOrFail({ id: mcpServer.id })
@@ -448,7 +454,7 @@ describe("McpOauthService", () => {
         new Response(JSON.stringify({ error: "server_error" }), { status: 500 }),
       )
 
-      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+      const token = await getValidAccessTokenFor(mcpServer)
 
       expect(token).toBeNull()
       const reloaded = await repositories.mcpServerRepository.findOneByOrFail({ id: mcpServer.id })
@@ -465,7 +471,7 @@ describe("McpOauthService", () => {
       })
       fetchMock.mockResolvedValueOnce(new Response("rate limited", { status: 429 }))
 
-      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+      const token = await getValidAccessTokenFor(mcpServer)
 
       expect(token).toBeNull()
       const reloaded = await repositories.mcpServerRepository.findOneByOrFail({ id: mcpServer.id })
@@ -482,7 +488,7 @@ describe("McpOauthService", () => {
       })
       fetchMock.mockResolvedValueOnce(new Response("<html>Forbidden</html>", { status: 403 }))
 
-      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+      const token = await getValidAccessTokenFor(mcpServer)
 
       expect(token).toBeNull()
       const reloaded = await repositories.mcpServerRepository.findOneByOrFail({ id: mcpServer.id })
@@ -500,7 +506,7 @@ describe("McpOauthService", () => {
         new Response(JSON.stringify({ error: "invalid_client" }), { status: 401 }),
       )
 
-      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+      const token = await getValidAccessTokenFor(mcpServer)
 
       expect(token).toBeNull()
       const reloaded = await repositories.mcpServerRepository.findOneByOrFail({ id: mcpServer.id })
@@ -508,13 +514,49 @@ describe("McpOauthService", () => {
       expect(config.oauth?.tokens).toBeUndefined()
     })
 
-    it("returns null for a server without oauth tokens", async () => {
-      const mcpServer = await createServer({ url: MCP_URL })
+    it("returns a fresh token from the caller's state without opening a transaction", async () => {
+      const mcpServer = await seedServerWithOauth({
+        accessToken: "at-1",
+        expiresAt: Date.now() + 3600_000,
+      })
+      const transactionSpy = jest.spyOn(setup.dataSource, "transaction")
 
-      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+      const token = await getValidAccessTokenFor(mcpServer)
+
+      expect(token).toBe("at-1")
+      expect(transactionSpy).not.toHaveBeenCalled()
+      transactionSpy.mockRestore()
+    })
+
+    it("re-checks under the lock so a refresh already done by another worker is reused", async () => {
+      // The DB row already holds tokens refreshed by another worker, but this caller
+      // decrypted the config before that happened and still sees the expired ones.
+      const mcpServer = await seedServerWithOauth({
+        accessToken: "at-refreshed",
+        refreshToken: "rt-2",
+        expiresAt: Date.now() + 3600_000,
+      })
+      const staleOauth = {
+        ...mcpServersService.getConfig(mcpServer).oauth,
+        tokens: { accessToken: "old", refreshToken: "rt-1", expiresAt: Date.now() - 1000 },
+      } as McpServerOauthState
+
+      const token = await mcpOauthService.getValidAccessToken(mcpServer.id, staleOauth)
+
+      expect(token).toBe("at-refreshed")
+      expect(fetchMock).not.toHaveBeenCalled()
+    })
+
+    it("returns null without touching the database when the oauth state has no tokens", async () => {
+      const mcpServer = await seedServerWithOauth(undefined)
+      const transactionSpy = jest.spyOn(setup.dataSource, "transaction")
+
+      const token = await getValidAccessTokenFor(mcpServer)
 
       expect(token).toBeNull()
       expect(fetchMock).not.toHaveBeenCalled()
+      expect(transactionSpy).not.toHaveBeenCalled()
+      transactionSpy.mockRestore()
     })
   })
 
@@ -539,6 +581,27 @@ describe("McpOauthService", () => {
       expect(servers).toHaveLength(1)
       expect(servers[0]?.apiKey).toBe("at-2")
       expect(servers[0]).not.toHaveProperty("oauth")
+    })
+
+    it("does not open a locking transaction while the access token is fresh", async () => {
+      const { organization, project } = await createOrganizationWithProject(repositories)
+      const agent = agentFactory.transient({ organization, project }).build()
+      await repositories.agentRepository.save(agent)
+
+      const mcpServer = await seedServerWithOauth({
+        accessToken: "at-1",
+        refreshToken: "rt-1",
+        expiresAt: Date.now() + 3600_000,
+      })
+      await mcpServersService.enableForAgent(agent.id, mcpServer.id)
+      const transactionSpy = jest.spyOn(setup.dataSource, "transaction")
+
+      const servers = await mcpServersService.getEnabledServersForAgent(agent.id)
+
+      expect(servers[0]?.apiKey).toBe("at-1")
+      expect(transactionSpy).not.toHaveBeenCalled()
+      expect(fetchMock).not.toHaveBeenCalled()
+      transactionSpy.mockRestore()
     })
   })
 })

@@ -15,7 +15,7 @@ import { codeChallengeS256, generateCodeVerifier, generateState } from "./pkce"
 
 const PENDING_AUTH_TTL_MS = 10 * 60 * 1000
 const TOKEN_REFRESH_MARGIN_MS = 60 * 1000
-// The refresh path runs inside a pessimistic row lock (see getValidAccessToken
+// The refresh path runs inside a pessimistic row lock (see refreshAccessToken
 // below), so a hanging authorization server must not hold that lock forever.
 const OAUTH_FETCH_TIMEOUT_MS = 10_000
 
@@ -149,8 +149,28 @@ export class McpOauthService {
     return this.mcpServerRepository.findOneByOrFail({ id: mcpServer.id })
   }
 
-  async getValidAccessToken(mcpServerId: string): Promise<string | null> {
+  /**
+   * Called on every agent turn for every enabled OAuth server, so the common case
+   * (token still fresh) must not touch the database: the caller already decrypted
+   * the config, and a row lock across a network call would stall every concurrent
+   * turn on that server. Only a refresh that is actually due takes the lock.
+   */
+  async getValidAccessToken(
+    mcpServerId: string,
+    oauth: McpServerOauthState,
+  ): Promise<string | null> {
+    if (!oauth.tokens) return null
+    if (!isAccessTokenExpired(oauth.tokens, Date.now(), TOKEN_REFRESH_MARGIN_MS)) {
+      return oauth.tokens.accessToken
+    }
+    return this.refreshAccessToken(mcpServerId)
+  }
+
+  private async refreshAccessToken(mcpServerId: string): Promise<string | null> {
     // Row lock: refresh tokens rotate, so two workers must not refresh at once.
+    // The state is re-read under the lock because another worker may have
+    // refreshed since the caller's lock-free check, in which case its fresh token
+    // is returned without a second round trip to the authorization server.
     return this.dataSource.transaction(async (manager) => {
       const mcpServer = await manager.getRepository(McpServer).findOne({
         where: { id: mcpServerId },

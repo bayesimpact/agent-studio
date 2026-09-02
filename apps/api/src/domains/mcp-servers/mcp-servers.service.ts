@@ -43,6 +43,7 @@ export class McpServersService {
         if (!oauth) return { id: agentMcpServer.mcpServer.id, ...config }
         const accessToken = await this.mcpOauthService.getValidAccessToken(
           agentMcpServer.mcpServer.id,
+          oauth,
         )
         return { id: agentMcpServer.mcpServer.id, ...config, apiKey: accessToken ?? undefined }
       }),
