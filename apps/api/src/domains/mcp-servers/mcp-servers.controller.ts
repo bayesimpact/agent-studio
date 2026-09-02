@@ -1,4 +1,5 @@
 import {
+  completeMcpServerOauthSchema,
   createMcpServerSchema,
   type McpServerAuthStatus,
   type McpServerDto,
@@ -30,12 +31,17 @@ import { McpServerGuard } from "./mcp-server.guard"
 import type { McpServerConfig } from "./mcp-servers.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { McpServersService } from "./mcp-servers.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { McpOauthService } from "./oauth/mcp-oauth.service"
 
 @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, McpServerGuard)
 @RequireContext("organization", "project")
 @Controller()
 export class McpServersController {
-  constructor(private readonly mcpServersService: McpServersService) {}
+  constructor(
+    private readonly mcpServersService: McpServersService,
+    private readonly mcpOauthService: McpOauthService,
+  ) {}
 
   @Post(McpServersRoutes.createOne.path)
   @CheckPolicy((policy) => policy.canCreate())
@@ -99,6 +105,33 @@ export class McpServersController {
   ): Promise<typeof McpServersRoutes.disableForAgent.response> {
     await this.mcpServersService.disableForAgent(agentId, request.mcpServer.id)
     return { data: { success: true } }
+  }
+
+  @Post(McpServersRoutes.initiateOauth.path)
+  @CheckPolicy((policy) => policy.canCreate())
+  @AddContext("mcpServer")
+  async initiateOauth(
+    @Req() request: EndpointRequestWithMcpServer,
+  ): Promise<typeof McpServersRoutes.initiateOauth.response> {
+    const { authorizationUrl } = await this.mcpOauthService.initiateAuthorization(request.mcpServer)
+    return { data: { authorizationUrl } }
+  }
+
+  @Post(McpServersRoutes.completeOauth.path)
+  @CheckPolicy((policy) => policy.canCreate())
+  @AddContext("mcpServer")
+  @UsePipes(new ZodValidationPipe(completeMcpServerOauthSchema))
+  async completeOauth(
+    @Req() request: EndpointRequestWithMcpServer,
+    @Body() { payload }: typeof McpServersRoutes.completeOauth.request,
+  ): Promise<typeof McpServersRoutes.completeOauth.response> {
+    const updated = await this.mcpOauthService.completeAuthorization({
+      mcpServer: request.mcpServer,
+      code: payload.code,
+      state: payload.state,
+    })
+    const config = this.mcpServersService.getConfig(updated)
+    return { data: toMcpServerDto(updated, config, this.mcpServersService.getAuthStatus(config)) }
   }
 }
 
