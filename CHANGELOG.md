@@ -12,6 +12,16 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ### Changed
 
 ### Fixed
+
+### Security
+
+## [26.09.1] - 2026-09-02
+
+### Added
+
+### Changed
+
+### Fixed
 - Agents no longer confuse the day and month of today's date.
 
 ### Security
