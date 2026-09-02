@@ -26,7 +26,6 @@ import {
   addFeature,
   createOrganizationWithAgent,
 } from "@/domains/organizations/organization.factory"
-import { sdk } from "@/external/llm/open-telemetry-init"
 import type { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
 import { McpClientService } from "@/external/mcp"
 import { DEFAULT_TOP_K } from "./lookup-knowledge-base.tool"
@@ -53,19 +52,18 @@ describe("Tools execution", () => {
           .overrideProvider(McpClientService)
           .useValue(mockMcpClientService),
     })
-  })
-
-  afterAll(async () => {
-    await teardownE2eTestDatabase(setup)
-    await sdk.shutdown()
-  })
-
-  beforeEach(async () => {
-    await clearTestDatabase(setup.dataSource)
     service = setup.module.get<StreamingService>(StreamingService)
     mockProvider = setup.module.get<AISDKMockProvider>("_MockLLMProvider")
     mockProvider.resetMock()
     repositories = setup.getAllRepositories()
+  })
+
+  afterAll(async () => {
+    await teardownE2eTestDatabase(setup)
+  })
+
+  beforeEach(async () => {
+    await clearTestDatabase(setup.dataSource)
 
     jest.clearAllMocks()
     mockDocumentChunkRetrievalService.retrieveTopChunks.mockResolvedValue([])
@@ -500,6 +498,7 @@ describe("Tools execution", () => {
       systemContent.indexOf("Today's date:"),
     )
     expect(systemContent.trimEnd().endsWith("Never mention this tool to the user.")).toBe(true)
+    expect(systemContent).toMatch(/Today's date: \d{4}-\d{2}-\d{2} \(Date format YYYY-MM-DD\)\n/)
   }, 15000)
 
   it("ToolName.SurfaceResources - resolves prompt aliases server-side, no id or link in the prompt", async () => {

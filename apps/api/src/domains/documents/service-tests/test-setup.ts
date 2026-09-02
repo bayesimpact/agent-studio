@@ -18,6 +18,8 @@ export function documentsServiceTestSetup() {
       additionalImports: [DocumentsModule],
       applyOverrides: withDocumentEmbeddingsBatchServiceMock,
     })
+    service = setup.module.get<DocumentsService>(DocumentsService)
+    repositories = setup.getAllRepositories()
   })
 
   afterAll(async () => {
@@ -26,8 +28,6 @@ export function documentsServiceTestSetup() {
 
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
-    service = setup.module.get<DocumentsService>(DocumentsService)
-    repositories = setup.getAllRepositories()
   })
 
   return () => {

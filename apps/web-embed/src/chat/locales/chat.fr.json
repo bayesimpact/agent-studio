@@ -11,7 +11,9 @@
     "message": {
       "thinking": "Réflexion en cours…",
       "error": "Une erreur s'est produite. Veuillez réessayer.",
-      "copyAriaLabel": "Copier dans le presse-papiers"
+      "copyAriaLabel": "Copier dans le presse-papiers",
+      "sources_one": "{{count}} source",
+      "sources_other": "{{count}} sources"
     },
     "status": {
       "connecting": "Connexion en cours…",

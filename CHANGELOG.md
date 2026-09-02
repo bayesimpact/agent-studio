@@ -8,6 +8,28 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+### Security
+
+## [26.09.1] - 2026-09-02
+
+### Added
+
+### Changed
+
+### Fixed
+- Agents no longer confuse the day and month of today's date.
+
+### Security
+- Only platform superadmins can update terms documents.
+
+## [26.09.0] - 2026-09-01
+
+### Added
 - Backoffice staff can review user roles and browse a catalog of role permissions.
 - Conversation retention: conversations are kept 30 days by default, configurable per workspace.
 - (beta) Gemma and MedGemma agents accept PDF documents in chat and extraction.
@@ -60,6 +82,8 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Studio no longer crashes when a project opens right after onboarding restarts.
 
 ### Security
+- Cross-origin browser calls to authenticated endpoints are now limited to the platform's own domains.
+
 ## [26.07.3] - 2026-07-24
 
 ### Added

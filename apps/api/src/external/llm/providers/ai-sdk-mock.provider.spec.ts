@@ -1,5 +1,5 @@
 import { AgentModel } from "@caseai-connect/api-contracts"
-import { afterAll, beforeAll, beforeEach } from "@jest/globals"
+import { beforeAll, beforeEach } from "@jest/globals"
 import { tool } from "ai"
 import { v4 } from "uuid"
 import { z } from "zod"
@@ -9,7 +9,6 @@ import type {
   LLMFile,
   LLMMetadata,
 } from "@/common/interfaces/llm-provider.interface"
-import { sdk } from "@/external/llm/open-telemetry-init"
 import { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
 
 describe("AISDKMockProvider", () => {
@@ -35,9 +34,6 @@ describe("AISDKMockProvider", () => {
   beforeEach(() => {
     provider.resetMock()
     metadata.traceId = v4()
-  })
-  afterAll(async () => {
-    await sdk.shutdown()
   })
 
   it("streamChatResponse - default mock value", async () => {

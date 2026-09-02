@@ -5,7 +5,10 @@ import {
   emptyConversation,
   longConversation,
   markdownConversation,
+  resourceCardsConversation,
+  resourceCardsOnlyConversation,
   shortConversation,
+  sourcesConversation,
 } from "./chat.factory"
 import { EmbedChat } from "./EmbedChat"
 
@@ -178,6 +181,35 @@ export const CustomLogo: Story = {
       primaryColor: "#0f766e",
       logoUrl: "https://placehold.co/36x36/0f766e/ffffff?text=A",
     },
+  },
+}
+
+export const Sources: Story = {
+  name: "Sources",
+  args: {
+    messages: sourcesConversation,
+  },
+}
+
+export const SourcesFrench: Story = {
+  name: "Sources — French",
+  args: {
+    locale: "fr",
+    messages: sourcesConversation,
+  },
+}
+
+export const ResourceCards: Story = {
+  name: "Resource cards",
+  args: {
+    messages: resourceCardsConversation,
+  },
+}
+
+export const ResourceCardsOnly: Story = {
+  name: "Resource cards — no assistant text",
+  args: {
+    messages: resourceCardsOnlyConversation,
   },
 }
 

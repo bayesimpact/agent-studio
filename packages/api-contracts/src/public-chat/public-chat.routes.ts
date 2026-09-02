@@ -10,7 +10,15 @@ import type {
 // SSE streaming responses do not follow the usual ResponseData<T> shape.
 export type PublicChatStreamResponse = unknown
 
-const agentBasePath = "public/agents/:embedToken"
+/**
+ * Namespace for endpoints callable from arbitrary host pages (embed widget).
+ * The API selects its open CORS policy on this prefix (ADR 0015), and their
+ * security is enforced by EmbedTokenGuard, not by CORS. Renaming it breaks
+ * deployed embed snippets.
+ */
+export const PUBLIC_PATH_PREFIX = "public"
+
+const agentBasePath = `${PUBLIC_PATH_PREFIX}/agents/:embedToken`
 const sessionBasePath = `${agentBasePath}/sessions/:sessionId`
 
 export const PublicChatRoutes = {

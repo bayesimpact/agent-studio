@@ -24,7 +24,6 @@ import {
   createOrganizationWithAgent,
   createOrganizationWithAgentAndSubAgents,
 } from "@/domains/organizations/organization.factory"
-import { sdk } from "@/external/llm/open-telemetry-init"
 import type { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
 import { AgentLlmRequestService } from "./agent-llm-request.service"
 import { StreamingModule } from "./streaming.module"
@@ -43,15 +42,6 @@ describe("StreamingService", () => {
     setup = await setupE2eTestDatabase({
       additionalImports: [StreamingModule],
     })
-  })
-
-  afterAll(async () => {
-    await teardownE2eTestDatabase(setup)
-    await sdk.shutdown()
-  })
-
-  beforeEach(async () => {
-    await clearTestDatabase(setup.dataSource)
     service = setup.module.get<StreamingService>(StreamingService)
     agentLlmRequestService = setup.module.get<AgentLlmRequestService>(AgentLlmRequestService)
     agentMessageAttachmentDocumentsService =
@@ -60,6 +50,14 @@ describe("StreamingService", () => {
       )
     pdfConverterClient = setup.module.get<PdfConverterClient>(PdfConverterClient)
     mockProvider = setup.module.get<AISDKMockProvider>("_MockLLMProvider")
+  })
+
+  afterAll(async () => {
+    await teardownE2eTestDatabase(setup)
+  })
+
+  beforeEach(async () => {
+    await clearTestDatabase(setup.dataSource)
     mockProvider.resetMock()
     repositories = setup.getAllRepositories()
   })
