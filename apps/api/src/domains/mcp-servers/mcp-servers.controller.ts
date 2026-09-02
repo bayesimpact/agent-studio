@@ -50,7 +50,14 @@ export class McpServersController {
     @Req() request: EndpointRequestWithProject,
     @Body() { payload }: typeof McpServersRoutes.createOne.request,
   ): Promise<typeof McpServersRoutes.createOne.response> {
-    const config = { url: payload.url, apiKey: payload.apiKey, headers: payload.headers }
+    // Infer the method for legacy callers that omit it: a key means apiKey, else none.
+    const authMethod = payload.authMethod ?? (payload.apiKey ? "apiKey" : "none")
+    const config = {
+      url: payload.url,
+      authMethod,
+      apiKey: authMethod === "apiKey" ? payload.apiKey : undefined,
+      headers: payload.headers,
+    }
     const mcpServer = await this.mcpServersService.createMcpServer({
       projectId: request.project.id,
       name: payload.name,

@@ -1,3 +1,4 @@
+import type { McpServerAuthMethod } from "@caseai-connect/api-contracts"
 import { useNavigate } from "react-router-dom"
 import { selectCurrentOrganizationId } from "@/common/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/common/features/projects/projects.selectors"
@@ -23,7 +24,12 @@ export function McpServersRoute() {
     navigate(StudioRoutes.project.build({ organizationId, projectId }))
   }
 
-  const handleCreate = (fields: { name: string; url: string; apiKey?: string }) => {
+  const handleCreate = (fields: {
+    name: string
+    url: string
+    authMethod?: McpServerAuthMethod
+    apiKey?: string
+  }) => {
     dispatch(createMcpServer({ fields, onSuccess: () => {} }))
   }
 

@@ -118,7 +118,7 @@ export class McpServersService {
 
   getAuthStatus(config: McpServerConfig): McpServerAuthStatus {
     if (config.oauth?.tokens) return "oauthConnected"
-    if (config.oauth) return "oauthPending"
+    if (config.oauth || config.authMethod === "oauth") return "oauthPending"
     if (config.apiKey) return "apiKey"
     return "none"
   }

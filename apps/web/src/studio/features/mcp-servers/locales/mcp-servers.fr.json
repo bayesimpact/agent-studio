@@ -18,8 +18,13 @@
       "name": "Nom",
       "namePlaceholder": "Entrez le nom du serveur",
       "url": "URL",
+      "authMethod": "Authentification",
+      "authMethodApiKey": "Clé API",
+      "authMethodOauth": "OAuth",
+      "authMethodNone": "Aucune",
+      "oauthHint": "Vous cliquerez sur Autoriser sur la carte du serveur une fois celui-ci créé.",
       "apiKey": "Clé API",
-      "apiKeyPlaceholder": "Optionnelle — laisser vide pour les serveurs OAuth"
+      "apiKeyPlaceholder": "Saisir la clé API du serveur"
     },
     "oauthCallback": {
       "errorTitle": "Échec de l'autorisation",

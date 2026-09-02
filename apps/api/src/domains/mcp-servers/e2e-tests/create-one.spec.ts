@@ -93,6 +93,80 @@ describe("McpServers - createOne", () => {
     expect(config.headers).toEqual({ "X-Api-Version": "2" })
   })
 
+  it("should store the api key and report apiKey status for the apiKey method", async () => {
+    await createContext()
+
+    const response = await subject({
+      payload: {
+        name: "Keyed",
+        url: "https://mcp.example.com",
+        authMethod: "apiKey",
+        apiKey: "secret-key",
+      },
+    })
+
+    expectResponse(response, 201)
+    expect(response.body.data.authStatus).toBe("apiKey")
+
+    const stored = await setup.getRepository(McpServer).findOneOrFail({
+      where: { id: response.body.data.id },
+    })
+    const config = setup.module.get(McpServersService).getConfig(stored)
+    expect(config.apiKey).toBe("secret-key")
+    expect(config.authMethod).toBe("apiKey")
+  })
+
+  it("should reject the apiKey method without a key", async () => {
+    await createContext()
+
+    const response = await subject({
+      payload: { name: "Keyless", url: "https://mcp.example.com", authMethod: "apiKey" },
+    })
+
+    expectResponse(response, 400)
+  })
+
+  it("should report oauthPending for the oauth method before authorization", async () => {
+    await createContext()
+
+    const response = await subject({
+      payload: { name: "OAuth server", url: "https://mcp.example.com", authMethod: "oauth" },
+    })
+
+    expectResponse(response, 201)
+    expect(response.body.data.authStatus).toBe("oauthPending")
+
+    const stored = await setup.getRepository(McpServer).findOneOrFail({
+      where: { id: response.body.data.id },
+    })
+    const config = setup.module.get(McpServersService).getConfig(stored)
+    expect(config.authMethod).toBe("oauth")
+    expect(config.apiKey).toBeUndefined()
+  })
+
+  it("should report none status for the none method and drop any key", async () => {
+    await createContext()
+
+    const response = await subject({
+      payload: {
+        name: "Open server",
+        url: "https://mcp.example.com",
+        authMethod: "none",
+        apiKey: "ignored",
+      },
+    })
+
+    expectResponse(response, 201)
+    expect(response.body.data.authStatus).toBe("none")
+
+    const stored = await setup.getRepository(McpServer).findOneOrFail({
+      where: { id: response.body.data.id },
+    })
+    const config = setup.module.get(McpServersService).getConfig(stored)
+    expect(config.authMethod).toBe("none")
+    expect(config.apiKey).toBeUndefined()
+  })
+
   it("should reject creation without a name", async () => {
     await createContext()
 

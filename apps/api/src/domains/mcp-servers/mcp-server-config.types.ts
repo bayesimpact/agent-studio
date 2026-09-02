@@ -1,5 +1,13 @@
+import type { McpServerAuthMethod } from "@caseai-connect/api-contracts"
+
 export type McpServerConfig = {
   url: string
+  /**
+   * Authentication mechanism chosen at creation. Distinguishes a deliberately
+   * unauthenticated server ("none") from one awaiting its first OAuth
+   * authorization ("oauth"), which are otherwise identical in the blob.
+   */
+  authMethod?: McpServerAuthMethod
   apiKey?: string
   /**
    * Static headers sent on every call to this server, for whatever a given

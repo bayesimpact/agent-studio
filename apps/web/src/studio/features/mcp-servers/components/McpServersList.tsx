@@ -1,3 +1,4 @@
+import type { McpServerAuthMethod } from "@caseai-connect/api-contracts"
 import { Button } from "@caseai-connect/ui/shad/button"
 import { PlusIcon } from "lucide-react"
 import { useState } from "react"
@@ -16,7 +17,12 @@ export function McpServersList({
 }: {
   mcpServers: McpServerDisplay[]
   onDelete: (id: string) => void
-  onCreate: (values: { name: string; url: string; apiKey?: string }) => void
+  onCreate: (values: {
+    name: string
+    url: string
+    authMethod?: McpServerAuthMethod
+    apiKey?: string
+  }) => void
   onBack: () => void
   onAuthorize: (id: string) => void
 }) {

@@ -36,7 +36,7 @@ export function McpServerItem({
           <p className="text-base text-muted-foreground leading-snug mt-1 mb-4 truncate">
             {mcpServer.url}
           </p>
-          {(mcpServer.authStatus === "none" || mcpServer.authStatus === "oauthPending") && (
+          {mcpServer.authStatus === "oauthPending" && (
             <Button variant="outline" size="sm" onClick={() => onAuthorize(mcpServer.id)}>
               {t("mcpServers:oauth.authorize")}
             </Button>

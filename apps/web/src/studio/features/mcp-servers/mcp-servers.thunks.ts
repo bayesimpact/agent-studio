@@ -1,3 +1,4 @@
+import type { McpServerAuthMethod } from "@caseai-connect/api-contracts"
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import { getCurrentId } from "@/common/features/helpers"
 import type { RootState, ThunkExtraArg } from "@/common/store"
@@ -35,7 +36,10 @@ export const listMcpServers = createAsyncThunk<McpServer[], void, ThunkConfig>(
 
 export const createMcpServer = createAsyncThunk<
   McpServer,
-  { fields: { name: string; url: string; apiKey?: string }; onSuccess: () => void },
+  {
+    fields: { name: string; url: string; authMethod?: McpServerAuthMethod; apiKey?: string }
+    onSuccess: () => void
+  },
   ThunkConfig
 >("mcpServers/create", async ({ fields }, { extra: { services }, getState, rejectWithValue }) => {
   try {
