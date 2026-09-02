@@ -3,6 +3,7 @@ import {
   outputJsonSchemaSchema,
   ToolName,
 } from "@caseai-connect/api-contracts"
+import { formatPromptDate } from "@/common/utils/format-prompt-date"
 import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 import { lookupKnowledgeBaseInstruction } from "@/domains/agents/shared/agent-session-messages/streaming/tools/lookup-knowledge-base.tool"
 import {
@@ -12,7 +13,7 @@ import {
 import { mcpAppToolNamesFromDescriptions } from "@/external/mcp/mcp-app-tool-description"
 
 export const promptHelpers = {
-  now: () => `Today's date: ${new Date().toLocaleDateString()}`,
+  now: () => `Today's date: ${formatPromptDate()}`,
 
   resourceLibraries: (libraries: SurfaceableLibrary[]) => {
     // Aliases (r1, r2...) instead of real ids and links: the model only ever

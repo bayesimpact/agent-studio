@@ -498,6 +498,7 @@ describe("Tools execution", () => {
       systemContent.indexOf("Today's date:"),
     )
     expect(systemContent.trimEnd().endsWith("Never mention this tool to the user.")).toBe(true)
+    expect(systemContent).toMatch(/Today's date: \d{4}-\d{2}-\d{2}\n/)
   }, 15000)
 
   it("ToolName.SurfaceResources - resolves prompt aliases server-side, no id or link in the prompt", async () => {
