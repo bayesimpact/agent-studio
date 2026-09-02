@@ -13,25 +13,33 @@ const DEFAULT_LOCAL_FRONTEND_URLS = [
 /**
  * Parses `FRONTEND_URL` into a list of CORS origins. Accepts a single URL or
  * a comma-separated list. Each entry is trimmed and normalized to https://
- * if no scheme is given. When the env var is unset and we're not in
- * production, falls back to the local dev/preview URLs so a fresh checkout
- * works without extra `.env` setup. In production, an unset env var yields
- * an empty array (no origins allowed).
+ * if no scheme is given. When the list resolves to nothing (unset or blank)
+ * outside production, falls back to the local dev/preview URLs so a fresh
+ * checkout works without extra `.env` setup. In production the same case
+ * throws: an empty list would silently block every browser call to the
+ * platform, whereas a crash at boot fails the Cloud Run revision and keeps
+ * the previous one serving.
  */
 export function parseFrontendUrls(
   frontendUrl: string | undefined,
   isProduction: boolean,
 ): string[] {
-  if (!frontendUrl) {
-    return isProduction ? [] : DEFAULT_LOCAL_FRONTEND_URLS
-  }
-  return frontendUrl
+  const urls = (frontendUrl ?? "")
     .split(",")
     .map((url) => url.trim())
     .filter(Boolean)
     .map((url) =>
       url.startsWith("http://") || url.startsWith("https://") ? url : `https://${url}`,
     )
+  if (urls.length > 0) {
+    return urls
+  }
+  if (isProduction) {
+    throw new Error(
+      "FRONTEND_URL must be set in production (comma-separated list of allowed CORS origins)",
+    )
+  }
+  return DEFAULT_LOCAL_FRONTEND_URLS
 }
 
 /**

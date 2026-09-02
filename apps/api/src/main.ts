@@ -38,12 +38,6 @@ async function bootstrap() {
   )
   app.useGlobalFilters(new StackTraceLoggingExceptionFilter(app.getHttpAdapter()))
   // Two CORS policies, split by path — see buildCorsOptionsDelegate (#366).
-  if (isProduction && frontendUrls.length === 0) {
-    new StructuredLogger(logLevels).warn(
-      "FRONTEND_URL is not set: CORS will block every browser call to non-public endpoints",
-      "bootstrap",
-    )
-  }
   app.enableCors(buildCorsOptionsDelegate(frontendUrls))
   const port = Number(process.env.PORT) || 3000
   await app.listen(port)

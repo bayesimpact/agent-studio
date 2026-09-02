@@ -9,8 +9,19 @@ describe("parseFrontendUrls", () => {
     ])
   })
 
-  it("returns no origins when unset in production", () => {
-    expect(parseFrontendUrls(undefined, true)).toEqual([])
+  it("returns the local dev URLs when blank outside production", () => {
+    expect(parseFrontendUrls(" , ", false)).toEqual([
+      "https://connect.localhost:5173",
+      "https://connect.localhost:5174",
+    ])
+  })
+
+  it("throws when unset in production", () => {
+    expect(() => parseFrontendUrls(undefined, true)).toThrow(/FRONTEND_URL must be set/)
+  })
+
+  it("throws when blank in production", () => {
+    expect(() => parseFrontendUrls(" , ", true)).toThrow(/FRONTEND_URL must be set/)
   })
 
   it("splits a comma-separated list and trims entries", () => {
