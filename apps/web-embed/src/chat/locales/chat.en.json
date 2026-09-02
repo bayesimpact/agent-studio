@@ -11,7 +11,9 @@
     "message": {
       "thinking": "Thinking…",
       "error": "Something went wrong. Please try again.",
-      "copyAriaLabel": "Copy to clipboard"
+      "copyAriaLabel": "Copy to clipboard",
+      "sources_one": "{{count}} source",
+      "sources_other": "{{count}} sources"
     },
     "status": {
       "connecting": "Connecting…",
