@@ -19,13 +19,17 @@
       "namePlaceholder": "Entrez le nom du serveur",
       "url": "URL",
       "apiKey": "Clé API",
-      "apiKeyPlaceholder": "Clé d'authentification optionnelle"
+      "apiKeyPlaceholder": "Optionnelle — laisser vide pour les serveurs OAuth"
     },
     "oauthCallback": {
       "errorTitle": "Échec de l'autorisation",
       "denied": "L'autorisation a été refusée par le fournisseur.",
       "missingContext": "Ce lien d'autorisation est invalide ou a expiré. Recommencez depuis la page des serveurs MCP.",
       "failed": "Le serveur a rejeté l'autorisation. Recommencez depuis la page des serveurs MCP."
+    },
+    "oauth": {
+      "authorize": "Autoriser",
+      "connected": "Connecté via OAuth"
     }
   }
 }

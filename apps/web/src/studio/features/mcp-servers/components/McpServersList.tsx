@@ -12,11 +12,13 @@ export function McpServersList({
   onDelete,
   onCreate,
   onBack,
+  onAuthorize,
 }: {
   mcpServers: McpServerDisplay[]
   onDelete: (id: string) => void
   onCreate: (values: { name: string; url: string; apiKey?: string }) => void
   onBack: () => void
+  onAuthorize: (id: string) => void
 }) {
   const { t } = useTranslation()
   const [isCreateOpen, setIsCreateOpen] = useState(false)
@@ -43,7 +45,12 @@ export function McpServersList({
             </GridCard>
           ) : (
             mcpServers.map((mcpServer) => (
-              <McpServerItem key={mcpServer.id} mcpServer={mcpServer} onDelete={onDelete} />
+              <McpServerItem
+                key={mcpServer.id}
+                mcpServer={mcpServer}
+                onDelete={onDelete}
+                onAuthorize={onAuthorize}
+              />
             ))
           )}
         </GridContent>

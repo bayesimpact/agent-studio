@@ -84,3 +84,22 @@ export const WithServers: Story = {
     }),
   ],
 }
+
+export const WithAuthStatuses: Story = {
+  args: { withServers: true },
+  decorators: [
+    buildDecorator<StoryArgs>(({ withServers: _withServers, ...args }) => {
+      const { baseSeeds, project } = buildStudioData(args)
+      const mcpServers = [
+        mcpServerFactory.build({ authStatus: "none" }, { transient: { project } }),
+        mcpServerFactory.build({ authStatus: "oauthPending" }, { transient: { project } }),
+        mcpServerFactory.build({ authStatus: "oauthConnected" }, { transient: { project } }),
+        mcpServerFactory.build({ authStatus: "apiKey" }, { transient: { project } }),
+      ]
+      return {
+        state: mergeSeeds(baseSeeds, seed.studio.mcpServers(mcpServers)),
+        services: { mcpServers: buildMockMcpServersService({ mcpServers }) },
+      }
+    }),
+  ],
+}

@@ -5,7 +5,11 @@ import { useCurrentId, useValue } from "@/common/hooks/use-value"
 import { useAppDispatch } from "@/common/store/hooks"
 import { McpServersList } from "@/studio/features/mcp-servers/components/McpServersList"
 import { selectMcpServersData } from "@/studio/features/mcp-servers/mcp-servers.selectors"
-import { createMcpServer, deleteMcpServer } from "@/studio/features/mcp-servers/mcp-servers.thunks"
+import {
+  createMcpServer,
+  deleteMcpServer,
+  initiateMcpServerOauth,
+} from "@/studio/features/mcp-servers/mcp-servers.thunks"
 import { StudioRoutes } from "./helpers"
 
 export function McpServersRoute() {
@@ -27,12 +31,17 @@ export function McpServersRoute() {
     dispatch(deleteMcpServer({ mcpServerId, onSuccess: () => {} }))
   }
 
+  const handleAuthorize = (mcpServerId: string) => {
+    dispatch(initiateMcpServerOauth({ mcpServerId }))
+  }
+
   return (
     <McpServersList
       mcpServers={mcpServers}
       onCreate={handleCreate}
       onDelete={handleDelete}
       onBack={handleBack}
+      onAuthorize={handleAuthorize}
     />
   )
 }
