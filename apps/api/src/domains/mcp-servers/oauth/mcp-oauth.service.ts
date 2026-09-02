@@ -19,11 +19,21 @@ const TOKEN_REFRESH_MARGIN_MS = 60 * 1000
 // below), so a hanging authorization server must not hold that lock forever.
 const OAUTH_FETCH_TIMEOUT_MS = 10_000
 
+// RFC 6749 §5.2 error codes that mean the grant itself is dead and the user has
+// to re-authorize. Any other failure (network error, 5xx, a 429 from a
+// rate-limited server, a 4xx from a WAF with no OAuth body) may be transient and
+// must not cost the caller its stored refresh token.
+const GRANT_FATAL_OAUTH_ERRORS = new Set([
+  "invalid_grant",
+  "invalid_client",
+  "unauthorized_client",
+  "invalid_scope",
+])
+
 /**
  * Thrown by `requestTokens`. `isDefinitive` is true only when the authorization
- * server actually responded with a 4xx (e.g. `invalid_grant`) — a definitive
- * rejection of the grant. It is false for network failures and 5xx responses,
- * which are transient and should not cost the caller its stored tokens.
+ * server answered with one of the grant-fatal OAuth error codes above, a
+ * definitive rejection of the grant. It is false for every other failure.
  */
 export class OauthTokenRequestError extends BadRequestException {
   constructor(
@@ -196,8 +206,8 @@ export class McpOauthService {
             oauth: { ...oauth, tokens: undefined },
           })
         }
-        // Transient failure (network error, 5xx): keep the stored tokens untouched so
-        // the next connection attempt can retry the refresh.
+        // Anything else (network error, 5xx, 429, a 4xx without an OAuth error code):
+        // keep the stored tokens untouched so the next connection attempt can retry.
         return null
       }
     })
@@ -228,7 +238,7 @@ export class McpOauthService {
     }
     if (!response.ok || !body.access_token) {
       this.logger.warn(`MCP OAuth token request failed: ${response.status} ${body.error ?? ""}`)
-      const isDefinitive = response.status >= 400 && response.status < 500
+      const isDefinitive = body.error !== undefined && GRANT_FATAL_OAUTH_ERRORS.has(body.error)
       throw new OauthTokenRequestError(
         `OAuth token request failed (${body.error ?? response.status}).`,
         isDefinitive,
