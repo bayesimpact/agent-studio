@@ -1,16 +1,19 @@
 import { BadRequestException, Injectable, Logger } from "@nestjs/common"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ConfigService } from "@nestjs/config"
-import { InjectRepository } from "@nestjs/typeorm"
-import type { Repository } from "typeorm"
+import { InjectDataSource, InjectRepository } from "@nestjs/typeorm"
+import type { EntityManager, Repository } from "typeorm"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { DataSource } from "typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { EncryptionService } from "../encryption.service"
 import { McpServer } from "../mcp-server.entity"
-import type { McpServerConfig, McpServerOauthState } from "../mcp-servers.service"
+import type { McpServerConfig, McpServerOauthState } from "../mcp-server-config.types"
 import { discoverOauthConfiguration, registerOauthClient } from "./mcp-oauth-discovery"
 import { codeChallengeS256, generateCodeVerifier, generateState } from "./pkce"
 
 const PENDING_AUTH_TTL_MS = 10 * 60 * 1000
+const TOKEN_REFRESH_MARGIN_MS = 60 * 1000
 
 @Injectable()
 export class McpOauthService {
@@ -21,6 +24,8 @@ export class McpOauthService {
     private readonly mcpServerRepository: Repository<McpServer>,
     private readonly encryptionService: EncryptionService,
     private readonly configService: ConfigService,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
   ) {}
 
   async initiateAuthorization(mcpServer: McpServer): Promise<{ authorizationUrl: string }> {
@@ -115,6 +120,53 @@ export class McpOauthService {
     return this.mcpServerRepository.findOneByOrFail({ id: mcpServer.id })
   }
 
+  async getValidAccessToken(mcpServerId: string): Promise<string | null> {
+    // Row lock: refresh tokens rotate, so two workers must not refresh at once.
+    return this.dataSource.transaction(async (manager) => {
+      const mcpServer = await manager.getRepository(McpServer).findOne({
+        where: { id: mcpServerId },
+        lock: { mode: "pessimistic_write" },
+      })
+      if (!mcpServer) return null
+      const config = this.readConfig(mcpServer)
+      const oauth = config.oauth
+      if (!oauth?.tokens) return null
+
+      if (oauth.tokens.expiresAt - TOKEN_REFRESH_MARGIN_MS > Date.now()) {
+        return oauth.tokens.accessToken
+      }
+      if (!oauth.tokens.refreshToken) return null
+
+      try {
+        const tokens = await this.requestTokens(oauth.tokenEndpoint, {
+          grant_type: "refresh_token",
+          refresh_token: oauth.tokens.refreshToken,
+          client_id: oauth.clientId,
+          resource: oauth.resource,
+        })
+        const mergedTokens = {
+          ...tokens,
+          refreshToken: tokens.refreshToken ?? oauth.tokens.refreshToken,
+        }
+        await this.persistConfigWithManager(manager, mcpServerId, {
+          ...config,
+          oauth: { ...oauth, tokens: mergedTokens },
+        })
+        return mergedTokens.accessToken
+      } catch (error) {
+        this.logger.warn(
+          `MCP OAuth refresh failed for server ${mcpServerId}: ${error instanceof Error ? error.message : error}`,
+        )
+        // Invalid grant: drop the tokens so the UI shows the server needs re-authorization.
+        await this.persistConfigWithManager(manager, mcpServerId, {
+          ...config,
+          oauth: { ...oauth, tokens: undefined },
+        })
+        return null
+      }
+    })
+  }
+
   private async requestTokens(
     tokenEndpoint: string,
     params: Record<string, string>,
@@ -154,9 +206,19 @@ export class McpOauthService {
   }
 
   private async saveConfig(mcpServerId: string, config: McpServerConfig): Promise<void> {
-    await this.mcpServerRepository.update(
-      { id: mcpServerId },
-      { encryptedConfig: this.encryptionService.encrypt(JSON.stringify(config)) },
-    )
+    await this.persistConfigWithManager(this.dataSource.manager, mcpServerId, config)
+  }
+
+  private async persistConfigWithManager(
+    manager: EntityManager,
+    mcpServerId: string,
+    config: McpServerConfig,
+  ): Promise<void> {
+    await manager
+      .getRepository(McpServer)
+      .update(
+        { id: mcpServerId },
+        { encryptedConfig: this.encryptionService.encrypt(JSON.stringify(config)) },
+      )
   }
 }

@@ -7,10 +7,12 @@ import {
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
+import { agentFactory } from "@/domains/agents/agent.factory"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { EncryptionService } from "../encryption.service"
 import type { McpServer } from "../mcp-server.entity"
 import { McpServersModule } from "../mcp-servers.module"
+import type { McpServerOauthState, McpServerOauthTokens } from "../mcp-servers.service"
 import { McpServersService } from "../mcp-servers.service"
 import { McpOauthService } from "./mcp-oauth.service"
 
@@ -118,6 +120,33 @@ describe("McpOauthService", () => {
     if (!codeVerifier) throw new Error("Expected a pending codeVerifier after initiation")
 
     return { mcpServer: reloaded, state, codeVerifier }
+  }
+
+  const TOKEN_ENDPOINT = "https://auth.example.com/oauth2/token"
+
+  const seedServerWithOauth = async (
+    tokens: McpServerOauthTokens | undefined,
+    overrides: Partial<McpServerOauthState> = {},
+  ): Promise<McpServer> => {
+    const mcpServer = await createServer({ url: MCP_URL })
+    const config = mcpServersService.getConfig(mcpServer)
+    const oauth: McpServerOauthState = {
+      clientId: "client-123",
+      authorizationEndpoint: "https://auth.example.com/oauth2/authorize",
+      tokenEndpoint: TOKEN_ENDPOINT,
+      resource: "https://mcp.example.com",
+      tokens,
+      ...overrides,
+    }
+    await repositories.mcpServerRepository.update(
+      { id: mcpServer.id },
+      {
+        encryptedConfig: setup.module
+          .get(EncryptionService)
+          .encrypt(JSON.stringify({ ...config, oauth })),
+      },
+    )
+    return repositories.mcpServerRepository.findOneByOrFail({ id: mcpServer.id })
   }
 
   it("stores oauth state and returns the authorization URL with PKCE, state, resource and scope", async () => {
@@ -274,5 +303,113 @@ describe("McpOauthService", () => {
     await expect(
       mcpOauthService.completeAuthorization({ mcpServer, code: "code-1", state }),
     ).rejects.toThrow(BadRequestException)
+  })
+
+  describe("getValidAccessToken", () => {
+    it("returns the stored token while it is fresh", async () => {
+      const mcpServer = await seedServerWithOauth({
+        accessToken: "at-1",
+        expiresAt: Date.now() + 3600_000,
+      })
+
+      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+
+      expect(token).toBe("at-1")
+      expect(fetchMock).not.toHaveBeenCalled()
+    })
+
+    it("refreshes an expired token, persists the rotated refresh token, and returns the new one", async () => {
+      const mcpServer = await seedServerWithOauth({
+        accessToken: "old",
+        refreshToken: "rt-1",
+        expiresAt: Date.now() - 1000,
+      })
+      fetchMock.mockResolvedValueOnce(
+        json({ access_token: "at-2", refresh_token: "rt-2", expires_in: 3600 }),
+      )
+
+      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+
+      expect(token).toBe("at-2")
+      const [tokenUrl, init] = fetchMock.mock.calls.at(-1)!
+      expect(tokenUrl).toBe(TOKEN_ENDPOINT)
+      const body = new URLSearchParams(init.body)
+      expect(body.get("grant_type")).toBe("refresh_token")
+      expect(body.get("refresh_token")).toBe("rt-1")
+      expect(body.get("client_id")).toBe("client-123")
+      expect(body.get("resource")).toBe("https://mcp.example.com")
+
+      const reloaded = await repositories.mcpServerRepository.findOneByOrFail({ id: mcpServer.id })
+      const config = mcpServersService.getConfig(reloaded)
+      expect(config.oauth?.tokens?.accessToken).toBe("at-2")
+      expect(config.oauth?.tokens?.refreshToken).toBe("rt-2")
+    })
+
+    it("keeps the previous refresh token when the response does not rotate it", async () => {
+      const mcpServer = await seedServerWithOauth({
+        accessToken: "old",
+        refreshToken: "rt-1",
+        expiresAt: Date.now() - 1000,
+      })
+      fetchMock.mockResolvedValueOnce(json({ access_token: "at-2", expires_in: 3600 }))
+
+      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+
+      expect(token).toBe("at-2")
+      const reloaded = await repositories.mcpServerRepository.findOneByOrFail({ id: mcpServer.id })
+      const config = mcpServersService.getConfig(reloaded)
+      expect(config.oauth?.tokens?.refreshToken).toBe("rt-1")
+    })
+
+    it("clears tokens and returns null when the refresh is rejected", async () => {
+      const mcpServer = await seedServerWithOauth({
+        accessToken: "old",
+        refreshToken: "rt-1",
+        expiresAt: Date.now() - 1000,
+      })
+      fetchMock.mockResolvedValueOnce(
+        new Response(JSON.stringify({ error: "invalid_grant" }), { status: 400 }),
+      )
+
+      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+
+      expect(token).toBeNull()
+      const reloaded = await repositories.mcpServerRepository.findOneByOrFail({ id: mcpServer.id })
+      const config = mcpServersService.getConfig(reloaded)
+      expect(config.oauth?.tokens).toBeUndefined()
+      expect(mcpServersService.getAuthStatus(config)).toBe("oauthPending")
+    })
+
+    it("returns null for a server without oauth tokens", async () => {
+      const mcpServer = await createServer({ url: MCP_URL })
+
+      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+
+      expect(token).toBeNull()
+      expect(fetchMock).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("McpServersService.getEnabledServersForAgent with an oauth-configured server", () => {
+    it("swaps in the refreshed access token as apiKey", async () => {
+      const { organization, project } = await createOrganizationWithProject(repositories)
+      const agent = agentFactory.transient({ organization, project }).build()
+      await repositories.agentRepository.save(agent)
+
+      const mcpServer = await seedServerWithOauth({
+        accessToken: "old",
+        refreshToken: "rt-1",
+        expiresAt: Date.now() - 1000,
+      })
+      await mcpServersService.enableForAgent(agent.id, mcpServer.id)
+      fetchMock.mockResolvedValueOnce(
+        json({ access_token: "at-2", refresh_token: "rt-2", expires_in: 3600 }),
+      )
+
+      const servers = await mcpServersService.getEnabledServersForAgent(agent.id)
+
+      expect(servers).toHaveLength(1)
+      expect(servers[0]?.apiKey).toBe("at-2")
+    })
   })
 })
