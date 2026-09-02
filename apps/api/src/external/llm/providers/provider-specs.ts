@@ -429,7 +429,7 @@ export class ProviderSpecs {
     advancedExpectation: boolean
     serviceTier?: LLMServiceTier
   }): Promise<void> {
-    const prompt = `Today's date: 4/1/2026
+    const prompt = `Today's date: 2026-04-01 (Date format YYYY-MM-DD)
 
 ## Identity
 You are **Warmachine rules**, a conversational AI assistant.
@@ -524,7 +524,7 @@ Always answer in English.`
     advancedExpectation: boolean
     serviceTier?: LLMServiceTier
   }): Promise<void> {
-    const prompt = `Today's date: 4/1/2026
+    const prompt = `Today's date: 2026-04-01 (Date format YYYY-MM-DD)
 
 ## Identity
 You are **Warmachine rules**, a conversational AI assistant.
