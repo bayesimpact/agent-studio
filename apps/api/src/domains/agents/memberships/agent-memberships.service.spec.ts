@@ -35,6 +35,8 @@ describe("AgentMembershipsService", () => {
       additionalImports: [AgentsModule],
     })
     await ensureRbacCatalog(setup.module)
+    service = setup.module.get(AgentMembershipsService)
+    repositories = setup.getAllRepositories()
   })
 
   afterAll(async () => {
@@ -44,8 +46,6 @@ describe("AgentMembershipsService", () => {
 
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
-    service = setup.module.get(AgentMembershipsService)
-    repositories = setup.getAllRepositories()
   })
 
   describe("createAgentOwnerMembership", () => {

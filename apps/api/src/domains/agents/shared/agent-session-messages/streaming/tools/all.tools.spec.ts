@@ -53,6 +53,10 @@ describe("Tools execution", () => {
           .overrideProvider(McpClientService)
           .useValue(mockMcpClientService),
     })
+    service = setup.module.get<StreamingService>(StreamingService)
+    mockProvider = setup.module.get<AISDKMockProvider>("_MockLLMProvider")
+    mockProvider.resetMock()
+    repositories = setup.getAllRepositories()
   })
 
   afterAll(async () => {
@@ -62,10 +66,6 @@ describe("Tools execution", () => {
 
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
-    service = setup.module.get<StreamingService>(StreamingService)
-    mockProvider = setup.module.get<AISDKMockProvider>("_MockLLMProvider")
-    mockProvider.resetMock()
-    repositories = setup.getAllRepositories()
 
     jest.clearAllMocks()
     mockDocumentChunkRetrievalService.retrieveTopChunks.mockResolvedValue([])

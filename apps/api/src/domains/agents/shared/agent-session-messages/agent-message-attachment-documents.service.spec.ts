@@ -18,14 +18,14 @@ describe("AgentMessageAttachmentDocumentsService", () => {
     setup = await setupE2eTestDatabase({
       additionalImports: [ConversationAgentSessionsModule],
     })
-  })
-
-  beforeEach(async () => {
-    await clearTestDatabase(setup.dataSource)
     service = setup.module.get<AgentMessageAttachmentDocumentsService>(
       AgentMessageAttachmentDocumentsService,
     )
     repositories = setup.getAllRepositories()
+  })
+
+  beforeEach(async () => {
+    await clearTestDatabase(setup.dataSource)
   })
 
   afterAll(async () => {

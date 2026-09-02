@@ -43,6 +43,14 @@ describe("StreamingService", () => {
     setup = await setupE2eTestDatabase({
       additionalImports: [StreamingModule],
     })
+    service = setup.module.get<StreamingService>(StreamingService)
+    agentLlmRequestService = setup.module.get<AgentLlmRequestService>(AgentLlmRequestService)
+    agentMessageAttachmentDocumentsService =
+      setup.module.get<AgentMessageAttachmentDocumentsService>(
+        AgentMessageAttachmentDocumentsService,
+      )
+    pdfConverterClient = setup.module.get<PdfConverterClient>(PdfConverterClient)
+    mockProvider = setup.module.get<AISDKMockProvider>("_MockLLMProvider")
   })
 
   afterAll(async () => {
@@ -52,14 +60,6 @@ describe("StreamingService", () => {
 
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
-    service = setup.module.get<StreamingService>(StreamingService)
-    agentLlmRequestService = setup.module.get<AgentLlmRequestService>(AgentLlmRequestService)
-    agentMessageAttachmentDocumentsService =
-      setup.module.get<AgentMessageAttachmentDocumentsService>(
-        AgentMessageAttachmentDocumentsService,
-      )
-    pdfConverterClient = setup.module.get<PdfConverterClient>(PdfConverterClient)
-    mockProvider = setup.module.get<AISDKMockProvider>("_MockLLMProvider")
     mockProvider.resetMock()
     repositories = setup.getAllRepositories()
   })

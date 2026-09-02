@@ -23,6 +23,8 @@ describe("AgentSubAgentsService", () => {
     setup = await setupE2eTestDatabase({
       additionalImports: [AgentsModule],
     })
+    service = setup.module.get<AgentSubAgentsService>(AgentSubAgentsService)
+    repositories = setup.getAllRepositories()
   })
 
   afterAll(async () => {
@@ -32,8 +34,6 @@ describe("AgentSubAgentsService", () => {
 
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
-    service = setup.module.get<AgentSubAgentsService>(AgentSubAgentsService)
-    repositories = setup.getAllRepositories()
   })
 
   it("replaces and lists sub-agents for a conversation agent", async () => {

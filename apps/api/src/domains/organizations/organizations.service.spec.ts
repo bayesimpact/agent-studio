@@ -30,6 +30,11 @@ describe("OrganizationsService", () => {
       additionalImports: [OrganizationsModule],
     })
     await ensureRbacCatalog(setup.module)
+    service = setup.module.get<OrganizationsService>(OrganizationsService)
+    organizationRepository = setup.getRepository(Organization)
+    userMembershipRepository = setup.getRepository(UserMembership)
+    setup.getRepository(FeatureFlag)
+    userRepository = setup.getRepository(User)
   })
 
   afterAll(async () => {
@@ -38,11 +43,6 @@ describe("OrganizationsService", () => {
 
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
-    service = setup.module.get<OrganizationsService>(OrganizationsService)
-    organizationRepository = setup.getRepository(Organization)
-    userMembershipRepository = setup.getRepository(UserMembership)
-    setup.getRepository(FeatureFlag)
-    userRepository = setup.getRepository(User)
   })
 
   describe("createOrganization", () => {

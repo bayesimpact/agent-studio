@@ -30,6 +30,9 @@ describe("AgentsService", () => {
     setup = await setupE2eTestDatabase({
       additionalImports: [AgentsModule],
     })
+    service = setup.module.get<AgentsService>(AgentsService)
+    agentSettingsService = setup.module.get<AgentSettingsService>(AgentSettingsService)
+    repositories = setup.getAllRepositories()
   })
 
   afterAll(async () => {
@@ -39,9 +42,6 @@ describe("AgentsService", () => {
 
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
-    service = setup.module.get<AgentsService>(AgentsService)
-    agentSettingsService = setup.module.get<AgentSettingsService>(AgentSettingsService)
-    repositories = setup.getAllRepositories()
   })
 
   describe("createAgent", () => {

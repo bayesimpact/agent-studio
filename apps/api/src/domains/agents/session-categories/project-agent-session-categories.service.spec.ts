@@ -18,6 +18,9 @@ describe("ProjectAgentSessionCategoriesService", () => {
     setup = await setupE2eTestDatabase({
       additionalImports: [AgentsModule],
     })
+    service = setup.module.get<ProjectAgentSessionCategoriesService>(
+      ProjectAgentSessionCategoriesService,
+    )
   })
 
   afterAll(async () => {
@@ -27,9 +30,6 @@ describe("ProjectAgentSessionCategoriesService", () => {
 
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
-    service = setup.module.get<ProjectAgentSessionCategoriesService>(
-      ProjectAgentSessionCategoriesService,
-    )
   })
 
   describe("addProjectAgentSessionCategory", () => {

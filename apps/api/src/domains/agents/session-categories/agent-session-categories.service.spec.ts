@@ -20,6 +20,8 @@ describe("AgentSessionCategoriesService", () => {
     setup = await setupE2eTestDatabase({
       additionalImports: [AgentsModule],
     })
+    service = setup.module.get<AgentSessionCategoriesService>(AgentSessionCategoriesService)
+    repositories = setup.getAllRepositories()
   })
 
   afterAll(async () => {
@@ -29,8 +31,6 @@ describe("AgentSessionCategoriesService", () => {
 
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
-    service = setup.module.get<AgentSessionCategoriesService>(AgentSessionCategoriesService)
-    repositories = setup.getAllRepositories()
   })
 
   describe("replaceActiveCategoriesForAgent", () => {
