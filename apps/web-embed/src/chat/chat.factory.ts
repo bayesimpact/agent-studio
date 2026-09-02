@@ -104,6 +104,49 @@ export const resourceCardsConversation: AgentSessionMessageDto[] = [
   }),
 ]
 
+export const sourcesConversation: AgentSessionMessageDto[] = [
+  buildUserMessage("What is the return policy?"),
+  buildAssistantMessage(
+    "You can return unused items within 30 days of delivery. Keep the original packaging when you can.",
+    {
+      toolCalls: [
+        {
+          id: "tool-sources-1",
+          name: ToolName.Sources,
+          arguments: {
+            sources: [
+              {
+                documentId: "aaaaaaaa-0000-4000-8000-000000000010",
+                documentTitle: "Returns handbook",
+                documentSourceType: "project",
+                chunks: [
+                  {
+                    chunkId: "chunk-1",
+                    partialContent:
+                      "Unused items may be returned within 30 days of delivery. Original packaging is recommended.",
+                  },
+                ],
+              },
+              {
+                documentId: "aaaaaaaa-0000-4000-8000-000000000011",
+                documentTitle: "Help center — Returns",
+                documentSourceType: "webCrawl",
+                chunks: [
+                  {
+                    chunkId: "chunk-2",
+                    partialContent:
+                      "Start a return from your orders page. A prepaid label is emailed once the request is approved.",
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ],
+    },
+  ),
+]
+
 export const resourceCardsOnlyConversation: AgentSessionMessageDto[] = [
   buildUserMessage("Show me the support handbook."),
   buildAssistantMessage("", {
