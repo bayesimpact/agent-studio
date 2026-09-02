@@ -7,6 +7,20 @@ import type { McpServer } from "./mcp-servers.models"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg; rejectValue: string }
 
+// Defense in depth: the API already validates discovered OAuth endpoints, but
+// this is the last line before the URL reaches window.location.assign, a
+// javascript:/data: URL there would execute on the app origin.
+const isSafeAuthorizationUrl = (candidate: string): boolean => {
+  let url: URL
+  try {
+    url = new URL(candidate)
+  } catch {
+    return false
+  }
+  if (url.protocol === "https:") return true
+  return url.protocol === "http:" && (url.hostname === "localhost" || url.hostname === "127.0.0.1")
+}
+
 const currentProjectScope = (state: RootState) => ({
   organizationId: getCurrentId({ state, name: "organizationId" }),
   projectId: getCurrentId({ state, name: "projectId" }),
@@ -74,6 +88,9 @@ export const initiateMcpServerOauth = createAsyncThunk<void, { mcpServerId: stri
         ...scope,
         mcpServerId,
       })
+      if (!isSafeAuthorizationUrl(authorizationUrl)) {
+        return rejectWithValue("The authorization server returned an unsafe redirect URL.")
+      }
       savePendingMcpOauthContext({ ...scope, mcpServerId })
       window.location.assign(authorizationUrl)
     } catch (error) {

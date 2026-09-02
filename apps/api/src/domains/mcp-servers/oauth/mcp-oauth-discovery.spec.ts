@@ -93,6 +93,85 @@ describe("discoverOauthConfiguration", () => {
       "https://auth.example.com/.well-known/openid-configuration",
     )
   })
+
+  it("accepts an http localhost authorization_endpoint (dev)", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockResolvedValueOnce(json(resourceMetadata))
+      .mockResolvedValueOnce(
+        json({
+          ...authServerMetadata,
+          authorization_endpoint: "http://localhost:4000/oauth2/authorize",
+          token_endpoint: "http://localhost:4000/oauth2/token",
+        }),
+      )
+
+    const discovery = await discoverOauthConfiguration(MCP_URL)
+
+    expect(discovery?.authorizationEndpoint).toBe("http://localhost:4000/oauth2/authorize")
+    expect(discovery?.tokenEndpoint).toBe("http://localhost:4000/oauth2/token")
+  })
+
+  it("returns null when authorization_endpoint is a javascript: URL", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockResolvedValueOnce(json(resourceMetadata))
+      .mockResolvedValueOnce(
+        json({
+          ...authServerMetadata,
+          authorization_endpoint: "javascript:alert(document.domain)//",
+        }),
+      )
+
+    expect(await discoverOauthConfiguration(MCP_URL)).toBeNull()
+  })
+
+  it("returns null when token_endpoint is a data: URL", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockResolvedValueOnce(json(resourceMetadata))
+      .mockResolvedValueOnce(
+        json({ ...authServerMetadata, token_endpoint: "data:text/html,<script>evil()</script>" }),
+      )
+
+    expect(await discoverOauthConfiguration(MCP_URL)).toBeNull()
+  })
+
+  it("omits registration_endpoint when it is an unsafe URL but keeps the rest of discovery", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockResolvedValueOnce(json(resourceMetadata))
+      .mockResolvedValueOnce(
+        json({ ...authServerMetadata, registration_endpoint: "javascript:alert(1)//" }),
+      )
+
+    const discovery = await discoverOauthConfiguration(MCP_URL)
+
+    expect(discovery?.authorizationEndpoint).toBe("https://auth.example.com/oauth2/authorize")
+    expect(discovery?.registrationEndpoint).toBeUndefined()
+  })
+
+  it("falls back to the path-derived well-known URL when resource_metadata is cross-origin", async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(null, {
+          status: 401,
+          headers: {
+            "WWW-Authenticate":
+              'Bearer resource_metadata="https://attacker.example.com/.well-known/oauth-protected-resource"',
+          },
+        }),
+      )
+      .mockResolvedValueOnce(json(resourceMetadata))
+      .mockResolvedValueOnce(json(authServerMetadata))
+
+    const discovery = await discoverOauthConfiguration(MCP_URL)
+
+    expect(discovery?.tokenEndpoint).toBe("https://auth.example.com/oauth2/token")
+    expect(fetchMock.mock.calls[1][0]).toBe(
+      "https://mcp.example.com/.well-known/oauth-protected-resource/mcp",
+    )
+  })
 })
 
 describe("registerOauthClient", () => {

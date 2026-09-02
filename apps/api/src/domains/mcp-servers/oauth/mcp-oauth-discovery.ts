@@ -14,6 +14,28 @@ export type McpOauthDiscovery = {
   scopesSupported?: string[]
 }
 
+// Outbound OAuth discovery calls hit third-party servers named in MCP server
+// config; a slow or hanging server must not block the request indefinitely.
+const OAUTH_FETCH_TIMEOUT_MS = 10_000
+
+/**
+ * A discovered endpoint is later handed to the browser (authorization_endpoint
+ * becomes a `window.location.assign` target). A hostile authorization server
+ * could return a `javascript:` or `data:` URL, so every endpoint from
+ * third-party JSON must be validated before use. `http:` is allowed only for
+ * localhost, to keep local dev authorization servers working.
+ */
+function isValidEndpointUrl(candidate: string): boolean {
+  let url: URL
+  try {
+    url = new URL(candidate)
+  } catch {
+    return false
+  }
+  if (url.protocol === "https:") return true
+  return url.protocol === "http:" && (url.hostname === "localhost" || url.hostname === "127.0.0.1")
+}
+
 type ProtectedResourceMetadata = {
   resource?: string
   authorization_servers?: string[]
@@ -40,11 +62,21 @@ export async function discoverOauthConfiguration(
     )) ??
     (await fetchJson<AuthorizationServerMetadata>(`${issuer}/.well-known/openid-configuration`))
   if (!serverMetadata?.authorization_endpoint || !serverMetadata.token_endpoint) return null
+  if (
+    !isValidEndpointUrl(serverMetadata.authorization_endpoint) ||
+    !isValidEndpointUrl(serverMetadata.token_endpoint)
+  ) {
+    return null
+  }
+  const registrationEndpoint =
+    serverMetadata.registration_endpoint && isValidEndpointUrl(serverMetadata.registration_endpoint)
+      ? serverMetadata.registration_endpoint
+      : undefined
 
   return {
     authorizationEndpoint: serverMetadata.authorization_endpoint,
     tokenEndpoint: serverMetadata.token_endpoint,
-    registrationEndpoint: serverMetadata.registration_endpoint,
+    registrationEndpoint,
     resource: resourceMetadata.resource ?? mcpUrl,
     scopesSupported: resourceMetadata.scopes_supported,
   }
@@ -67,6 +99,8 @@ export async function registerOauthClient({
       response_types: ["code"],
       token_endpoint_auth_method: "none",
     }),
+    redirect: "manual",
+    signal: AbortSignal.timeout(OAUTH_FETCH_TIMEOUT_MS),
   })
   if (!response.ok) {
     throw new Error(`Dynamic client registration failed with status ${response.status}`)
@@ -79,9 +113,12 @@ export async function registerOauthClient({
 /**
  * Probes the MCP endpoint expecting a 401 whose WWW-Authenticate names the
  * resource metadata URL. Falls back to the RFC 9728 path-derived well-known
- * URL when the header is absent or the probe itself fails.
+ * URL when the header is absent, points off-origin (a malicious or misbehaving
+ * server naming an attacker-controlled metadata host), or the probe itself
+ * fails.
  */
 async function probeForResourceMetadataUrl(mcpUrl: string): Promise<string> {
+  const mcpOrigin = new URL(mcpUrl).origin
   try {
     const probe = await fetch(mcpUrl, {
       method: "POST",
@@ -90,11 +127,19 @@ async function probeForResourceMetadataUrl(mcpUrl: string): Promise<string> {
         Accept: "application/json, text/event-stream",
       },
       body: JSON.stringify({ jsonrpc: "2.0", id: 0, method: "ping" }),
+      redirect: "manual",
+      signal: AbortSignal.timeout(OAUTH_FETCH_TIMEOUT_MS),
     })
     const wwwAuthenticate = probe.headers.get("www-authenticate")
     if (wwwAuthenticate) {
       const match = wwwAuthenticate.match(/resource_metadata="([^"]+)"/)
-      if (match?.[1]) return match[1]
+      if (match?.[1]) {
+        try {
+          if (new URL(match[1]).origin === mcpOrigin) return match[1]
+        } catch {
+          // Falls through to the well-known fallback below.
+        }
+      }
     }
   } catch {
     // Network errors fall through to the well-known fallback.
@@ -106,7 +151,10 @@ async function probeForResourceMetadataUrl(mcpUrl: string): Promise<string> {
 
 async function fetchJson<ResponseBody>(url: string): Promise<ResponseBody | null> {
   try {
-    const response = await fetch(url)
+    const response = await fetch(url, {
+      redirect: "manual",
+      signal: AbortSignal.timeout(OAUTH_FETCH_TIMEOUT_MS),
+    })
     if (!response.ok) return null
     return (await response.json()) as ResponseBody
   } catch {

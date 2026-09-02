@@ -446,6 +446,7 @@ describe("McpOauthService", () => {
 
       expect(servers).toHaveLength(1)
       expect(servers[0]?.apiKey).toBe("at-2")
+      expect(servers[0]).not.toHaveProperty("oauth")
     })
   })
 })

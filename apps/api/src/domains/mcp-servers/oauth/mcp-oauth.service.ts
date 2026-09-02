@@ -14,6 +14,9 @@ import { codeChallengeS256, generateCodeVerifier, generateState } from "./pkce"
 
 const PENDING_AUTH_TTL_MS = 10 * 60 * 1000
 const TOKEN_REFRESH_MARGIN_MS = 60 * 1000
+// The refresh path runs inside a pessimistic row lock (see getValidAccessToken
+// below), so a hanging authorization server must not hold that lock forever.
+const OAUTH_FETCH_TIMEOUT_MS = 10_000
 
 /**
  * Thrown by `requestTokens`. `isDefinitive` is true only when the authorization
@@ -198,6 +201,8 @@ export class McpOauthService {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams(params).toString(),
+        redirect: "manual",
+        signal: AbortSignal.timeout(OAUTH_FETCH_TIMEOUT_MS),
       })
     } catch (error) {
       this.logger.warn(`MCP OAuth token request failed: ${(error as Error).message}`)

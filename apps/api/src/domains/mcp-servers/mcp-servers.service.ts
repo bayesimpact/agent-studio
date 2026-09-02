@@ -38,8 +38,8 @@ export class McpServersService {
     const enabledServers = agentMcpServers.filter((agentMcpServer) => agentMcpServer.mcpServer)
     return Promise.all(
       enabledServers.map(async (agentMcpServer) => {
-        const config = this.decryptConfig(agentMcpServer.mcpServer)
-        if (!config.oauth) return { id: agentMcpServer.mcpServer.id, ...config }
+        const { oauth, ...config } = this.decryptConfig(agentMcpServer.mcpServer)
+        if (!oauth) return { id: agentMcpServer.mcpServer.id, ...config }
         const accessToken = await this.mcpOauthService.getValidAccessToken(
           agentMcpServer.mcpServer.id,
         )
@@ -110,10 +110,6 @@ export class McpServersService {
 
   async disableForAgent(agentId: string, mcpServerId: string): Promise<void> {
     await this.agentMcpServerRepository.delete({ agentId, mcpServerId })
-  }
-
-  decryptUrl(mcpServer: McpServer): string {
-    return this.decryptConfig(mcpServer).url
   }
 
   getConfig(mcpServer: McpServer): McpServerConfig {
