@@ -6,7 +6,7 @@ import type {
   LLMMetadata,
   LLMProvider,
 } from "@/common/interfaces/llm-provider.interface"
-import { formatPromptDate } from "@/common/utils/format-prompt-date"
+import { todaysDatePromptLine } from "@/common/utils/todays-date-prompt-line"
 import { ServiceWithLLM } from "@/external/llm"
 import type { AgentWithSettingsRunJobPayload } from "./agent-with-settings-run.types"
 
@@ -101,7 +101,7 @@ export class StructuredExtractionAgentRunnerService extends ServiceWithLLM {
       content: [{ type: "text", text: inputText }],
     }
 
-    const systemPrompt = `${agentWithSettings.settings.instructions}\n\nToday's date: ${formatPromptDate()}`
+    const systemPrompt = `${agentWithSettings.settings.instructions}\n\n${todaysDatePromptLine()}`
 
     const llmConfig = this.buildLLMConfig({
       systemPrompt,
