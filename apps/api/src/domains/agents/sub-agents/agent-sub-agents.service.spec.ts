@@ -10,7 +10,6 @@ import { agentFactory } from "@/domains/agents/agent.factory"
 import { agentSettingsFactory } from "@/domains/agents/settings/agent.settings.factory"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { projectFactory } from "@/domains/projects/project.factory"
-import { sdk } from "@/external/llm/open-telemetry-init"
 import { AgentsModule } from "../agents.module"
 import { AgentSubAgentsService } from "./agent-sub-agents.service"
 
@@ -29,7 +28,6 @@ describe("AgentSubAgentsService", () => {
 
   afterAll(async () => {
     await teardownE2eTestDatabase(setup)
-    await sdk.shutdown()
   })
 
   beforeEach(async () => {

@@ -6,7 +6,6 @@ import {
   teardownE2eTestDatabase,
 } from "@/common/test/test-database"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
-import { sdk } from "@/external/llm/open-telemetry-init"
 import { AgentsModule } from "../agents.module"
 import { AgentSessionCategoriesService } from "./agent-session-categories.service"
 import { ProjectAgentSessionCategory } from "./project-agent-session-category.entity"
@@ -26,7 +25,6 @@ describe("AgentSessionCategoriesService", () => {
 
   afterAll(async () => {
     await teardownE2eTestDatabase(setup)
-    await sdk.shutdown()
   })
 
   beforeEach(async () => {

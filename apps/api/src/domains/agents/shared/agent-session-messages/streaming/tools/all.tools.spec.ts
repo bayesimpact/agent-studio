@@ -26,7 +26,6 @@ import {
   addFeature,
   createOrganizationWithAgent,
 } from "@/domains/organizations/organization.factory"
-import { sdk } from "@/external/llm/open-telemetry-init"
 import type { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
 import { McpClientService } from "@/external/mcp"
 import { DEFAULT_TOP_K } from "./lookup-knowledge-base.tool"
@@ -61,7 +60,6 @@ describe("Tools execution", () => {
 
   afterAll(async () => {
     await teardownE2eTestDatabase(setup)
-    await sdk.shutdown()
   })
 
   beforeEach(async () => {

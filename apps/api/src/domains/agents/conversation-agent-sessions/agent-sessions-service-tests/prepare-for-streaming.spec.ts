@@ -1,15 +1,10 @@
-import { afterAll } from "@jest/globals"
 import { NotFoundException } from "@nestjs/common/exceptions"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
-import { sdk } from "@/external/llm/open-telemetry-init"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()
 
 describe("prepareForStreaming", () => {
-  afterAll(async () => {
-    await sdk.shutdown()
-  })
   it("should persist user message and empty assistant message", async () => {
     const {
       service,

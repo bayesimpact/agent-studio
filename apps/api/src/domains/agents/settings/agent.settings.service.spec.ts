@@ -24,7 +24,6 @@ import {
   createOrganizationWithProject,
 } from "@/domains/organizations/organization.factory"
 import { createResourceLibraryForProject } from "@/domains/resource-libraries/resource-library.factory"
-import { sdk } from "@/external/llm/open-telemetry-init"
 import { AgentSettingsService } from "./agent-settings.service"
 
 async function createAgentWithSettings(
@@ -71,7 +70,6 @@ describe("AgentSettings", () => {
 
   afterAll(async () => {
     await teardownE2eTestDatabase(setup)
-    await sdk.shutdown()
   })
 
   beforeEach(async () => {

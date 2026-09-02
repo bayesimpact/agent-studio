@@ -12,7 +12,6 @@ import { StructuredExtractionAgentRunnerService } from "@/domains/agents/shared/
 import { documentFactory } from "@/domains/documents/document.factory"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { LlmModule } from "@/external/llm/llm.module"
-import { sdk } from "@/external/llm/open-telemetry-init"
 import type { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
 import { agentCsvExtractionRunFactory } from "./agent-csv-extraction-run.factory"
 import type { ProcessAgentCsvExtractionRunRecordJobPayload } from "./agent-csv-extraction-run.types"
@@ -49,7 +48,6 @@ describe("AgentCsvExtractionRunProcessorService", () => {
 
   afterAll(async () => {
     await teardownE2eTestDatabase(setup)
-    await sdk.shutdown()
   })
 
   beforeEach(async () => {

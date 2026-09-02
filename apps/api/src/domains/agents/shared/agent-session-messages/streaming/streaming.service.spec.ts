@@ -24,7 +24,6 @@ import {
   createOrganizationWithAgent,
   createOrganizationWithAgentAndSubAgents,
 } from "@/domains/organizations/organization.factory"
-import { sdk } from "@/external/llm/open-telemetry-init"
 import type { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
 import { AgentLlmRequestService } from "./agent-llm-request.service"
 import { StreamingModule } from "./streaming.module"
@@ -55,7 +54,6 @@ describe("StreamingService", () => {
 
   afterAll(async () => {
     await teardownE2eTestDatabase(setup)
-    await sdk.shutdown()
   })
 
   beforeEach(async () => {

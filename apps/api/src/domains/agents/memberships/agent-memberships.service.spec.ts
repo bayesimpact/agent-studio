@@ -14,7 +14,6 @@ import {
 } from "@/domains/organizations/organization.factory"
 import { addUserToProject } from "@/domains/projects/memberships/project-membership.factory"
 import { AGENT_ROLES } from "@/domains/rbac/rbac.constants"
-import { sdk } from "@/external/llm/open-telemetry-init"
 import { ensureRbacCatalog } from "../../../../test/rbac-test.helpers"
 import { agentFactory } from "../agent.factory"
 import { AgentsModule } from "../agents.module"
@@ -41,7 +40,6 @@ describe("AgentMembershipsService", () => {
 
   afterAll(async () => {
     await teardownE2eTestDatabase(setup)
-    await sdk.shutdown()
   })
 
   beforeEach(async () => {
