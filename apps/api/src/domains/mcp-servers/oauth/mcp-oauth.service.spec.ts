@@ -380,6 +380,42 @@ describe("McpOauthService", () => {
       expect(mcpServersService.getAuthStatus(config)).toBe("oauthPending")
     })
 
+    it("keeps the stored tokens and returns null on a network failure", async () => {
+      const mcpServer = await seedServerWithOauth({
+        accessToken: "old",
+        refreshToken: "rt-1",
+        expiresAt: Date.now() - 1000,
+      })
+      fetchMock.mockRejectedValueOnce(new TypeError("fetch failed"))
+
+      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+
+      expect(token).toBeNull()
+      const reloaded = await repositories.mcpServerRepository.findOneByOrFail({ id: mcpServer.id })
+      const config = mcpServersService.getConfig(reloaded)
+      expect(config.oauth?.tokens?.accessToken).toBe("old")
+      expect(config.oauth?.tokens?.refreshToken).toBe("rt-1")
+    })
+
+    it("keeps the stored tokens and returns null on a 5xx from the token endpoint", async () => {
+      const mcpServer = await seedServerWithOauth({
+        accessToken: "old",
+        refreshToken: "rt-1",
+        expiresAt: Date.now() - 1000,
+      })
+      fetchMock.mockResolvedValueOnce(
+        new Response(JSON.stringify({ error: "server_error" }), { status: 500 }),
+      )
+
+      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+
+      expect(token).toBeNull()
+      const reloaded = await repositories.mcpServerRepository.findOneByOrFail({ id: mcpServer.id })
+      const config = mcpServersService.getConfig(reloaded)
+      expect(config.oauth?.tokens?.accessToken).toBe("old")
+      expect(config.oauth?.tokens?.refreshToken).toBe("rt-1")
+    })
+
     it("returns null for a server without oauth tokens", async () => {
       const mcpServer = await createServer({ url: MCP_URL })
 

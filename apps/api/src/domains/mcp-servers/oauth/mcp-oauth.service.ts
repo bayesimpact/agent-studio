@@ -15,6 +15,21 @@ import { codeChallengeS256, generateCodeVerifier, generateState } from "./pkce"
 const PENDING_AUTH_TTL_MS = 10 * 60 * 1000
 const TOKEN_REFRESH_MARGIN_MS = 60 * 1000
 
+/**
+ * Thrown by `requestTokens`. `isDefinitive` is true only when the authorization
+ * server actually responded with a 4xx (e.g. `invalid_grant`) — a definitive
+ * rejection of the grant. It is false for network failures and 5xx responses,
+ * which are transient and should not cost the caller its stored tokens.
+ */
+export class OauthTokenRequestError extends BadRequestException {
+  constructor(
+    message: string,
+    readonly isDefinitive: boolean,
+  ) {
+    super(message)
+  }
+}
+
 @Injectable()
 export class McpOauthService {
   private readonly logger = new Logger(McpOauthService.name)
@@ -157,11 +172,17 @@ export class McpOauthService {
         this.logger.warn(
           `MCP OAuth refresh failed for server ${mcpServerId}: ${error instanceof Error ? error.message : error}`,
         )
-        // Invalid grant: drop the tokens so the UI shows the server needs re-authorization.
-        await this.persistConfigWithManager(manager, mcpServerId, {
-          ...config,
-          oauth: { ...oauth, tokens: undefined },
-        })
+        const isDefinitive = error instanceof OauthTokenRequestError && error.isDefinitive
+        if (isDefinitive) {
+          // Definitive rejection (e.g. invalid_grant): drop the tokens so the UI shows
+          // the server needs re-authorization.
+          await this.persistConfigWithManager(manager, mcpServerId, {
+            ...config,
+            oauth: { ...oauth, tokens: undefined },
+          })
+        }
+        // Transient failure (network error, 5xx): keep the stored tokens untouched so
+        // the next connection attempt can retry the refresh.
         return null
       }
     })
@@ -180,7 +201,7 @@ export class McpOauthService {
       })
     } catch (error) {
       this.logger.warn(`MCP OAuth token request failed: ${(error as Error).message}`)
-      throw new BadRequestException("OAuth token request failed (network error).")
+      throw new OauthTokenRequestError("OAuth token request failed (network error).", false)
     }
     const body = (await response.json().catch(() => ({}))) as {
       access_token?: string
@@ -190,8 +211,10 @@ export class McpOauthService {
     }
     if (!response.ok || !body.access_token) {
       this.logger.warn(`MCP OAuth token request failed: ${response.status} ${body.error ?? ""}`)
-      throw new BadRequestException(
+      const isDefinitive = response.status >= 400 && response.status < 500
+      throw new OauthTokenRequestError(
         `OAuth token request failed (${body.error ?? response.status}).`,
+        isDefinitive,
       )
     }
     return {
