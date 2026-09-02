@@ -10,6 +10,7 @@ import { EncryptionService } from "../encryption.service"
 import { McpServer } from "../mcp-server.entity"
 import type { McpServerConfig, McpServerOauthState } from "../mcp-server-config.types"
 import { discoverOauthConfiguration, registerOauthClient } from "./mcp-oauth-discovery"
+import { isAccessTokenExpired } from "./oauth-tokens"
 import { codeChallengeS256, generateCodeVerifier, generateState } from "./pkce"
 
 const PENDING_AUTH_TTL_MS = 10 * 60 * 1000
@@ -150,10 +151,21 @@ export class McpOauthService {
       const oauth = config.oauth
       if (!oauth?.tokens) return null
 
-      if (oauth.tokens.expiresAt - TOKEN_REFRESH_MARGIN_MS > Date.now()) {
+      if (!isAccessTokenExpired(oauth.tokens, Date.now(), TOKEN_REFRESH_MARGIN_MS)) {
         return oauth.tokens.accessToken
       }
-      if (!oauth.tokens.refreshToken) return null
+      if (!oauth.tokens.refreshToken) {
+        // Expired with no way to refresh: drop the dead tokens so the server reports
+        // that it needs re-authorization instead of staying "connected" forever.
+        this.logger.warn(
+          `MCP OAuth access token expired with no refresh token for server ${mcpServerId}`,
+        )
+        await this.persistConfigWithManager(manager, mcpServerId, {
+          ...config,
+          oauth: { ...oauth, tokens: undefined },
+        })
+        return null
+      }
 
       try {
         const tokens = await this.requestTokens(oauth.tokenEndpoint, {
@@ -225,7 +237,7 @@ export class McpOauthService {
     return {
       accessToken: body.access_token,
       refreshToken: body.refresh_token,
-      expiresAt: Date.now() + (body.expires_in ?? 3600) * 1000,
+      expiresAt: body.expires_in === undefined ? undefined : Date.now() + body.expires_in * 1000,
     }
   }
 

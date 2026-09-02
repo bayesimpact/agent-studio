@@ -9,6 +9,7 @@ import { McpServer } from "./mcp-server.entity"
 import type { EnabledMcpServer, McpServerConfig } from "./mcp-server-config.types"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { McpOauthService } from "./oauth/mcp-oauth.service"
+import { canStillAuthenticate } from "./oauth/oauth-tokens"
 
 export type {
   EnabledMcpServer,
@@ -117,7 +118,7 @@ export class McpServersService {
   }
 
   getAuthStatus(config: McpServerConfig): McpServerAuthStatus {
-    if (config.oauth?.tokens) return "oauthConnected"
+    if (canStillAuthenticate(config.oauth?.tokens)) return "oauthConnected"
     if (config.oauth || config.authMethod === "oauth") return "oauthPending"
     if (config.apiKey) return "apiKey"
     return "none"

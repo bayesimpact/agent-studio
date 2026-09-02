@@ -247,6 +247,22 @@ describe("McpOauthService", () => {
     expect(config.oauth?.pendingAuth).toBeUndefined()
   })
 
+  it("stores no expiry when the token response omits expires_in", async () => {
+    const { mcpServer, state } = await initiateForServer()
+    fetchMock.mockResolvedValueOnce(json({ access_token: "at-1", token_type: "Bearer" }))
+
+    const updated = await mcpOauthService.completeAuthorization({
+      mcpServer,
+      code: "code-1",
+      state,
+    })
+
+    const config = mcpServersService.getConfig(updated)
+    expect(config.oauth?.tokens?.accessToken).toBe("at-1")
+    expect(config.oauth?.tokens?.expiresAt).toBeUndefined()
+    expect(mcpServersService.getAuthStatus(config)).toBe("oauthConnected")
+  })
+
   it("rejects a mismatched state", async () => {
     const { mcpServer } = await initiateForServer()
     await expect(
@@ -316,6 +332,31 @@ describe("McpOauthService", () => {
 
       expect(token).toBe("at-1")
       expect(fetchMock).not.toHaveBeenCalled()
+    })
+
+    it("treats a token without a known expiry as fresh", async () => {
+      const mcpServer = await seedServerWithOauth({ accessToken: "at-1" })
+
+      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+
+      expect(token).toBe("at-1")
+      expect(fetchMock).not.toHaveBeenCalled()
+    })
+
+    it("drops an expired token that has no refresh token and reports the server as pending", async () => {
+      const mcpServer = await seedServerWithOauth({
+        accessToken: "old",
+        expiresAt: Date.now() - 1000,
+      })
+
+      const token = await mcpOauthService.getValidAccessToken(mcpServer.id)
+
+      expect(token).toBeNull()
+      expect(fetchMock).not.toHaveBeenCalled()
+      const reloaded = await repositories.mcpServerRepository.findOneByOrFail({ id: mcpServer.id })
+      const config = mcpServersService.getConfig(reloaded)
+      expect(config.oauth?.tokens).toBeUndefined()
+      expect(mcpServersService.getAuthStatus(config)).toBe("oauthPending")
     })
 
     it("refreshes an expired token, persists the rotated refresh token, and returns the new one", async () => {

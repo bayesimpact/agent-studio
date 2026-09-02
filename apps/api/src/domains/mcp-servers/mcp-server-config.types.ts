@@ -26,8 +26,12 @@ export type EnabledMcpServer = McpServerConfig & {
 export type McpServerOauthTokens = {
   accessToken: string
   refreshToken?: string
-  /** Epoch ms after which accessToken must be refreshed. */
-  expiresAt: number
+  /**
+   * Epoch ms after which accessToken must be refreshed. Absent when the token
+   * response carried no `expires_in`: the token is then used until the server
+   * rejects it.
+   */
+  expiresAt?: number
 }
 
 export type McpServerOauthPendingAuth = {
