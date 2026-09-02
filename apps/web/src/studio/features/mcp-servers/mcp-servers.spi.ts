@@ -11,4 +11,9 @@ export interface IMcpServersSpi {
   deleteOne: (params: McpServerScope) => Promise<void>
   enableForAgent: (params: McpServerAgentScope) => Promise<void>
   disableForAgent: (params: McpServerAgentScope) => Promise<void>
+  initiateOauth: (params: McpServerScope) => Promise<{ authorizationUrl: string }>
+  completeOauth: (
+    params: McpServerScope,
+    payload: { code: string; state: string },
+  ) => Promise<McpServer>
 }

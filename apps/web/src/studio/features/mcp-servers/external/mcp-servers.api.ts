@@ -42,6 +42,21 @@ export default {
       }),
     )
   },
+  initiateOauth: async ({ organizationId, projectId, mcpServerId }) => {
+    const axios = getAxiosInstance()
+    const response = await axios.post<typeof McpServersRoutes.initiateOauth.response>(
+      McpServersRoutes.initiateOauth.getPath({ organizationId, projectId, mcpServerId }),
+    )
+    return response.data.data
+  },
+  completeOauth: async ({ organizationId, projectId, mcpServerId }, payload) => {
+    const axios = getAxiosInstance()
+    const response = await axios.post<typeof McpServersRoutes.completeOauth.response>(
+      McpServersRoutes.completeOauth.getPath({ organizationId, projectId, mcpServerId }),
+      { payload } satisfies typeof McpServersRoutes.completeOauth.request,
+    )
+    return toMcpServer(response.data.data)
+  },
 } satisfies IMcpServersSpi
 
 const toMcpServer = (dto: McpServerDto): McpServer => ({

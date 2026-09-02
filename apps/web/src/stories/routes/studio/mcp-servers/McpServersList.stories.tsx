@@ -30,6 +30,14 @@ function buildMockMcpServersService(
     async deleteOne() {},
     async enableForAgent() {},
     async disableForAgent() {},
+    async initiateOauth() {
+      return { authorizationUrl: "https://example.com/oauth/authorize" }
+    },
+    async completeOauth() {
+      return (
+        mcpServers[0] ?? mcpServerFactory.transient({ project: { id: "mock" } as never }).build()
+      )
+    },
   }
 }
 
