@@ -12,6 +12,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Conversation retention: conversations are kept 30 days by default, configurable per workspace.
 - (beta) Gemma and MedGemma agents accept PDF documents in chat and extraction.
 - (beta) Embedded public chat shows the MCP App UI for tools that provide one.
+- (beta) MCP servers: connect servers that use OAuth by authorizing access in the browser, alongside API keys.
 
 ### Changed
 
