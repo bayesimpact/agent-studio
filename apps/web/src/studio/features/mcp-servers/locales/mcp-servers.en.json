@@ -20,6 +20,12 @@
       "url": "URL",
       "apiKey": "API Key",
       "apiKeyPlaceholder": "Optional authentication key"
+    },
+    "oauthCallback": {
+      "errorTitle": "Authorization failed",
+      "denied": "The authorization was denied by the provider.",
+      "missingContext": "This authorization link is invalid or has expired. Start again from the MCP servers page.",
+      "failed": "The server rejected the authorization. Start again from the MCP servers page."
     }
   }
 }
