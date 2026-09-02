@@ -1,7 +1,8 @@
 import { spawn } from "node:child_process"
 import { resolve } from "node:path"
 import { config as dotenvConfig } from "dotenv"
-import { parseWorkersArgument, resolveWorkerCount, workerDatabasesExist } from "./dbs4tests-exists"
+import { getNbWorkers } from "./dbs4tests-config"
+import { parseWorkersArgument, workerDatabasesExist } from "./dbs4tests-exists"
 
 dotenvConfig({ path: resolve(__dirname, "../../.env.test"), override: true, quiet: true })
 
@@ -18,7 +19,7 @@ function runPrepare(workerCount: number): Promise<number> {
 }
 
 async function main(): Promise<void> {
-  const workerCount = parseWorkersArgument() ?? resolveWorkerCount()
+  const workerCount = parseWorkersArgument() ?? getNbWorkers()
 
   if (
     process.env.TEST_FORCE_RECREATE_WORKER_DB !== "true" &&
