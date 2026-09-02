@@ -9,7 +9,6 @@ import {
 import { AgentLlmModule } from "@/domains/agents/shared/agent-session-messages/streaming/agent-llm.module"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { LlmModule } from "@/external/llm/llm.module"
-import { sdk } from "@/external/llm/open-telemetry-init"
 import type { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
 import { evaluationConversationDatasetFactory } from "../datasets/evaluation-conversation-dataset.factory"
 import { evaluationConversationDatasetRecordFactory } from "../datasets/records/evaluation-conversation-dataset-record.factory"
@@ -45,7 +44,6 @@ describe("EvaluationConversationRunProcessorService", () => {
 
   afterAll(async () => {
     await teardownE2eTestDatabase(setup)
-    await sdk.shutdown()
   })
 
   beforeEach(async () => {

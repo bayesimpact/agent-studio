@@ -14,7 +14,6 @@ import { ActivitiesModule } from "@/domains/activities/activities.module"
 import { DocumentTag } from "@/domains/documents/tags/document-tag.entity"
 import { documentTagFactory } from "@/domains/documents/tags/document-tag.factory"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
-import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 import { AgentsModule } from "../../agents.module"
@@ -52,7 +51,6 @@ describe("Agent Settings - updateOne", () => {
 
   afterAll(async () => {
     await teardownE2eTestDatabase(setup)
-    await sdk.shutdown()
     await app.close()
   })
 
