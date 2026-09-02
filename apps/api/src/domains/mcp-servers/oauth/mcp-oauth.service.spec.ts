@@ -8,6 +8,7 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
+import { EncryptionService } from "../encryption.service"
 import type { McpServer } from "../mcp-server.entity"
 import { McpServersModule } from "../mcp-servers.module"
 import { McpServersService } from "../mcp-servers.service"
@@ -99,6 +100,26 @@ describe("McpOauthService", () => {
     })
   }
 
+  const initiateForServer = async (): Promise<{
+    mcpServer: McpServer
+    state: string
+    codeVerifier: string
+  }> => {
+    mockFullDiscoveryAndRegistration()
+    const created = await createServer({ url: MCP_URL })
+
+    const { authorizationUrl } = await mcpOauthService.initiateAuthorization(created)
+    const state = new URL(authorizationUrl).searchParams.get("state")
+    if (!state) throw new Error("Expected a state param on the authorization URL")
+
+    const reloaded = await repositories.mcpServerRepository.findOneByOrFail({ id: created.id })
+    const config = mcpServersService.getConfig(reloaded)
+    const codeVerifier = config.oauth?.pendingAuth?.codeVerifier
+    if (!codeVerifier) throw new Error("Expected a pending codeVerifier after initiation")
+
+    return { mcpServer: reloaded, state, codeVerifier }
+  }
+
   it("stores oauth state and returns the authorization URL with PKCE, state, resource and scope", async () => {
     mockFullDiscoveryAndRegistration()
     const mcpServer = await createServer({ url: MCP_URL })
@@ -166,5 +187,84 @@ describe("McpOauthService", () => {
     await expect(mcpOauthService.initiateAuthorization(mcpServer)).rejects.toThrow(
       BadRequestException,
     )
+  })
+
+  it("exchanges the code with the PKCE verifier and stores the tokens", async () => {
+    const { mcpServer, state, codeVerifier } = await initiateForServer()
+    fetchMock.mockResolvedValueOnce(
+      json({ access_token: "at-1", refresh_token: "rt-1", expires_in: 3600, token_type: "Bearer" }),
+    )
+
+    const updated = await mcpOauthService.completeAuthorization({
+      mcpServer,
+      code: "code-1",
+      state,
+    })
+
+    const [tokenUrl, init] = fetchMock.mock.calls.at(-1)!
+    expect(tokenUrl).toBe("https://auth.example.com/oauth2/token")
+    const body = new URLSearchParams(init.body)
+    expect(body.get("grant_type")).toBe("authorization_code")
+    expect(body.get("code")).toBe("code-1")
+    expect(body.get("code_verifier")).toBe(codeVerifier)
+    expect(body.get("client_id")).toBe("client-123")
+    expect(body.get("redirect_uri")).toBe("https://app.test/oauth/mcp/callback")
+    expect(body.get("resource")).toBe("https://mcp.example.com")
+
+    const config = mcpServersService.getConfig(updated)
+    expect(config.oauth?.tokens?.accessToken).toBe("at-1")
+    expect(config.oauth?.tokens?.refreshToken).toBe("rt-1")
+    expect(config.oauth?.tokens?.expiresAt).toBeGreaterThan(Date.now())
+    expect(config.oauth?.pendingAuth).toBeUndefined()
+  })
+
+  it("rejects a mismatched state", async () => {
+    const { mcpServer } = await initiateForServer()
+    await expect(
+      mcpOauthService.completeAuthorization({ mcpServer, code: "code-1", state: "wrong" }),
+    ).rejects.toThrow(BadRequestException)
+  })
+
+  it("rejects an expired pending authorization", async () => {
+    const { mcpServer, state } = await initiateForServer()
+    const config = mcpServersService.getConfig(mcpServer)
+    const expiredConfig = {
+      ...config,
+      oauth: {
+        ...config.oauth,
+        pendingAuth: {
+          ...config.oauth?.pendingAuth,
+          expiresAt: Date.now() - 1000,
+        },
+      },
+    }
+    await repositories.mcpServerRepository.update(
+      { id: mcpServer.id },
+      {
+        encryptedConfig: setup.module.get(EncryptionService).encrypt(JSON.stringify(expiredConfig)),
+      },
+    )
+    const reloaded = await repositories.mcpServerRepository.findOneByOrFail({ id: mcpServer.id })
+
+    await expect(
+      mcpOauthService.completeAuthorization({ mcpServer: reloaded, code: "code-1", state }),
+    ).rejects.toThrow(BadRequestException)
+  })
+
+  it("rejects when there is no pending authorization", async () => {
+    const mcpServer = await createServer({ url: "https://mcp.example.com/mcp" })
+    await expect(
+      mcpOauthService.completeAuthorization({ mcpServer, code: "c", state: "s" }),
+    ).rejects.toThrow(BadRequestException)
+  })
+
+  it("surfaces a token endpoint error as BadRequestException", async () => {
+    const { mcpServer, state } = await initiateForServer()
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: "invalid_grant" }), { status: 400 }),
+    )
+    await expect(
+      mcpOauthService.completeAuthorization({ mcpServer, code: "bad", state }),
+    ).rejects.toThrow(BadRequestException)
   })
 })
