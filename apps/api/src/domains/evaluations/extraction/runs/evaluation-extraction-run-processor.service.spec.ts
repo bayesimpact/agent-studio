@@ -11,7 +11,6 @@ import { StructuredExtractionAgentRunnerService } from "@/domains/agents/shared/
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { ProjectRepository } from "@/domains/projects/project.repository"
 import { LlmModule } from "@/external/llm/llm.module"
-import { sdk } from "@/external/llm/open-telemetry-init"
 import type { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
 import { evaluationExtractionDatasetFactory } from "../datasets/evaluation-extraction-dataset.factory"
 import { evaluationExtractionRunFactory } from "./evaluation-extraction-run.factory"
@@ -49,7 +48,6 @@ describe("EvaluationExtractionRunProcessorService", () => {
 
   afterAll(async () => {
     await teardownE2eTestDatabase(setup)
-    await sdk.shutdown()
   })
 
   beforeEach(async () => {

@@ -1,4 +1,4 @@
-import type { AgentSessionMessageDto } from "@caseai-connect/api-contracts"
+import { type AgentSessionMessageDto, ToolName } from "@caseai-connect/api-contracts"
 
 let idCounter = 1
 function nextId() {
@@ -74,4 +74,54 @@ export const markdownConversation: AgentSessionMessageDto[] = [
   buildAssistantMessage(
     `Sure! Here's a quick demo:\n\n## Headings work\n\nAnd **bold**, *italic*, and \`inline code\` too.\n\n### Lists\n\n- Item one\n- Item two\n- Item three\n\n### Code block\n\n\`\`\`\nnpm install react\n\`\`\`\n\nAnd [links open in a new tab](https://example.com).`,
   ),
+]
+
+export const resourceCardsConversation: AgentSessionMessageDto[] = [
+  buildUserMessage("Do you have a pricing guide?"),
+  buildAssistantMessage("Here is the pricing guide and a short product overview.", {
+    toolCalls: [
+      {
+        id: "tool-surface-1",
+        name: ToolName.SurfaceResources,
+        arguments: {
+          resources: [
+            {
+              id: "aaaaaaaa-0000-4000-8000-000000000001",
+              title: "Pricing guide",
+              description: "Current product pricing and plan comparison.",
+              link: "https://example.com/pricing",
+            },
+            {
+              id: "aaaaaaaa-0000-4000-8000-000000000002",
+              title: "Product overview",
+              description: "Two-minute walkthrough of the main features.",
+              link: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            },
+          ],
+        },
+      },
+    ],
+  }),
+]
+
+export const resourceCardsOnlyConversation: AgentSessionMessageDto[] = [
+  buildUserMessage("Show me the support handbook."),
+  buildAssistantMessage("", {
+    toolCalls: [
+      {
+        id: "tool-surface-2",
+        name: ToolName.SurfaceResources,
+        arguments: {
+          resources: [
+            {
+              id: "aaaaaaaa-0000-4000-8000-000000000003",
+              title: "Support handbook",
+              description: "How to open a ticket and what to include.",
+              link: "https://example.com/support-handbook",
+            },
+          ],
+        },
+      },
+    ],
+  }),
 ]

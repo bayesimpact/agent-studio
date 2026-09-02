@@ -402,5 +402,5 @@ ${toolsSection}
 ## Response language:
 Always answer in English.
 ${epilogue ? `\n${epilogue}\n` : ""}
-Today's date: 7/29/2026`
+Today's date: 2026-07-29 (Date format YYYY-MM-DD)`
 }

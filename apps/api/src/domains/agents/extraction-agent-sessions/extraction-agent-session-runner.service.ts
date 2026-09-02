@@ -11,6 +11,7 @@ import type {
   LLMMetadata,
   LLMProvider,
 } from "@/common/interfaces/llm-provider.interface"
+import { todaysDatePromptLine } from "@/common/utils/todays-date-prompt-line"
 import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 import type { Document } from "@/domains/documents/document.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -134,7 +135,7 @@ export class ExtractionAgentSessionRunnerService extends ServiceWithLLM {
         message: llmMessage,
         schema: agentSettings.outputJsonSchema,
         config: this.buildLLMConfig({
-          systemPrompt: `Today's date: ${new Date().toLocaleDateString()}`,
+          systemPrompt: todaysDatePromptLine(),
           model: agentSettings.model,
           temperature: agentSettings.temperature,
           // Extraction agent runs can be long-running; opt in to the extended

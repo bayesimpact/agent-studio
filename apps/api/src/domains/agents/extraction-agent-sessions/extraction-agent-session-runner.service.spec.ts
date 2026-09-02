@@ -23,7 +23,6 @@ import { createOrganizationWithAgent } from "@/domains/organizations/organizatio
 import { ProjectRepository } from "@/domains/projects/project.repository"
 import { ProjectsModule } from "@/domains/projects/projects.module"
 import { LlmModule } from "@/external/llm/llm.module"
-import { sdk } from "@/external/llm/open-telemetry-init"
 import { extractionAgentSessionFactory } from "./extraction-agent-session.factory"
 import { ExtractionAgentSessionRunnerService } from "./extraction-agent-session-runner.service"
 import { ExtractionAgentSessionStatusNotifierService } from "./extraction-agent-session-status-notifier.service"
@@ -62,7 +61,6 @@ describe("ExtractionAgentSessionRunnerService", () => {
   })
 
   afterAll(async () => {
-    await sdk.shutdown()
     await teardownE2eTestDatabase(setup)
   })
 

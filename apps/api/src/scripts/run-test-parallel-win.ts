@@ -2,7 +2,8 @@ import { type ChildProcess, spawn } from "node:child_process"
 // Aliased: `resolve` would shadow the promise resolver in `runCommand`.
 import { resolve as resolvePath } from "node:path"
 import { config as dotenvConfig } from "dotenv"
-import { resolveWorkerCount, workerDatabasesExist } from "./dbs4tests-exists"
+import { getNbWorkers } from "./dbs4tests-config"
+import { workerDatabasesExist } from "./dbs4tests-exists"
 
 dotenvConfig({ path: resolvePath(__dirname, "../../.env.test"), override: true, quiet: true })
 
@@ -54,8 +55,7 @@ async function main(): Promise<void> {
   process.env.TEST_USE_WORKER_DATABASE = "true"
   process.env.MCP_ENCRYPTION_KEY ??=
     "0000000000000000000000000000000000000000000000000000000000000000"
-  const resolvedWorkerCount = resolveWorkerCount()
-  process.env.TEST_WORKERS = String(resolvedWorkerCount)
+  const nbWorkers = getNbWorkers()
 
   process.on("SIGINT", () => forwardSignalToActiveChild("SIGINT"))
   process.on("SIGTERM", () => forwardSignalToActiveChild("SIGTERM"))
@@ -66,15 +66,14 @@ async function main(): Promise<void> {
   let jestExitCode = 0
 
   const canReuseWorkerDatabases =
-    process.env.TEST_FORCE_RECREATE_WORKER_DB !== "true" &&
-    (await workerDatabasesExist(resolvedWorkerCount))
+    process.env.TEST_FORCE_RECREATE_WORKER_DB !== "true" && (await workerDatabasesExist(nbWorkers))
 
   if (canReuseWorkerDatabases) {
-    console.log(`Reusing ${resolvedWorkerCount} existing worker databases.`)
+    console.log(`Reusing ${nbWorkers} existing worker databases.`)
   } else {
     const prepareResult = await runCommand(
       "npm",
-      ["run", "dbs4tests:prepare", "--", `--workers=${resolvedWorkerCount}`],
+      ["run", "dbs4tests:prepare", "--", `--workers=${nbWorkers}`],
       scriptEnvironment,
     )
     prepareExitCode = prepareResult.exitCode
@@ -87,7 +86,6 @@ async function main(): Promise<void> {
         "../../node_modules/jest/bin/jest.js",
         "--colors",
         "--forceExit",
-        `--maxWorkers=${resolvedWorkerCount}`,
         "--config",
         "jest.win.config.ts",
         ...jestAdditionalArguments,

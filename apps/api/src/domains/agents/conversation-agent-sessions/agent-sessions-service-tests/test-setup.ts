@@ -58,15 +58,6 @@ export function agentSessionControllerTestSetup() {
     setup = await setupE2eTestDatabase({
       additionalImports: [ConversationAgentSessionsModule],
     })
-  })
-
-  afterAll(async () => {
-    await teardownE2eTestDatabase(setup)
-    await sdk.shutdown()
-  })
-
-  beforeEach(async () => {
-    await clearTestDatabase(setup.dataSource)
     service = setup.module.get<ConversationAgentSessionsService>(ConversationAgentSessionsService)
     streamingService = setup.module.get<StreamingService>(StreamingService)
     toolsService = setup.module.get<ToolsService>(ToolsService)
@@ -85,6 +76,15 @@ export function agentSessionControllerTestSetup() {
     projectRepository = setup.getRepository(Project)
     userMembershipRepository = setup.getRepository(UserMembership)
     repositories = setup.getAllRepositories()
+  })
+
+  afterAll(async () => {
+    await teardownE2eTestDatabase(setup)
+    await sdk.shutdown()
+  })
+
+  beforeEach(async () => {
+    await clearTestDatabase(setup.dataSource)
 
     // Use unique identifier to avoid conflicts between tests
     const uniqueId = Date.now().toString()

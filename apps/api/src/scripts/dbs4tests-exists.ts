@@ -1,17 +1,4 @@
-import { availableParallelism, cpus } from "node:os"
 import { Client } from "pg"
-
-function getCpuCount(): number {
-  return typeof availableParallelism === "function" ? availableParallelism() : cpus().length
-}
-
-export function resolveWorkerCount(): number {
-  const envWorkers = Number(process.env.TEST_WORKERS)
-  if (Number.isFinite(envWorkers) && envWorkers > 0) {
-    return Math.floor(envWorkers)
-  }
-  return Math.max(1, Math.floor(getCpuCount() * 0.5))
-}
 
 export function parseWorkersArgument(): number | null {
   const matchingArgument = process.argv.find((argumentValue) =>
@@ -24,7 +11,6 @@ export function parseWorkersArgument(): number | null {
   return Number.isFinite(numericValue) && numericValue > 0 ? Math.floor(numericValue) : null
 }
 
-/** False whenever the answer cannot be established, so the caller falls back to prepare. */
 export async function workerDatabasesExist(workerCount: number): Promise<boolean> {
   const baseDatabaseUrl = process.env.DATABASE_URL
   if (!baseDatabaseUrl) {
