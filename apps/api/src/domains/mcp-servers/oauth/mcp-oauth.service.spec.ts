@@ -267,4 +267,12 @@ describe("McpOauthService", () => {
       mcpOauthService.completeAuthorization({ mcpServer, code: "bad", state }),
     ).rejects.toThrow(BadRequestException)
   })
+
+  it("surfaces a network error from the token endpoint as BadRequestException", async () => {
+    const { mcpServer, state } = await initiateForServer()
+    fetchMock.mockRejectedValueOnce(new TypeError("fetch failed"))
+    await expect(
+      mcpOauthService.completeAuthorization({ mcpServer, code: "code-1", state }),
+    ).rejects.toThrow(BadRequestException)
+  })
 })

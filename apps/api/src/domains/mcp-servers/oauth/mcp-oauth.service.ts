@@ -119,11 +119,17 @@ export class McpOauthService {
     tokenEndpoint: string,
     params: Record<string, string>,
   ): Promise<NonNullable<McpServerOauthState["tokens"]>> {
-    const response = await fetch(tokenEndpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams(params).toString(),
-    })
+    let response: Response
+    try {
+      response = await fetch(tokenEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(params).toString(),
+      })
+    } catch (error) {
+      this.logger.warn(`MCP OAuth token request failed: ${(error as Error).message}`)
+      throw new BadRequestException("OAuth token request failed (network error).")
+    }
     const body = (await response.json().catch(() => ({}))) as {
       access_token?: string
       refresh_token?: string
