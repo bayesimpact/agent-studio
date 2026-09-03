@@ -590,7 +590,7 @@ describe("AgentSettings", () => {
       ])
     })
     describe("priority calls", () => {
-      it("updateAllSettings should persist priorityCallsEnabled on a Gemini 3.x model", async () => {
+      it("updateAllSettings should persist priorityCallsEnabled on any model", async () => {
         const { organization, project, agent } = await createOrganizationWithAgent(repositories)
 
         const { agentSettings: updatedAgentSettings } = await service.updateAllSettings({

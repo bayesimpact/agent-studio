@@ -60,8 +60,6 @@ export function ModelTab({ agentSettings, onDirtyChange }: AgentTabFormProps) {
 
   const handleSubmit = form.handleSubmit(async (values) => {
     const fields = pickDirtyFields(values, form.formState.dirtyFields)
-    // Moving to a model without a priority tier turns the option off rather than letting the API
-    // reject the save.
     if (!priorityCallsAvailable && values.priorityCallsEnabled) fields.priorityCallsEnabled = false
     await dispatch(updateAgentSettingsModel({ agentId: agentSettings.agentId, fields })).unwrap()
     form.reset({

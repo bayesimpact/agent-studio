@@ -39,7 +39,6 @@ class AgentSettingsFactory extends Factory<AgentSettings, AgentSettingsTransient
     })
   }
 
-  /** An agent on the priority tier (only meaningful on a Gemini 3.x model). */
   priorityCalls() {
     return this.params({ priorityCallsEnabled: true })
   }

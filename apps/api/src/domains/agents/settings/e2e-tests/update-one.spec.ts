@@ -312,7 +312,7 @@ describe("Agent Settings - updateOne", () => {
     ).toEqual([legacyProjectCategory.id, newProjectCategory.id])
   })
 
-  it("should update priorityCallsEnabled on a Gemini 3.x model", async () => {
+  it("should update priorityCallsEnabled on any model", async () => {
     await createContext()
 
     const response = await subject({

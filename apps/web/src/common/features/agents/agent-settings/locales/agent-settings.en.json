@@ -203,7 +203,7 @@
     "model": {
       "priorityCalls": {
         "title": "Priority calls",
-        "description": "Lower and more stable latency for Gemini 3.x models, at about 1.8x the standard token price."
+        "description": "Lower and more stable response time, at a higher cost per call."
       }
     },
     "tools": {
