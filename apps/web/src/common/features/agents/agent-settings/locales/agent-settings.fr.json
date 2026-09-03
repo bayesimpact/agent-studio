@@ -13,6 +13,7 @@
       "model": "Modèle",
       "outputJsonSchema": "Schéma JSON de sortie",
       "fillFormEnabled": "Remplissage de formulaire",
+      "priorityCallsEnabled": "Appels prioritaires",
       "schemaBuilder": {
         "advancedMode": "Mode avancé",
         "visualMode": "Éditeur visuel",
@@ -199,6 +200,12 @@
     "source_one": "{{count}} source",
     "source_other": "{{count}} sources",
     "source_zero": "Aucune source",
+    "model": {
+      "priorityCalls": {
+        "title": "Appels prioritaires",
+        "description": "Latence plus basse et plus stable pour les modèles Gemini 3.x, pour environ 1,8x le prix standard des tokens."
+      }
+    },
     "tools": {
       "fillForm": {
         "title": "Remplissage de formulaire",

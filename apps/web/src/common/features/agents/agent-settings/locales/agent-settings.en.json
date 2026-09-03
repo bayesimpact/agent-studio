@@ -13,6 +13,7 @@
       "model": "Model",
       "outputJsonSchema": "Output JSON Schema",
       "fillFormEnabled": "Form filling",
+      "priorityCallsEnabled": "Priority calls",
       "schemaBuilder": {
         "advancedMode": "Advanced mode",
         "visualMode": "Visual editor",
@@ -199,6 +200,12 @@
     "source_one": "{{count}} source",
     "source_other": "{{count}} sources",
     "source_zero": "No sources",
+    "model": {
+      "priorityCalls": {
+        "title": "Priority calls",
+        "description": "Lower and more stable latency for Gemini 3.x models, at about 1.8x the standard token price."
+      }
+    },
     "tools": {
       "fillForm": {
         "title": "Form filling",

@@ -244,6 +244,7 @@ export const agentSettingsValidationSchema = z.object({
   documentsRagMode: z.enum(DocumentsRagMode),
   fillFormEnabled: z.boolean(),
   locale: z.enum(AgentLocale),
+  priorityCallsEnabled: z.boolean(),
   model: z.enum(AgentModel),
   outputJsonSchema: outputJsonSchemaSchema.optional(),
   projectAgentSessionCategoryIds: z.array(z.string().uuid()),
@@ -336,9 +337,12 @@ export const updateAgentSettingsGeneralSchema = agentSettingsValidationSchema
   })
 export type UpdateAgentSettingsGeneralDto = z.infer<typeof updateAgentSettingsGeneralSchema>
 
+// The Model tab also owns the priority tier: it is only meaningful for Gemini 3.x models and
+// is gated by the project's `llm-priority-calls` feature flag (validated server-side).
 export const updateAgentSettingsModelSchema = agentSettingsValidationSchema.pick({
   model: true,
   temperature: true,
+  priorityCallsEnabled: true,
 })
 export type UpdateAgentSettingsModelDto = z.infer<typeof updateAgentSettingsModelSchema>
 

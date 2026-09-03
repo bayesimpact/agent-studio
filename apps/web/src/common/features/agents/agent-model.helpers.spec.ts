@@ -11,6 +11,7 @@ import {
   buildAgentModelDeprecationInterpolation,
   buildAgentModelOptions,
   formatAgentModelLabel,
+  isPriorityCallsAvailable,
 } from "./agent-model.helpers"
 
 describe("AgentModelMetadataMap", () => {
@@ -182,5 +183,28 @@ describe("buildAgentModelOptions", () => {
 
   it("never offers the mock model", () => {
     expect(buildAgentModelOptions(() => true)).not.toContain(AgentModel._Mock)
+  })
+})
+
+describe("isPriorityCallsAvailable", () => {
+  const withPriorityFlag: HasFeature = (feature) => feature === "llm-priority-calls"
+
+  it("is available for a Gemini 3.x model when the project has the flag", () => {
+    expect(
+      isPriorityCallsAvailable({ hasFeature: withPriorityFlag, model: AgentModel.Gemini35Flash }),
+    ).toBe(true)
+  })
+
+  it("is hidden without the project flag", () => {
+    expect(
+      isPriorityCallsAvailable({ hasFeature: () => false, model: AgentModel.Gemini35Flash }),
+    ).toBe(false)
+  })
+
+  it("is hidden for models outside the vertex 3 provider", () => {
+    expect(
+      isPriorityCallsAvailable({ hasFeature: withPriorityFlag, model: AgentModel.Gemini25Flash }),
+    ).toBe(false)
+    expect(isPriorityCallsAvailable({ hasFeature: withPriorityFlag, model: undefined })).toBe(false)
   })
 })

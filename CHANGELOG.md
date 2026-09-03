@@ -9,6 +9,8 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 
 ### Added
 
+- Priority calls: agents on Gemini 3.x models can now enable the priority tier from the Model tab.
+
 ### Changed
 
 ### Fixed

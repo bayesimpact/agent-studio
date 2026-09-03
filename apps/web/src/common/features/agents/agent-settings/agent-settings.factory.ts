@@ -38,6 +38,11 @@ class AgentSettingsFactory extends Factory<AgentSettings, AgentSettingsTransient
       outputJsonSchema: agentOutputJsonSchemaFactory.build(),
     })
   }
+
+  /** An agent on the priority tier (only meaningful on a Gemini 3.x model). */
+  priorityCalls() {
+    return this.params({ priorityCallsEnabled: true })
+  }
 }
 
 export const agentSettingsFactory = AgentSettingsFactory.define(({ params, transientParams }) => {
