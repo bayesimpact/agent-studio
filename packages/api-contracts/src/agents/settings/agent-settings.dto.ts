@@ -244,6 +244,7 @@ export const agentSettingsValidationSchema = z.object({
   documentsRagMode: z.enum(DocumentsRagMode),
   fillFormEnabled: z.boolean(),
   locale: z.enum(AgentLocale),
+  priorityCallsEnabled: z.boolean(),
   model: z.enum(AgentModel),
   outputJsonSchema: outputJsonSchemaSchema.optional(),
   projectAgentSessionCategoryIds: z.array(z.string().uuid()),
@@ -339,6 +340,7 @@ export type UpdateAgentSettingsGeneralDto = z.infer<typeof updateAgentSettingsGe
 export const updateAgentSettingsModelSchema = agentSettingsValidationSchema.pick({
   model: true,
   temperature: true,
+  priorityCallsEnabled: true,
 })
 export type UpdateAgentSettingsModelDto = z.infer<typeof updateAgentSettingsModelSchema>
 
