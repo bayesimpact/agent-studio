@@ -68,10 +68,27 @@ export function AgentSessionMessages({
   renderVersionSelect?: React.ReactNode
 }) {
   const isStreaming = useAppSelector(selectStreaming)
+  const dispatch = useAppDispatch()
 
   const formResult = formResultSchema
     ? { outputJsonSchema: formResultSchema, result: session.result }
     : null
+
+  // A failed or interrupted last reply offers to send its turn again: the same content and
+  // attachment the user already provided, so nothing has to be retyped or re-uploaded.
+  const turnToResend = findTurnToResend(messages)
+  const handleResendLast =
+    turnToResend && !isStreaming
+      ? () =>
+          void dispatch(
+            sendMessage({
+              content: turnToResend.content,
+              attachmentDocumentId: turnToResend.attachmentDocumentId,
+              onFillFormToolEvent,
+              agentSession: session,
+            }),
+          )
+      : undefined
 
   const desktopHeightClasses = "h-[85dvh] md:h-[calc(100dvh-11rem)] xl:h-[calc(100dvh-17rem)]"
   return (
@@ -81,7 +98,11 @@ export function AgentSessionMessages({
           <MessageScrollerProvider scrollPreviousItemPeek={168} defaultScrollPosition="end">
             <FormSubSessionsProvider value={formSubSessions}>
               <FormResultProvider value={formResult}>
-                <Messages messages={messages} renderMessageVersion={renderMessageVersion} />
+                <Messages
+                  messages={messages}
+                  renderMessageVersion={renderMessageVersion}
+                  onResendLast={handleResendLast}
+                />
               </FormResultProvider>
             </FormSubSessionsProvider>
 
@@ -99,13 +120,29 @@ export function AgentSessionMessages({
   )
 }
 
+/**
+ * The user turn to send again when the thread ends on a reply that failed or was interrupted.
+ * Older failures stay as they are: resending them would append out of order.
+ */
+function findTurnToResend(
+  messages: AgentSessionMessageType[],
+): AgentSessionMessageType | undefined {
+  const lastMessage = messages.at(-1)
+  if (lastMessage?.role !== "assistant") return undefined
+  if (lastMessage.status !== "aborted" && lastMessage.status !== "error") return undefined
+  return [...messages].reverse().find((message) => message.role === "user")
+}
+
 function Messages({
   messages,
   renderMessageVersion,
+  onResendLast,
 }: {
   messages: AgentSessionMessageType[]
   renderMessageVersion?: (message: AgentSessionMessageType) => React.ReactNode
+  onResendLast?: () => void
 }) {
+  const lastIndex = messages.length - 1
   return (
     <MessageScroller className="flex-1">
       <MessageScrollerViewport className="p-6">
@@ -117,7 +154,11 @@ function Messages({
               // Anchor on user turns so jumps land on a question with prior context peeking above.
               scrollAnchor={message.role === "user"}
             >
-              <AgentSessionMessage message={message} renderMessageVersion={renderMessageVersion} />
+              <AgentSessionMessage
+                message={message}
+                renderMessageVersion={renderMessageVersion}
+                onResend={index === lastIndex ? onResendLast : undefined}
+              />
             </MessageScrollerItem>
           ))}
         </MessageScrollerContent>

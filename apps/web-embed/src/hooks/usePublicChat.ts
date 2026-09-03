@@ -53,6 +53,18 @@ function toDisplayMessage(msg: {
   }
 }
 
+/**
+ * How often a reply found still streaming on load is re-fetched. A reload mid-reply drops the
+ * SSE stream but the server keeps writing and settles the message on its own (completed, error,
+ * or aborted once found orphaned), so the widget only has to notice.
+ */
+const STREAMING_RECOVERY_POLL_INTERVAL_MS = 2_000
+
+const hasStreamingReply = (messages: { role: string; status?: string }[]) =>
+  messages.some((message) => message.role === "assistant" && message.status === "streaming")
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+
 // ─── Hook ──────────────────────────────────────────────────────────────────
 
 export type PublicChatStatus = "initializing" | "ready" | "error"
@@ -134,6 +146,9 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
           sessionRef.current = stored
           setMessages(sessionData.messages.map(toDisplayMessage))
           setStatus("ready")
+          if (hasStreamingReply(sessionData.messages)) {
+            void settleStreamingReply(stored, stillCurrent)
+          }
           return
         } catch (err) {
           if (!stillCurrent()) return
@@ -151,6 +166,35 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
         await startFreshSession(nonce)
       } catch (err) {
         failInit(err, nonce)
+      }
+    }
+
+    /**
+     * Re-fetches the session until its streaming reply settles, keeping the composer locked as
+     * it was before the reload. Ends when the reply settles, the session is reset, or the
+     * widget unmounts.
+     */
+    async function settleStreamingReply(session: StoredSession, stillCurrent: () => boolean) {
+      setIsStreaming(true)
+      try {
+        while (stillCurrent()) {
+          await sleep(STREAMING_RECOVERY_POLL_INTERVAL_MS)
+          if (!stillCurrent()) return
+          const sessionData = await getSession(embedToken, session.sessionId, session.sessionToken)
+          if (!stillCurrent()) return
+          setMessages(sessionData.messages.map(toDisplayMessage))
+          if (!hasStreamingReply(sessionData.messages)) return
+        }
+      } catch {
+        if (!stillCurrent()) return
+        // The reply can no longer be followed: show it failed rather than spinning for good.
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.status === "streaming" ? { ...message, status: "error" } : message,
+          ),
+        )
+      } finally {
+        if (stillCurrent()) setIsStreaming(false)
       }
     }
 

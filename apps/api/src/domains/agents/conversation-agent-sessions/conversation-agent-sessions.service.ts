@@ -9,6 +9,10 @@ import { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
 import type { AgentSessionCategory } from "../session-categories/agent-session-category.entity"
 import { AgentMessage } from "../shared/agent-session-messages/agent-message.entity"
+import {
+  recoverAbortedStream,
+  recoverAbortedStreams,
+} from "../shared/agent-session-messages/stream-recovery"
 import { ConversationAgentSession } from "./conversation-agent-session.entity"
 import { ConversationAgentSessionCategory } from "./conversation-agent-session-category.entity"
 
@@ -21,6 +25,7 @@ export class ConversationAgentSessionsService {
   private readonly agentSettingsConnectRepository: ConnectRepository<AgentSettings>
   private readonly conversationAgentSessionRepository: Repository<ConversationAgentSession>
   private readonly conversationAgentSessionCategoryRepository: Repository<ConversationAgentSessionCategory>
+  private readonly agentMessageRepository: Repository<AgentMessage>
 
   constructor(
     @InjectRepository(ConversationAgentSession)
@@ -48,6 +53,7 @@ export class ConversationAgentSessionsService {
     )
     this.conversationAgentSessionRepository = conversationAgentSessionRepository
     this.conversationAgentSessionCategoryRepository = conversationAgentSessionCategoryRepository
+    this.agentMessageRepository = agentMessageRepository
   }
 
   async listMessagesForSession({
@@ -57,6 +63,8 @@ export class ConversationAgentSessionsService {
     agentSessionId: string
     connectScope: RequiredConnectScope
   }): Promise<AgentMessage[]> {
+    // A reply whose stream died with the server would otherwise be listed as live forever.
+    await recoverAbortedStreams(this.agentMessageRepository, agentSessionId)
     return this.agentMessageConnectRepository.find(connectScope, {
       where: { sessionId: agentSessionId },
       order: { createdAt: "ASC" },
@@ -74,9 +82,12 @@ export class ConversationAgentSessionsService {
   }): Promise<AgentMessage | null> {
     // `getOneById` builds a query builder, so relations are named as strings here — unlike
     // the `find` above, which forwards TypeORM's object-form FindManyOptions.
-    return this.agentMessageConnectRepository.getOneById(connectScope, id, {
+    const message = await this.agentMessageConnectRepository.getOneById(connectScope, id, {
       relations: ["agentSettings"],
     })
+    if (!message) return null
+    // The client polls this after a refresh until the reply settles; a dead stream must settle too.
+    return recoverAbortedStream(this.agentMessageRepository, message)
   }
 
   async getAllSessionsForAgent({

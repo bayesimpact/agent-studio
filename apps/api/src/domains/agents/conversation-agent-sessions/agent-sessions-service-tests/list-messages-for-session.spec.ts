@@ -3,7 +3,10 @@ import {
   organizationMembershipFactory,
   saveOrgMembership,
 } from "@/domains/organizations/memberships/organization-membership.factory"
-import { createChitChatConversation } from "../../shared/agent-session-messages/agent-messages.factory"
+import {
+  agentMessageFactory,
+  createChitChatConversation,
+} from "../../shared/agent-session-messages/agent-messages.factory"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()
@@ -53,5 +56,111 @@ describe("listMessagesForSession", () => {
     expect(messages[0]?.content).toBe("Hello")
     expect(messages[1]?.role).toBe("assistant")
     expect(messages[1]?.content).toBe("Hi!")
+  })
+})
+
+describe("stale streaming recovery", () => {
+  const buildContext = async () => {
+    const {
+      service,
+      testAgentSettings,
+      testUser,
+      testOrganization,
+      repositories,
+      agentMessageRepository,
+      testProject,
+    } = getTestContext()
+    const connectScope: RequiredConnectScope = {
+      organizationId: testOrganization.id,
+      projectId: testProject.id,
+    }
+
+    await saveOrgMembership({
+      repositories,
+      membership: organizationMembershipFactory
+        .transient({ organization: testOrganization, user: testUser })
+        .owner()
+        .build(),
+    })
+
+    const session = await service.createSession({
+      connectScope,
+      agentSettingsId: testAgentSettings.id,
+      userId: testUser.id,
+      type: "playground",
+    })
+
+    const buildStreamingMessage = (minutesAgo: number) =>
+      agentMessageFactory
+        .assistant()
+        .streaming()
+        .sentMinutesAgo(minutesAgo)
+        .transient({
+          organization: testOrganization,
+          project: testProject,
+          session,
+          agentSettings: testAgentSettings,
+        })
+        .build({ content: "" })
+
+    return { service, connectScope, session, agentMessageRepository, buildStreamingMessage }
+  }
+
+  describe("listMessagesForSession", () => {
+    it("marks a streaming message whose stream is long gone as aborted", async () => {
+      // A page refresh mid-reply closes the stream; if the server also went away, the
+      // assistant message stays "streaming" for good. Listing must not hand that back as live.
+      const { service, connectScope, session, agentMessageRepository, buildStreamingMessage } =
+        await buildContext()
+      const staleMessage = await agentMessageRepository.save(buildStreamingMessage(10))
+
+      const messages = await service.listMessagesForSession({
+        agentSessionId: session.id,
+        connectScope,
+      })
+
+      expect(messages.find((message) => message.id === staleMessage.id)?.status).toBe("aborted")
+      const persisted = await agentMessageRepository.findOneBy({ id: staleMessage.id })
+      expect(persisted?.status).toBe("aborted")
+    })
+
+    it("leaves a message that may still be streaming alone", async () => {
+      const { service, connectScope, session, agentMessageRepository, buildStreamingMessage } =
+        await buildContext()
+      const recentMessage = await agentMessageRepository.save(buildStreamingMessage(1))
+
+      const messages = await service.listMessagesForSession({
+        agentSessionId: session.id,
+        connectScope,
+      })
+
+      expect(messages.find((message) => message.id === recentMessage.id)?.status).toBe("streaming")
+    })
+  })
+
+  describe("getMessageById", () => {
+    it("marks a streaming message whose stream is long gone as aborted", async () => {
+      // The client polls this endpoint after a refresh until the message settles, so a stale
+      // stream must settle here too or the poll never ends.
+      const { service, connectScope, agentMessageRepository, buildStreamingMessage } =
+        await buildContext()
+      const staleMessage = await agentMessageRepository.save(buildStreamingMessage(10))
+
+      const message = await service.getMessageById({ id: staleMessage.id, connectScope })
+
+      expect(message?.status).toBe("aborted")
+      const persisted = await agentMessageRepository.findOneBy({ id: staleMessage.id })
+      expect(persisted?.status).toBe("aborted")
+    })
+
+    it("leaves a message that may still be streaming alone", async () => {
+      const { service, connectScope, agentMessageRepository, buildStreamingMessage } =
+        await buildContext()
+      const recentMessage = await agentMessageRepository.save(buildStreamingMessage(1))
+
+      const message = await service.getMessageById({ id: recentMessage.id, connectScope })
+
+      expect(message?.status).toBe("streaming")
+    })
   })
 })

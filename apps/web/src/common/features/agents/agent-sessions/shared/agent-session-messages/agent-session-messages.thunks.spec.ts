@@ -174,6 +174,31 @@ describe("sendMessage", () => {
     })
   })
 
+  it("resends with the original attachment instead of uploading again", async () => {
+    // Resending an interrupted turn reuses the document the user already attached to it.
+    mockedIsStudioInterface.mockReturnValue(false)
+    const dispatch = vi.fn()
+
+    const agentSession = {
+      id: agentSessionId,
+      type: "live",
+      agentId,
+    } as ConversationAgentSession
+
+    await sendMessage({ content: "Hello", agentSession, attachmentDocumentId: "attachment-1" })(
+      dispatch,
+      () => buildState(),
+      extra,
+    )
+
+    expect(mockedStreamChatResponse).toHaveBeenCalledWith(
+      expect.objectContaining({ attachmentDocumentId: "attachment-1" }),
+    )
+    expect(findAction(dispatch, "startStreaming")?.payload).toMatchObject({
+      userMessage: expect.objectContaining({ attachmentDocumentId: "attachment-1" }),
+    })
+  })
+
   it("leaves a completed stream alone", async () => {
     mockedIsStudioInterface.mockReturnValue(true)
     mockedStreamChatResponse.mockImplementation(async ({ handlers }) => {

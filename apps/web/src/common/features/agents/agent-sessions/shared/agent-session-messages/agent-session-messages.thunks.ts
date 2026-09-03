@@ -73,13 +73,21 @@ export const sendMessage = createAsyncThunk<
     content: string
     agentSession: ConversationAgentSession
     file?: File
+    /** An already uploaded attachment, when resending a turn that carried one. */
+    attachmentDocumentId?: string
     onFillFormToolEvent?: () => void
   },
   ThunkConfig
 >(
   "agentSessionMessages/sendMessage",
   async (
-    { content, agentSession, file, onFillFormToolEvent },
+    {
+      content,
+      agentSession,
+      file,
+      attachmentDocumentId: existingAttachmentDocumentId,
+      onFillFormToolEvent,
+    },
     { extra: { services }, dispatch, getState, signal },
   ) => {
     const state = getState()
@@ -105,7 +113,7 @@ export const sendMessage = createAsyncThunk<
     const userMessageId = generateId()
     const assistantMessageId = generateId()
 
-    let attachmentDocumentId: string | undefined
+    let attachmentDocumentId = existingAttachmentDocumentId
 
     if (file) {
       const attachmentDocument = await services.agentSessionMessages.uploadAttachmentDocument({

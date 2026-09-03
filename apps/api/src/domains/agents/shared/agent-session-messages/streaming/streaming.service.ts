@@ -11,6 +11,7 @@ import { ConversationAgentSession } from "@/domains/agents/conversation-agent-se
 import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 import { ServiceWithLLM } from "@/external/llm"
 import { AgentMessage } from "../agent-message.entity"
+import { recoverAbortedStreams } from "../stream-recovery"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentLlmRequestService } from "./agent-llm-request.service"
 import type { AgentSessionScope, PublicStreamingSessionProxy } from "./streaming-session.types"
@@ -21,7 +22,6 @@ type NotifyClient = (event: Extract<StreamEvent, { type: "notify_client" }>) => 
 
 @Injectable()
 export class StreamingService extends ServiceWithLLM {
-  private readonly STREAM_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
   private readonly agentMessageRepository: Repository<AgentMessage>
   private readonly agentMessageConnectRepository: ConnectRepository<AgentMessage>
   private readonly conversationAgentSessionRepository: Repository<ConversationAgentSession>
@@ -173,7 +173,7 @@ export class StreamingService extends ServiceWithLLM {
     /** Identifier the embedding page attached to the session, if any. */
     externalVisitorId?: string | null
   }): AsyncGenerator<StreamEvent, void, unknown> {
-    await this.recoverAbortedStreams(publicSessionId)
+    await recoverAbortedStreams(this.agentMessageRepository, publicSessionId)
 
     await this.agentMessageConnectRepository.createAndSave(connectScope, {
       sessionId: publicSessionId,
@@ -298,7 +298,7 @@ export class StreamingService extends ServiceWithLLM {
     }
 
     // Recover aborted streams
-    await this.recoverAbortedStreams(sessionId)
+    await recoverAbortedStreams(this.agentMessageRepository, sessionId)
 
     // Reload session with updated messages
     return this.conversationAgentSessionRepository.findOne({
@@ -424,40 +424,18 @@ export class StreamingService extends ServiceWithLLM {
     return session
   }
 
-  /**
-   * Recovers aborted streams in a session
-   * Marks old "streaming" messages as "aborted"
-   */
-  private async recoverAbortedStreams(sessionId: string): Promise<void> {
-    const messages = await this.agentMessageRepository.find({
-      where: {
-        sessionId,
-        role: "assistant",
-        status: "streaming",
-      },
-    })
-
-    for (const message of messages) {
-      if (this.isStreamAborted(message)) {
-        await this.updateMessageStatus({ message, status: "aborted", content: "" })
-      }
-    }
-  }
-
   private async updateMessageStatus({
     message,
     status,
     content,
   }: {
     message: AgentMessage
-    status: "completed" | "error" | "aborted"
+    status: "completed" | "error"
     content: string
   }) {
     message.status = status
-    if (status !== "aborted") {
-      message.content = content
-      message.completedAt = new Date()
-    }
+    message.content = content
+    message.completedAt = new Date()
     await this.agentMessageRepository.save(message)
   }
 
@@ -470,7 +448,7 @@ export class StreamingService extends ServiceWithLLM {
   }: {
     id: string
     sessionId: string
-    status: "completed" | "error" | "aborted"
+    status: "completed" | "error"
     content: string
     throwNotFound?: true
   }) {
@@ -483,22 +461,6 @@ export class StreamingService extends ServiceWithLLM {
       throw new NotFoundException(`ChatMessage with id ${id} not found in session ${sessionId}`)
     }
   }
-  /**
-   * Checks if a streaming message should be marked as aborted
-   */
-  private isStreamAborted(message: AgentMessage): boolean {
-    if (!message.startedAt) {
-      return false
-    }
-
-    const startedAt =
-      message.startedAt instanceof Date ? message.startedAt : new Date(message.startedAt)
-    const now = new Date()
-    const elapsed = now.getTime() - startedAt.getTime()
-
-    return elapsed > this.STREAM_TIMEOUT_MS
-  }
-
   private async persistToolExecutionAndNotifyClient({
     agentSessionScope,
     notifyClient,

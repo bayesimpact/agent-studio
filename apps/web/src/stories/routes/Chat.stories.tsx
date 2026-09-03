@@ -147,3 +147,14 @@ export const Default: Story = {
     )
   },
 }
+
+/** The thread ends on a reply whose stream died before anything was written. */
+export const InterruptedReply: Story = {
+  ...Default,
+  args: {
+    messages: [
+      { id: "1", role: "user", content: "What can you do?" },
+      { id: "2", role: "assistant", content: "", status: "aborted" },
+    ],
+  },
+}

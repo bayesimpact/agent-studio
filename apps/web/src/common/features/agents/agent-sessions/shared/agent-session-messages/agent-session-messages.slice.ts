@@ -120,6 +120,9 @@ const slice = createSlice({
           status: ADS.Fulfilled,
           error: null,
         }
+        // A reply loaded mid-stream (the page was refreshed while the agent was writing) is
+        // still being written server-side: keep the composer locked as it was before the refresh.
+        state.isStreaming = hasStreamingReply(action.payload)
       })
       .addCase(listMessages.rejected, (state, action) => {
         state.data.status = ADS.Error
@@ -133,12 +136,18 @@ const slice = createSlice({
       if (messageIndex !== -1) {
         state.data.value[messageIndex] = updatedMessage
       }
+      // Re-fetched after a refresh: the reply has settled once the server says so.
+      state.isStreaming = hasStreamingReply(state.data.value)
     })
 
     // Reset messages state when an agent session is unmounted
     builder.addMatcher(isAnyOf(conversationAgentSessionsActions.sessionUnmount), () => initialState)
   },
 })
+
+/** Whether an assistant reply in the thread is still being written. */
+export const hasStreamingReply = (messages: AgentSessionMessage[]): boolean =>
+  messages.some((message) => message.role === "assistant" && message.status === "streaming")
 
 export type { State as agentSessionMessagesState }
 export const agentSessionMessagesInitialState = initialState

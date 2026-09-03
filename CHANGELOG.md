@@ -14,6 +14,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ### Changed
 
 ### Fixed
+- Refreshing the page during a reply no longer loses the answer, and an interrupted reply can be resent.
 
 ### Security
 
