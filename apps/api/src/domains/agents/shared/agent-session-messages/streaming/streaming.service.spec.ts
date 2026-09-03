@@ -6,6 +6,7 @@ import {
 import { afterAll } from "@jest/globals"
 import type { ImagePart, TextPart } from "ai"
 import { v4 } from "uuid"
+import type { LLMConfig, LLMProvider } from "@/common/interfaces/llm-provider.interface"
 import {
   type AllRepositories,
   clearTestDatabase,
@@ -285,6 +286,8 @@ describe("StreamingService", () => {
         agentSessionScope: { ...agentSessionScope, session: sessionWithUserMessage },
         attachmentDocumentId,
         onToolExecute: () => undefined,
+        getProviderForModel: jest.fn().mockReturnValue({} as LLMProvider),
+        buildLLMConfig: jest.fn().mockReturnValue({} as LLMConfig),
       })
     }
 

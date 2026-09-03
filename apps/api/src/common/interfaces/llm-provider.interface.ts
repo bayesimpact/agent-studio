@@ -1,5 +1,6 @@
 import type { AgentModel, AgentProvider } from "@caseai-connect/api-contracts"
 import type { ModelMessage, ToolSet } from "ai"
+import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 export type LLMChatMessage = ModelMessage
 
 type MockModels = AgentModel._Mock
@@ -19,7 +20,18 @@ export type LLMFeatures = {
   priorityCalls?: boolean
   flexWorkers?: boolean
 }
-
+export type BuildLLMConfigParams = {
+  model: AgentSettings["model"]
+  systemPrompt: string
+  temperature: AgentSettings["temperature"]
+  tools?: ToolSet
+  fireAndForgetToolNames?: string[]
+  endOfTurnTools?: ToolSet
+  endOfTurnExecutionCounts?: (toolResult: { toolName: string; output: unknown }) => boolean
+  priorityCallsEnabled: boolean
+  llmFeatures: LLMFeatures
+  useExtendedTimeouts?: boolean
+}
 export type LLMConfig =
   | {
       model: MockModels

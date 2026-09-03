@@ -4,6 +4,7 @@ import type { FilePart, ImagePart } from "ai"
 import { v4 } from "uuid"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type {
+  BuildLLMConfigParams,
   LLMChatMessage,
   LLMConfig,
   LLMMetadata,
@@ -90,6 +91,8 @@ export class AgentLlmRequestService extends ServiceWithLLM {
 
   async buildLLMRequest({
     agentSessionScope,
+    getProviderForModel,
+    buildLLMConfig,
     onToolExecute,
     attachmentDocumentId,
     includeSessionMetadataTools = true,
@@ -97,6 +100,8 @@ export class AgentLlmRequestService extends ServiceWithLLM {
     sessionState,
   }: {
     agentSessionScope: AgentSessionScope
+    getProviderForModel: (model: string) => LLMProvider
+    buildLLMConfig: (params: BuildLLMConfigParams) => LLMConfig
     onToolExecute: OnExecute
     attachmentDocumentId?: string
     includeSessionMetadataTools?: boolean
@@ -116,6 +121,8 @@ export class AgentLlmRequestService extends ServiceWithLLM {
       hasSubAgentTools,
     } = await this.toolsService.buildTools({
       agentSessionScope,
+      getProviderForModel,
+      buildLLMConfig,
       includeSessionMetadataTools,
       onExecute: onToolExecute,
       sessionState,
@@ -207,6 +214,8 @@ export class AgentLlmRequestService extends ServiceWithLLM {
           `Tool "${toolExecution.toolName}" executed during single-turn run (trace ${traceId})`,
         )
       },
+      getProviderForModel: this.getProviderForModel,
+      buildLLMConfig: this.buildLLMConfig,
     })
 
     try {

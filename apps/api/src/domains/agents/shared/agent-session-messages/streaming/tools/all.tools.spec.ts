@@ -8,6 +8,7 @@ import { afterAll } from "@jest/globals"
 import { tool } from "ai"
 import { v4 } from "uuid"
 import { z } from "zod"
+import type { LLMConfig, LLMProvider } from "@/common/interfaces/llm-provider.interface"
 import type { AllRepositories } from "@/common/test/test-all-repositories"
 import {
   clearTestDatabase,
@@ -622,6 +623,8 @@ describe("Tools execution", () => {
         connectScope: { organizationId: organization.id, projectId: project.id },
       },
       onExecute: () => undefined,
+      getProviderForModel: jest.fn().mockReturnValue({} as LLMProvider),
+      buildLLMConfig: jest.fn().mockReturnValue({} as LLMConfig),
     })
 
     // Other conversation tools are still built; only fillForm is gated off.
@@ -655,6 +658,8 @@ describe("Tools execution", () => {
         connectScope: { organizationId: organization.id, projectId: project.id },
       },
       onExecute: () => undefined,
+      getProviderForModel: jest.fn().mockReturnValue({} as LLMProvider),
+      buildLLMConfig: jest.fn().mockReturnValue({} as LLMConfig),
     })
 
     expect(tools?.[ToolName.LookupKnowledgeBase]).toBeDefined()

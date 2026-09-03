@@ -106,6 +106,8 @@ export class StreamingService extends ServiceWithLLM {
             toolExecution,
           })
         },
+        getProviderForModel: this.getProviderForModel,
+        buildLLMConfig: this.buildLLMConfig,
       })
       mcpClose = llmRequest.mcpClose
 
@@ -237,6 +239,8 @@ export class StreamingService extends ServiceWithLLM {
             toolExecution,
           })
         },
+        getProviderForModel: this.getProviderForModel,
+        buildLLMConfig: this.buildLLMConfig,
       })
       mcpClose = llmRequest.mcpClose
 
