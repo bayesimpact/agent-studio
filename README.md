@@ -580,7 +580,7 @@ caseai-connect/
    - On macOS, verify the cert is trusted: `security find-certificate -c "connect.localhost" /Library/Keychains/System.keychain`
 
 2. **CORS errors with `https://connect.localhost`:**
-   - The API's CORS config already allows `https://connect.localhost:5173`. If you still get CORS errors, the browser may be blocking the request because it doesn't trust the API's certificate.
+   - The API's CORS config already allows any port on `https://connect.localhost`. If you still get CORS errors, the browser may be blocking the request because it doesn't trust the API's certificate.
    - Visit `https://connect.localhost:3000` directly and accept the certificate, then reload the web app.
 
 3. **Certificate expired:**

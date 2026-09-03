@@ -10,13 +10,13 @@ import { registerBullBoardOpenIdConnect } from "./common/bull-board/bull-board-o
 import { StackTraceLoggingExceptionFilter } from "./common/filters/stack-trace-logging-exception.filter"
 import { getLogLevels, StructuredLogger } from "./common/logger/structured-logger"
 import { enableDbListeners } from "./common/sse/postgres-status-stream.service"
-import { buildCorsOptionsDelegate, parseFrontendUrls } from "./config/cors"
+import { buildCorsOptionsDelegate, parseFrontendOrigins } from "./config/cors"
 
 const isProduction = process.env.NODE_ENV === "production"
 
 async function bootstrap() {
   enableDbListeners()
-  const frontendUrls = parseFrontendUrls(process.env.FRONTEND_URL, isProduction)
+  const frontendOrigins = parseFrontendOrigins(process.env.FRONTEND_URL, isProduction)
   const httpsOptions = loadHttpsCertificates()
   const logLevels = getLogLevels()
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -38,7 +38,7 @@ async function bootstrap() {
   )
   app.useGlobalFilters(new StackTraceLoggingExceptionFilter(app.getHttpAdapter()))
   // Two CORS policies, split by path — see buildCorsOptionsDelegate (#366).
-  app.enableCors(buildCorsOptionsDelegate(frontendUrls))
+  app.enableCors(buildCorsOptionsDelegate(frontendOrigins))
   const port = Number(process.env.PORT) || 3000
   await app.listen(port)
 }
