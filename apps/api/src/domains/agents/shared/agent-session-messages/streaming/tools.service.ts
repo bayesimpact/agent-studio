@@ -73,7 +73,7 @@ type BuildToolsParams = {
  *
  * Owns everything related to tools: MCP tool wiring, conversation agent
  * tools, sub-agent tools, and the helpers that merge and filter them. Extracted
- * from StreamingService so that service can focus on the streaming lifecycle.
+ * from StreamingLLMService so that service can focus on the streaming lifecycle.
  */
 @Injectable()
 export class ToolsService {

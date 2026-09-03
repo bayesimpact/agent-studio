@@ -13,7 +13,7 @@ describe("prepareForStreaming", () => {
       testOrganization,
       testUser,
       testProject,
-      streamingService,
+      streamingLLMService,
     } = getTestContext()
     const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
@@ -28,7 +28,7 @@ describe("prepareForStreaming", () => {
     })
 
     const { session: updatedSession, assistantMessageId } =
-      await streamingService.prepareForStreaming({
+      await streamingLLMService.prepareForStreaming({
         agentSessionScope: {
           agent: testAgent,
           agentSettings: testAgentSettings,
@@ -53,7 +53,7 @@ describe("prepareForStreaming", () => {
   })
 
   it("should throw NotFoundException for non-existent session", async () => {
-    const { testOrganization, testProject, streamingService, testAgent, testAgentSettings } =
+    const { testOrganization, testProject, streamingLLMService, testAgent, testAgentSettings } =
       getTestContext()
     const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
@@ -69,7 +69,7 @@ describe("prepareForStreaming", () => {
       messages: [],
     }
     await expect(
-      streamingService.prepareForStreaming({
+      streamingLLMService.prepareForStreaming({
         agentSessionScope: {
           agent: testAgent,
           agentSettings: testAgentSettings,

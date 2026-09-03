@@ -28,10 +28,10 @@ import {
 import type { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
 import { AgentLlmRequestService } from "./agent-llm-request.service"
 import { StreamingModule } from "./streaming.module"
-import { StreamingService } from "./streaming.service"
+import { StreamingLlmService } from "./streaming-llm.service"
 
-describe("StreamingService", () => {
-  let service: StreamingService
+describe("StreamingLLMService", () => {
+  let service: StreamingLlmService
   let agentLlmRequestService: AgentLlmRequestService
   let agentMessageAttachmentDocumentsService: AgentMessageAttachmentDocumentsService
   let pdfConverterClient: PdfConverterClient
@@ -43,7 +43,7 @@ describe("StreamingService", () => {
     setup = await setupE2eTestDatabase({
       additionalImports: [StreamingModule],
     })
-    service = setup.module.get<StreamingService>(StreamingService)
+    service = setup.module.get<StreamingLlmService>(StreamingLlmService)
     agentLlmRequestService = setup.module.get<AgentLlmRequestService>(AgentLlmRequestService)
     agentMessageAttachmentDocumentsService =
       setup.module.get<AgentMessageAttachmentDocumentsService>(
@@ -265,7 +265,7 @@ describe("StreamingService", () => {
       jest.restoreAllMocks()
     })
 
-    // Builds the LLM request the same way StreamingService does (persist the
+    // Builds the LLM request the same way StreamingLLMService does (persist the
     // user message, reload the session, then hand it to
     // AgentLlmRequestService) without going through the LLM provider itself —
     // buildLLMRequest never calls the provider, so this exercises exactly the

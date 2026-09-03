@@ -25,7 +25,7 @@ import {
 } from "@/domains/documents/storage/file-storage.interface"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectsService } from "@/domains/projects/projects.service"
-import { ServiceWithLLM } from "@/external/llm"
+import { LlmServiceBase } from "@/external/llm"
 import { modelRequiresPdfAsImages } from "@/external/llm/agent-provider"
 import type { Agent } from "../agent.entity"
 import { ExtractionAgentSession } from "./extraction-agent-session.entity"
@@ -40,7 +40,7 @@ import { ExtractionAgentSessionStatusNotifierService } from "./extraction-agent-
  * the LLM call resolves in a worker process.
  */
 @Injectable()
-export class ExtractionAgentSessionRunnerService extends ServiceWithLLM {
+export class ExtractionAgentSessionRunLlmService extends LlmServiceBase {
   private readonly sessionConnectRepository: ConnectRepository<ExtractionAgentSession>
 
   constructor(

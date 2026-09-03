@@ -7,7 +7,7 @@ import type {
   LLMServiceTier,
 } from "@/common/interfaces/llm-provider.interface"
 
-export abstract class ServiceWithLLM {
+export abstract class LlmServiceBase {
   constructor({
     mockLlmProvider,
     vertexLlmProvider,

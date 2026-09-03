@@ -18,7 +18,7 @@ import {
 import type { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
 import { conversationAgentSessionFactory } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.factory"
 import { StreamingModule } from "@/domains/agents/shared/agent-session-messages/streaming/streaming.module"
-import { StreamingService } from "@/domains/agents/shared/agent-session-messages/streaming/streaming.service"
+import { StreamingLlmService } from "@/domains/agents/shared/agent-session-messages/streaming/streaming-llm.service"
 import type { AgentSessionScope } from "@/domains/agents/shared/agent-session-messages/streaming/streaming-session.types"
 import { ToolsService } from "@/domains/agents/shared/agent-session-messages/streaming/tools.service"
 import { DocumentChunkRetrievalService } from "@/domains/documents/embeddings/document-chunk-retrieval.service"
@@ -36,7 +36,7 @@ const mockMcpServersService = { getEnabledServersForAgent: jest.fn() }
 const mockMcpClientService = { connect: jest.fn() }
 
 describe("Tools execution", () => {
-  let service: StreamingService
+  let service: StreamingLlmService
   let mockProvider: AISDKMockProvider
   let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
@@ -53,7 +53,7 @@ describe("Tools execution", () => {
           .overrideProvider(McpClientService)
           .useValue(mockMcpClientService),
     })
-    service = setup.module.get<StreamingService>(StreamingService)
+    service = setup.module.get<StreamingLlmService>(StreamingLlmService)
     mockProvider = setup.module.get<AISDKMockProvider>("_MockLLMProvider")
     mockProvider.resetMock()
     repositories = setup.getAllRepositories()

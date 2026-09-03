@@ -8,7 +8,7 @@ import {
   teardownE2eTestDatabase,
 } from "@/common/test/test-database"
 import { toAgentWithSettingsRunJobPayload } from "@/domains/agents/shared/agent-with-settings-run.helper"
-import { StructuredExtractionAgentRunnerService } from "@/domains/agents/shared/structured-extraction-agent-runner.service"
+import { StructuredExtractionAgentRunLlmService } from "@/domains/agents/shared/structured-extraction-agent-run-llm.service"
 import { documentFactory } from "@/domains/documents/document.factory"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { LlmModule } from "@/external/llm/llm.module"
@@ -35,7 +35,7 @@ describe("AgentCsvExtractionRunProcessorService", () => {
       additionalImports: [LlmModule],
       providers: [
         AgentCsvExtractionRunProcessorService,
-        StructuredExtractionAgentRunnerService,
+        StructuredExtractionAgentRunLlmService,
         { provide: AgentCsvExtractionRunStatusNotifierService, useValue: mockStatusNotifier },
         { provide: AgentCsvExtractionRunCsvExportService, useValue: mockCsvExport },
       ],
