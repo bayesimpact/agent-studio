@@ -33,7 +33,6 @@ describe("AISDKVertex3Provider location routing", () => {
     new AISDKVertex3Provider().getTags({ model, temperature: 0, serviceTier: undefined })[1]
 
   it("keeps every vertex 3 model on the eu endpoint", () => {
-    // Verified 2026-09-04: every 3.x flash and flash-lite answers on aiplatform.eu.rep.googleapis.com.
     const vertex3Models = Object.values(AgentModel).filter(
       (model) => AgentModelToAgentProvider[model] === AgentProvider.Vertex3,
     )
