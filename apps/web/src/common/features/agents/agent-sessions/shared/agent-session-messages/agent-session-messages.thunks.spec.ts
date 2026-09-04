@@ -5,7 +5,7 @@ import { agentSettingsFactory } from "@/common/features/agents/agent-settings/ag
 import { organizationFactory } from "@/common/features/organizations/organization.factory"
 import { projectFactory } from "@/common/features/projects/projects.factory"
 import type { RootState } from "@/common/store"
-import { ADS } from "@/common/store/async-data-status"
+import { ADS, defaultAsyncData } from "@/common/store/async-data-status"
 import type { Services } from "@/di/services"
 import { isStudioInterface } from "@/studio/routes/helpers"
 import { sendMessage } from "./agent-session-messages.thunks"
@@ -59,7 +59,7 @@ function buildState({
 } = {}): RootState {
   return {
     currentIds: { organizationId, projectId, agentId, agentSessionId },
-    agentSessionMessages: { isStreaming: false },
+    agentSessionMessages: { data: defaultAsyncData },
     agentSettings: {
       history: Object.fromEntries(
         Object.entries(history).map(([historyAgentId, versions]) => [

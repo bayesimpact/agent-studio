@@ -8,6 +8,7 @@ import type { ConversationAgentSession } from "../../conversation/conversation-a
 import { conversationAgentSessionsActions } from "../../conversation/conversation-agent-sessions.slice"
 import { buildType } from "../base-agent-session/base-agent-sessions.thunks"
 import type { AgentSessionMessage } from "./agent-session-messages.models"
+import { selectStreaming } from "./agent-session-messages.selectors"
 import { agentSessionMessagesActions } from "./agent-session-messages.slice"
 import { streamChatResponse } from "./external/agent-session-messages-streaming"
 
@@ -106,7 +107,7 @@ export const sendMessage = createAsyncThunk<
       agentSession.type === "playground" ? selectPlaygroundRevision({ agentId })(state) : undefined
 
     // Guard: don't allow sending if already streaming
-    if (state.agentSessionMessages.isStreaming) {
+    if (selectStreaming(state)) {
       return
     }
 

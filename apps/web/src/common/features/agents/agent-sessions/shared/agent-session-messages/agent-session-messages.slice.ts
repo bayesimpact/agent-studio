@@ -5,16 +5,18 @@ import { conversationAgentSessionsActions } from "../../conversation/conversatio
 import type { AgentSessionMessage } from "./agent-session-messages.models"
 import { getMessage, listMessages } from "./agent-session-messages.thunks"
 
+/**
+ * Whether a reply is being written is not stored: it is read off the messages (see
+ * `selectStreaming`), so the composer lock can never drift from what the thread shows.
+ */
 type State = {
   data: AsyncData<AgentSessionMessage[]>
-  isStreaming: boolean
   /** Ordered tools the agent has run during the current streaming turn, driving the status timeline. */
   streamingToolSteps: AgentSessionToolName[]
 }
 
 const initialState: State = {
   data: defaultAsyncData,
-  isStreaming: false,
   streamingToolSteps: [],
 }
 
@@ -38,7 +40,6 @@ const slice = createSlice({
       if (!ADS.isFulfilled(state.data))
         state.data = { value: [], status: ADS.Fulfilled, error: null }
 
-      state.isStreaming = true
       state.streamingToolSteps = []
       state.data.value.push(action.payload.userMessage)
       state.data.value.push({
@@ -90,7 +91,6 @@ const slice = createSlice({
           message.completedAt = Date.now()
         }
       }
-      state.isStreaming = false
       state.streamingToolSteps = []
     },
     failAssistantMessage: (state, action: PayloadAction<{ messageId: string; error: string }>) => {
@@ -104,7 +104,6 @@ const slice = createSlice({
           message.completedAt = Date.now()
         }
       }
-      state.isStreaming = false
       state.streamingToolSteps = []
     },
   },
@@ -115,14 +114,15 @@ const slice = createSlice({
         state.data.error = null
       })
       .addCase(listMessages.fulfilled, (state, action) => {
+        // A list that lands while a reply is being written here (fetched before the turn was
+        // persisted, or a remount) would drop the optimistic turn and unlock the composer while
+        // the stream still runs. The stream, or the recovery poll, settles the thread itself.
+        if (ADS.isFulfilled(state.data) && hasStreamingReply(state.data.value)) return
         state.data = {
           value: action.payload,
           status: ADS.Fulfilled,
           error: null,
         }
-        // A reply loaded mid-stream (the page was refreshed while the agent was writing) is
-        // still being written server-side: keep the composer locked as it was before the refresh.
-        state.isStreaming = hasStreamingReply(action.payload)
       })
       .addCase(listMessages.rejected, (state, action) => {
         state.data.status = ADS.Error
@@ -140,8 +140,6 @@ const slice = createSlice({
       if (messageIndex !== -1) {
         state.data.value[messageIndex] = updatedMessage
       }
-      // Re-fetched after a refresh: the reply has settled once the server says so.
-      state.isStreaming = hasStreamingReply(state.data.value)
     })
 
     // Reset messages state when an agent session is unmounted

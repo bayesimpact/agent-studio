@@ -9,6 +9,7 @@ import {
   STREAMING_RECOVERY_POLL_INTERVAL_MS,
 } from "./agent-session-messages.middleware"
 import type { AgentSessionMessage } from "./agent-session-messages.models"
+import { selectStreaming } from "./agent-session-messages.selectors"
 import {
   agentSessionMessagesActions,
   agentSessionMessagesSlice,
@@ -92,7 +93,7 @@ describe("streaming recovery polling", () => {
 
     await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS)
     expect(getOne).toHaveBeenCalledTimes(2)
-    expect(store.getState().agentSessionMessages.isStreaming).toBe(false)
+    expect(selectStreaming(store.getState())).toBe(false)
 
     // Settled: no further poll.
     await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS * 3)
@@ -179,9 +180,12 @@ describe("streaming recovery polling", () => {
     })
 
     await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS)
-    const state = store.getState().agentSessionMessages
-    expect(state.isStreaming).toBe(false)
-    expect(state.data.value?.[1]).toMatchObject({ id: streamingReply.id, status: "error" })
+    const state = store.getState()
+    expect(selectStreaming(state)).toBe(false)
+    expect(state.agentSessionMessages.data.value?.[1]).toMatchObject({
+      id: streamingReply.id,
+      status: "error",
+    })
 
     await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS * 3)
     expect(getOne).toHaveBeenCalledTimes(STREAMING_RECOVERY_MAX_CONSECUTIVE_FAILURES)

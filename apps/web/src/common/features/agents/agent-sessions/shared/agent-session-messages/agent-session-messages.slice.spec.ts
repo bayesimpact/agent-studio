@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest"
+import type { RootState } from "@/common/store"
 import { ADS } from "@/common/store/async-data-status"
 import type { AgentSessionMessage } from "./agent-session-messages.models"
+import { selectStreaming } from "./agent-session-messages.selectors"
 import {
   agentSessionMessagesActions,
   agentSessionMessagesInitialState,
@@ -14,6 +16,10 @@ vi.mock("@/studio/routes/helpers", () => ({ isStudioInterface: vi.fn() }))
 vi.mock("./external/agent-session-messages-streaming", () => ({ streamChatResponse: vi.fn() }))
 
 const reducer = agentSessionMessagesSlice.reducer
+
+/** Whether the composer is locked for this slice state. */
+const isStreaming = (state: ReturnType<typeof reducer>) =>
+  selectStreaming({ agentSessionMessages: state } as unknown as RootState)
 
 const userMessage: AgentSessionMessage = { id: "user-1", role: "user", content: "Hello" }
 const streamingReply: AgentSessionMessage = {
@@ -39,7 +45,30 @@ describe("agentSessionMessages slice", () => {
         listMessages.fulfilled([userMessage, streamingReply], "request-1", "session-1"),
       )
 
-      expect(state.isStreaming).toBe(true)
+      expect(isStreaming(state)).toBe(true)
+    })
+
+    it("ignores a list that lands while a reply is being written", () => {
+      // A list fetched before the turn was persisted would drop the optimistic turn and unlock
+      // the composer while the SSE stream still runs. The stream settles the thread itself.
+      const streamingState = reducer(
+        reducer(
+          agentSessionMessagesInitialState,
+          listMessages.fulfilled([userMessage], "request-1", "session-1"),
+        ),
+        agentSessionMessagesActions.startStreaming({
+          userMessage: { id: "user-2", role: "user", content: "Again" },
+          assistantMessageId: "optimistic-2",
+        }),
+      )
+
+      const state = reducer(
+        streamingState,
+        listMessages.fulfilled([userMessage], "request-2", "session-1"),
+      )
+
+      expect(state).toBe(streamingState)
+      expect(isStreaming(state)).toBe(true)
     })
 
     it("does not stream when every reply has settled", () => {
@@ -48,7 +77,7 @@ describe("agentSessionMessages slice", () => {
         listMessages.fulfilled([userMessage, completedReply], "request-1", "session-1"),
       )
 
-      expect(state.isStreaming).toBe(false)
+      expect(isStreaming(state)).toBe(false)
     })
   })
 
@@ -64,7 +93,7 @@ describe("agentSessionMessages slice", () => {
         getMessage.fulfilled(completedReply, "request-2", completedReply.id),
       )
 
-      expect(state.isStreaming).toBe(false)
+      expect(isStreaming(state)).toBe(false)
       expect(ADS.isFulfilled(state.data) && state.data.value[1]).toEqual(completedReply)
     })
 
@@ -79,7 +108,7 @@ describe("agentSessionMessages slice", () => {
         getMessage.fulfilled(streamingReply, "request-2", streamingReply.id),
       )
 
-      expect(state.isStreaming).toBe(true)
+      expect(isStreaming(state)).toBe(true)
     })
 
     it("keeps locally streamed content when the snapshot is still streaming", () => {
@@ -102,7 +131,7 @@ describe("agentSessionMessages slice", () => {
       )
 
       expect(ADS.isFulfilled(state.data) && state.data.value[1]?.content).toBe("Hel")
-      expect(state.isStreaming).toBe(true)
+      expect(isStreaming(state)).toBe(true)
     })
 
     it("keeps a completed reply when a late snapshot still says streaming", () => {
@@ -118,7 +147,7 @@ describe("agentSessionMessages slice", () => {
       )
 
       expect(ADS.isFulfilled(state.data) && state.data.value[1]).toEqual(completedReply)
-      expect(state.isStreaming).toBe(false)
+      expect(isStreaming(state)).toBe(false)
     })
   })
 })
