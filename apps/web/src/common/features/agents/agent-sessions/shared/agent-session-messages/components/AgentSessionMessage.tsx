@@ -112,11 +112,15 @@ export function AgentSessionMessage({
                 />
               ))}
 
-            {!isStreaming && !isInterrupted && (
+            {!isStreaming && (
               <MessageFooter className="gap-0 px-1">
-                <FeedbackCreator message={message} />
+                {/* Nothing was written to rate or copy; tools that ran before the interruption
+                    still persisted their results, so those affordances stay. */}
+                {!isInterrupted && <FeedbackCreator message={message} />}
 
-                {!hideMarkdownRecap && <CopyToClipboard content={message.content} />}
+                {!isInterrupted && !hideMarkdownRecap && (
+                  <CopyToClipboard content={message.content} />
+                )}
 
                 {renderMessageVersion?.(message)}
 
