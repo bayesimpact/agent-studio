@@ -8,7 +8,10 @@ import {
   STREAMING_RECOVERY_POLL_INTERVAL_MS,
 } from "./agent-session-messages.middleware"
 import type { AgentSessionMessage } from "./agent-session-messages.models"
-import { agentSessionMessagesSlice } from "./agent-session-messages.slice"
+import {
+  agentSessionMessagesActions,
+  agentSessionMessagesSlice,
+} from "./agent-session-messages.slice"
 import { listMessages } from "./agent-session-messages.thunks"
 
 // The thunks module reaches the Auth0 client and `window.location` transitively; neither exists
@@ -93,6 +96,32 @@ describe("streaming recovery polling", () => {
     // Settled: no further poll.
     await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS * 3)
     expect(getOne).toHaveBeenCalledTimes(2)
+  })
+
+  it("polls only the reply it started for, leaving a later live send alone", async () => {
+    // Once the recovered reply settles the composer unlocks, and the user typically resends at
+    // once. That new turn is streamed live over SSE under an optimistic id the server does not
+    // know yet: polling it would 404 and kill the live reply.
+    const getOne = vi.fn().mockResolvedValue(completedReply)
+    const store = buildStore(getOne)
+
+    store.dispatch(loaded([userMessage, streamingReply]))
+    await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS)
+    expect(getOne).toHaveBeenCalledTimes(1)
+
+    store.dispatch(
+      agentSessionMessagesActions.startStreaming({
+        userMessage: { id: "user-2", role: "user", content: "Again" },
+        assistantMessageId: "optimistic-2",
+      }),
+    )
+    await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS * 3)
+
+    expect(getOne).toHaveBeenCalledTimes(1)
+    expect(store.getState().agentSessionMessages.data.value?.[3]).toMatchObject({
+      id: "optimistic-2",
+      status: "streaming",
+    })
   })
 
   it("does not poll when every loaded reply has settled", async () => {

@@ -23,10 +23,16 @@ function registerListeners() {
   listenerMiddleware.startListening({
     actionCreator: listMessages.fulfilled,
     effect: async (action, listenerApi) => {
-      if (!findStreamingReply(action.payload)) return
+      const streamingReply = findStreamingReply(action.payload)
+      if (!streamingReply) return
 
       // One loop per thread, even if the list is reloaded while a loop already runs.
       listenerApi.cancelActiveListeners()
+
+      // The loop follows this one persisted reply only. A turn the user sends after it settles
+      // is streamed live over SSE under an optimistic id the server does not know: polling it
+      // would fail and kill the live reply.
+      const messageId = streamingReply.id
 
       while (true) {
         await listenerApi.delay(STREAMING_RECOVERY_POLL_INTERVAL_MS)
@@ -34,14 +40,14 @@ function registerListeners() {
         // Leaving the session resets the slice, which is how the loop learns to stop.
         const { data } = listenerApi.getState().agentSessionMessages
         if (!ADS.isFulfilled(data)) return
-        const streamingReply = findStreamingReply(data.value)
-        if (!streamingReply) return
+        const reply = data.value.find((message) => message.id === messageId)
+        if (reply?.status !== "streaming") return
 
-        const result = await listenerApi.dispatch(getMessage(streamingReply.id))
+        const result = await listenerApi.dispatch(getMessage(messageId))
         if (getMessage.rejected.match(result)) {
           listenerApi.dispatch(
             agentSessionMessagesActions.failAssistantMessage({
-              messageId: streamingReply.id,
+              messageId,
               error: result.error.message ?? "The reply could not be loaded",
             }),
           )

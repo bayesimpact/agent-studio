@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 import { ADS } from "@/common/store/async-data-status"
 import type { AgentSessionMessage } from "./agent-session-messages.models"
 import {
+  agentSessionMessagesActions,
   agentSessionMessagesInitialState,
   agentSessionMessagesSlice,
 } from "./agent-session-messages.slice"
@@ -79,6 +80,45 @@ describe("agentSessionMessages slice", () => {
       )
 
       expect(state.isStreaming).toBe(true)
+    })
+
+    it("keeps locally streamed content when the snapshot is still streaming", () => {
+      // The server persists content only at completion, so a mid-stream snapshot is empty.
+      // Applying it would wipe the chunks the live stream has already delivered.
+      const withChunk = reducer(
+        reducer(
+          agentSessionMessagesInitialState,
+          listMessages.fulfilled([userMessage, streamingReply], "request-1", "session-1"),
+        ),
+        agentSessionMessagesActions.appendAssistantChunk({
+          messageId: streamingReply.id,
+          chunk: "Hel",
+        }),
+      )
+
+      const state = reducer(
+        withChunk,
+        getMessage.fulfilled(streamingReply, "request-2", streamingReply.id),
+      )
+
+      expect(ADS.isFulfilled(state.data) && state.data.value[1]?.content).toBe("Hel")
+      expect(state.isStreaming).toBe(true)
+    })
+
+    it("keeps a completed reply when a late snapshot still says streaming", () => {
+      // The read after `end` can be served before the completion is visible.
+      const completedState = reducer(
+        agentSessionMessagesInitialState,
+        listMessages.fulfilled([userMessage, completedReply], "request-1", "session-1"),
+      )
+
+      const state = reducer(
+        completedState,
+        getMessage.fulfilled(streamingReply, "request-2", streamingReply.id),
+      )
+
+      expect(ADS.isFulfilled(state.data) && state.data.value[1]).toEqual(completedReply)
+      expect(state.isStreaming).toBe(false)
     })
   })
 })

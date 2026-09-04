@@ -132,6 +132,10 @@ const slice = createSlice({
     builder.addCase(getMessage.fulfilled, (state, action) => {
       if (!ADS.isFulfilled(state.data)) return
       const updatedMessage = action.payload
+      // A snapshot of a reply still being written carries no content (it is persisted at
+      // completion) and may even trail a completion the client already saw. Only a settled
+      // snapshot may replace what the client holds.
+      if (updatedMessage.status === "streaming") return
       const messageIndex = state.data.value.findIndex((msg) => msg.id === updatedMessage.id)
       if (messageIndex !== -1) {
         state.data.value[messageIndex] = updatedMessage
