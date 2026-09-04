@@ -114,19 +114,19 @@ export const sendMessage = createAsyncThunk<
     const userMessageId = generateId()
     const assistantMessageId = generateId()
 
-    let attachmentDocumentId = existingAttachmentDocumentId
-
-    if (file) {
-      const attachmentDocument = await services.agentSessionMessages.uploadAttachmentDocument({
-        organizationId,
-        projectId,
-        agentId,
-        agentSessionId,
-        file,
-        payload: { type: buildType() },
-      })
-      attachmentDocumentId = attachmentDocument.attachmentDocumentId
-    }
+    // A file picked in the composer is uploaded now; a resend reuses the turn's attachment.
+    const attachmentDocumentId = file
+      ? (
+          await services.agentSessionMessages.uploadAttachmentDocument({
+            organizationId,
+            projectId,
+            agentId,
+            agentSessionId,
+            file,
+            payload: { type: buildType() },
+          })
+        ).attachmentDocumentId
+      : existingAttachmentDocumentId
 
     const userMessage: AgentSessionMessage = {
       id: userMessageId,

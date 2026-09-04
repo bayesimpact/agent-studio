@@ -1,8 +1,7 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit"
 import { ADS } from "@/common/store/async-data-status"
 import type { AppDispatch, RootState } from "@/common/store/types"
-import type { AgentSessionMessage } from "./agent-session-messages.models"
-import { agentSessionMessagesActions } from "./agent-session-messages.slice"
+import { agentSessionMessagesActions, isStreamingReply } from "./agent-session-messages.slice"
 import { getMessage, listMessages } from "./agent-session-messages.thunks"
 
 export const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
@@ -29,9 +28,6 @@ export const STREAMING_RECOVERY_MAX_WAIT_MS = 30 * 60 * 1000
 /** Nobody is looking: skip the poll and catch up on the next visible tick. */
 const isTabHidden = () => typeof document !== "undefined" && document.hidden
 
-const findStreamingReply = (messages: AgentSessionMessage[]): AgentSessionMessage | undefined =>
-  messages.find((message) => message.role === "assistant" && message.status === "streaming")
-
 function registerListeners() {
   // A page refresh while the agent writes closes the SSE stream, but the server keeps writing and
   // persists the outcome. Loading such a reply used to render a spinner nothing would ever
@@ -39,7 +35,7 @@ function registerListeners() {
   listenerMiddleware.startListening({
     actionCreator: listMessages.fulfilled,
     effect: async (action, listenerApi) => {
-      const streamingReply = findStreamingReply(action.payload)
+      const streamingReply = action.payload.find(isStreamingReply)
       if (!streamingReply) return
 
       // One loop per thread, even if the list is reloaded while a loop already runs.

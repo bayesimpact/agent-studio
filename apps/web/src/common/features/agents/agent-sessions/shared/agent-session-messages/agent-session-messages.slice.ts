@@ -57,7 +57,7 @@ const slice = createSlice({
       if (!ADS.isFulfilled(state.data)) return
 
       const message = state.data.value.find((msg) => msg.id === action.payload.oldMessageId)
-      if (message && message.role === "assistant" && message.status === "streaming") {
+      if (message && isStreamingReply(message)) {
         message.id = action.payload.newMessageId
       }
     },
@@ -147,9 +147,13 @@ const slice = createSlice({
   },
 })
 
+/** An assistant reply still being written, live over SSE or recovered after a refresh. */
+export const isStreamingReply = (message: AgentSessionMessage): boolean =>
+  message.role === "assistant" && message.status === "streaming"
+
 /** Whether an assistant reply in the thread is still being written. */
 export const hasStreamingReply = (messages: AgentSessionMessage[]): boolean =>
-  messages.some((message) => message.role === "assistant" && message.status === "streaming")
+  messages.some(isStreamingReply)
 
 export type { State as agentSessionMessagesState }
 export const agentSessionMessagesInitialState = initialState

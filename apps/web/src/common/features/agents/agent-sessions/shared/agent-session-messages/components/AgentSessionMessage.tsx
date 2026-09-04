@@ -40,6 +40,7 @@ export function AgentSessionMessage({
   /** Sends the turn that led to this reply again. Only offered on a failed last reply. */
   onResend?: () => void
 }) {
+  const { t } = useTranslation()
   const formSubSessions = useFormSubSessions()
   const formResult = useFormResult()
 
@@ -80,11 +81,13 @@ export function AgentSessionMessage({
             {isError || isInterrupted ? (
               <Bubble variant="destructive">
                 <BubbleContent className="px-4 py-3">
-                  {isInterrupted ? (
-                    <InterruptedMessage onResend={onResend} />
-                  ) : (
-                    <ErrorMessage detail={message.content} onResend={onResend} />
-                  )}
+                  <FailureNotice
+                    title={isInterrupted ? t("agentSessionMessage:interrupted") : t("status:error")}
+                    // Failed turns store the human-readable reason in the message content (e.g.
+                    // "PDF has 92 pages, but at most 20 pages can be converted to images").
+                    detail={isInterrupted ? undefined : message.content}
+                    onResend={onResend}
+                  />
                 </BubbleContent>
               </Bubble>
             ) : (
@@ -169,43 +172,27 @@ export function AgentSessionMessage({
 }
 
 /**
- * Failed turns store the human-readable reason in the message content (e.g.
- * "PDF has 92 pages, but at most 20 pages can be converted to images"), so
- * show it under the generic label instead of leaving the user guessing.
+ * A reply that failed or was interrupted: a title, the reason when one was recorded, and, on the
+ * last reply of the thread, a way to send the turn again.
  */
-function ErrorMessage({ detail, onResend }: { detail: string; onResend?: () => void }) {
-  const { t } = useTranslation("status")
-  const trimmedDetail = detail.trim()
-  return (
-    <FailureNotice title={t("error")} onResend={onResend}>
-      {trimmedDetail.length > 0 && <p className="whitespace-pre-wrap text-sm">{trimmedDetail}</p>}
-    </FailureNotice>
-  )
-}
-
-/** A reply whose stream ended before anything was written; the user can send the turn again. */
-function InterruptedMessage({ onResend }: { onResend?: () => void }) {
-  const { t } = useTranslation("agentSessionMessage")
-  return <FailureNotice title={t("interrupted")} onResend={onResend} />
-}
-
 function FailureNotice({
   title,
+  detail,
   onResend,
-  children,
 }: {
   title: string
+  detail?: string
   onResend?: () => void
-  children?: React.ReactNode
 }) {
   const { t } = useTranslation()
+  const trimmedDetail = detail?.trim()
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
         <AlertCircleIcon className="size-4 shrink-0" />
         <span className="font-semibold">{title}</span>
       </div>
-      {children}
+      {trimmedDetail && <p className="whitespace-pre-wrap text-sm">{trimmedDetail}</p>}
       {onResend && (
         <Button variant="outline" size="sm" className="w-fit" onClick={onResend}>
           <RotateCcwIcon className="size-3.5" />
