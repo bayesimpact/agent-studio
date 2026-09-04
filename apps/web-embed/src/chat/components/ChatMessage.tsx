@@ -30,7 +30,8 @@ export function ChatMessage({ message }: { message: AgentSessionMessageDto }) {
         message.status === "completed" &&
         !hideMarkdownRecap &&
         !hasSurfacedResources(message.toolCalls)
-      const isError = message.status === "error" || isEmpty
+      // "aborted": the stream died with the server before anything was written.
+      const isError = message.status === "error" || message.status === "aborted" || isEmpty
       const showTextBubble =
         isError || isStreaming || (!hideMarkdownRecap && message.content.trim().length > 0)
 
