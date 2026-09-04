@@ -6,6 +6,7 @@ import { conversationAgentSessionsActions } from "../../conversation/conversatio
 import {
   agentSessionMessagesMiddleware,
   STREAMING_RECOVERY_MAX_CONSECUTIVE_FAILURES,
+  STREAMING_RECOVERY_MAX_WAIT_MS,
   STREAMING_RECOVERY_POLL_INTERVAL_MS,
 } from "./agent-session-messages.middleware"
 import type { AgentSessionMessage } from "./agent-session-messages.models"
@@ -73,6 +74,7 @@ beforeEach(() => {
 afterEach(() => {
   agentSessionMessagesMiddleware.listenerMiddleware.clearListeners()
   vi.useRealTimers()
+  vi.unstubAllGlobals()
 })
 
 describe("streaming recovery polling", () => {
@@ -148,6 +150,43 @@ describe("streaming recovery polling", () => {
     await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS * 3)
 
     expect(getOne).toHaveBeenCalledTimes(1)
+  })
+
+  it("does not poll while the tab is hidden", async () => {
+    // A user who refreshed and tabbed away should not keep the API busy; the next visible tick
+    // catches up.
+    vi.stubGlobal("document", { hidden: true })
+    const getOne = vi.fn().mockResolvedValue(completedReply)
+    const store = buildStore(getOne)
+
+    store.dispatch(loaded([userMessage, streamingReply]))
+    await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS * 3)
+    expect(getOne).not.toHaveBeenCalled()
+
+    vi.stubGlobal("document", { hidden: false })
+    await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS)
+    expect(getOne).toHaveBeenCalledTimes(1)
+  })
+
+  it("gives up once the reply has been followed for the maximum wait", async () => {
+    // A safety net: the server settles orphaned replies on its own, but the loop must not run
+    // for the rest of the session if that ever fails.
+    const getOne = vi.fn().mockResolvedValue(streamingReply)
+    const store = buildStore(getOne)
+
+    store.dispatch(loaded([userMessage, streamingReply]))
+    await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_MAX_WAIT_MS)
+    expect(store.getState().agentSessionMessages.data.value?.[1]).toMatchObject({
+      status: "streaming",
+    })
+
+    await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS)
+    expect(store.getState().agentSessionMessages.data.value?.[1]).toMatchObject({
+      status: "error",
+    })
+    const pollsSoFar = getOne.mock.calls.length
+    await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS * 3)
+    expect(getOne).toHaveBeenCalledTimes(pollsSoFar)
   })
 
   it("keeps polling through a transient failure", async () => {

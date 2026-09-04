@@ -66,6 +66,15 @@ const STREAMING_RECOVERY_POLL_INTERVAL_MS = 2_000
  */
 const STREAMING_RECOVERY_MAX_CONSECUTIVE_FAILURES = 3
 
+/**
+ * Longest a reply is followed before it is shown as failed. The server settles an orphaned reply
+ * within its own window, so this only guards against that never happening.
+ */
+const STREAMING_RECOVERY_MAX_WAIT_MS = 30 * 60 * 1000
+
+/** Nobody is looking: skip the poll and catch up on the next visible tick. */
+const isTabHidden = () => typeof document !== "undefined" && document.hidden
+
 const hasStreamingReply = (messages: { role: string; status?: string }[]) =>
   messages.some((message) => message.role === "assistant" && message.status === "streaming")
 
@@ -187,11 +196,21 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
       nonce: number,
     ) {
       setIsStreaming(true)
+      const giveUpAt = Date.now() + STREAMING_RECOVERY_MAX_WAIT_MS
       let consecutiveFailures = 0
+      // The reply can no longer be followed: show it failed rather than spinning for good.
+      const giveUp = () =>
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.status === "streaming" ? { ...message, status: "error" } : message,
+          ),
+        )
       try {
         while (true) {
           await sleep(STREAMING_RECOVERY_POLL_INTERVAL_MS)
           if (!stillCurrent()) return
+          if (Date.now() > giveUpAt) return giveUp()
+          if (isTabHidden()) continue
 
           try {
             const sessionData = await getSession(
@@ -210,14 +229,7 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
               return
             }
             consecutiveFailures += 1
-            if (consecutiveFailures < STREAMING_RECOVERY_MAX_CONSECUTIVE_FAILURES) continue
-            // The reply can no longer be followed: show it failed rather than spinning for good.
-            setMessages((prev) =>
-              prev.map((message) =>
-                message.status === "streaming" ? { ...message, status: "error" } : message,
-              ),
-            )
-            return
+            if (consecutiveFailures >= STREAMING_RECOVERY_MAX_CONSECUTIVE_FAILURES) return giveUp()
           }
         }
       } finally {

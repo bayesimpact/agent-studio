@@ -19,6 +19,16 @@ export const STREAMING_RECOVERY_POLL_INTERVAL_MS = 2_000
  */
 export const STREAMING_RECOVERY_MAX_CONSECUTIVE_FAILURES = 3
 
+/**
+ * Longest a reply is followed before it is shown as failed. The server settles an orphaned reply
+ * within its own window, so this only guards against that never happening; it is generous enough
+ * for the longest legitimate turn.
+ */
+export const STREAMING_RECOVERY_MAX_WAIT_MS = 30 * 60 * 1000
+
+/** Nobody is looking: skip the poll and catch up on the next visible tick. */
+const isTabHidden = () => typeof document !== "undefined" && document.hidden
+
 const findStreamingReply = (messages: AgentSessionMessage[]): AgentSessionMessage | undefined =>
   messages.find((message) => message.role === "assistant" && message.status === "streaming")
 
@@ -39,7 +49,13 @@ function registerListeners() {
       // is streamed live over SSE under an optimistic id the server does not know: polling it
       // would fail and kill the live reply.
       const messageId = streamingReply.id
+      const giveUpAt = Date.now() + STREAMING_RECOVERY_MAX_WAIT_MS
       let consecutiveFailures = 0
+
+      // The reply cannot be followed any more: better a visible failure than a spinner for good.
+      const giveUp = (error: string) => {
+        listenerApi.dispatch(agentSessionMessagesActions.failAssistantMessage({ messageId, error }))
+      }
 
       while (true) {
         await listenerApi.delay(STREAMING_RECOVERY_POLL_INTERVAL_MS)
@@ -50,6 +66,9 @@ function registerListeners() {
         const reply = data.value.find((message) => message.id === messageId)
         if (reply?.status !== "streaming") return
 
+        if (Date.now() > giveUpAt) return giveUp("The reply took too long")
+        if (isTabHidden()) continue
+
         const result = await listenerApi.dispatch(getMessage(messageId))
         if (!getMessage.rejected.match(result)) {
           consecutiveFailures = 0
@@ -57,16 +76,9 @@ function registerListeners() {
         }
 
         consecutiveFailures += 1
-        if (consecutiveFailures < STREAMING_RECOVERY_MAX_CONSECUTIVE_FAILURES) continue
-
-        // The reply cannot be followed any more: better a visible failure than a spinner for good.
-        listenerApi.dispatch(
-          agentSessionMessagesActions.failAssistantMessage({
-            messageId,
-            error: result.error.message ?? "The reply could not be loaded",
-          }),
-        )
-        return
+        if (consecutiveFailures >= STREAMING_RECOVERY_MAX_CONSECUTIVE_FAILURES) {
+          return giveUp(result.error.message ?? "The reply could not be loaded")
+        }
       }
     },
   })
