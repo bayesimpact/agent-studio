@@ -13,6 +13,12 @@ export const listenerMiddleware = createListenerMiddleware<RootState, AppDispatc
  */
 export const STREAMING_RECOVERY_POLL_INTERVAL_MS = 2_000
 
+/**
+ * Polls that may fail in a row before the reply is given up on. A single failed read (network
+ * blip, token refresh) says nothing about the reply, which the server is still writing.
+ */
+export const STREAMING_RECOVERY_MAX_CONSECUTIVE_FAILURES = 3
+
 const findStreamingReply = (messages: AgentSessionMessage[]): AgentSessionMessage | undefined =>
   messages.find((message) => message.role === "assistant" && message.status === "streaming")
 
@@ -33,6 +39,7 @@ function registerListeners() {
       // is streamed live over SSE under an optimistic id the server does not know: polling it
       // would fail and kill the live reply.
       const messageId = streamingReply.id
+      let consecutiveFailures = 0
 
       while (true) {
         await listenerApi.delay(STREAMING_RECOVERY_POLL_INTERVAL_MS)
@@ -44,15 +51,22 @@ function registerListeners() {
         if (reply?.status !== "streaming") return
 
         const result = await listenerApi.dispatch(getMessage(messageId))
-        if (getMessage.rejected.match(result)) {
-          listenerApi.dispatch(
-            agentSessionMessagesActions.failAssistantMessage({
-              messageId,
-              error: result.error.message ?? "The reply could not be loaded",
-            }),
-          )
-          return
+        if (!getMessage.rejected.match(result)) {
+          consecutiveFailures = 0
+          continue
         }
+
+        consecutiveFailures += 1
+        if (consecutiveFailures < STREAMING_RECOVERY_MAX_CONSECUTIVE_FAILURES) continue
+
+        // The reply cannot be followed any more: better a visible failure than a spinner for good.
+        listenerApi.dispatch(
+          agentSessionMessagesActions.failAssistantMessage({
+            messageId,
+            error: result.error.message ?? "The reply could not be loaded",
+          }),
+        )
+        return
       }
     },
   })

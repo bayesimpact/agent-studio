@@ -5,6 +5,7 @@ import type { Services } from "@/di/services"
 import { conversationAgentSessionsActions } from "../../conversation/conversation-agent-sessions.slice"
 import {
   agentSessionMessagesMiddleware,
+  STREAMING_RECOVERY_MAX_CONSECUTIVE_FAILURES,
   STREAMING_RECOVERY_POLL_INTERVAL_MS,
 } from "./agent-session-messages.middleware"
 import type { AgentSessionMessage } from "./agent-session-messages.models"
@@ -148,19 +149,41 @@ describe("streaming recovery polling", () => {
     expect(getOne).toHaveBeenCalledTimes(1)
   })
 
-  it("marks the reply as failed when it cannot be re-fetched", async () => {
+  it("keeps polling through a transient failure", async () => {
+    // The server is still writing the reply; a network blip or a token refresh on one poll must
+    // not turn it into a failed reply the user then resends, producing a duplicate turn.
+    const getOne = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("Network Error"))
+      .mockResolvedValueOnce(completedReply)
+    const store = buildStore(getOne)
+
+    store.dispatch(loaded([userMessage, streamingReply]))
+    await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS * 2)
+
+    expect(getOne).toHaveBeenCalledTimes(2)
+    expect(store.getState().agentSessionMessages.data.value?.[1]).toEqual(completedReply)
+  })
+
+  it("marks the reply as failed once polls keep failing", async () => {
     // Without this the spinner would outlive a deleted or unreachable message.
     const getOne = vi.fn().mockRejectedValue(new Error("Message not found"))
     const store = buildStore(getOne)
 
     store.dispatch(loaded([userMessage, streamingReply]))
-    await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS)
+    await vi.advanceTimersByTimeAsync(
+      STREAMING_RECOVERY_POLL_INTERVAL_MS * (STREAMING_RECOVERY_MAX_CONSECUTIVE_FAILURES - 1),
+    )
+    expect(store.getState().agentSessionMessages.data.value?.[1]).toMatchObject({
+      status: "streaming",
+    })
 
+    await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS)
     const state = store.getState().agentSessionMessages
     expect(state.isStreaming).toBe(false)
     expect(state.data.value?.[1]).toMatchObject({ id: streamingReply.id, status: "error" })
 
     await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS * 3)
-    expect(getOne).toHaveBeenCalledTimes(1)
+    expect(getOne).toHaveBeenCalledTimes(STREAMING_RECOVERY_MAX_CONSECUTIVE_FAILURES)
   })
 })
