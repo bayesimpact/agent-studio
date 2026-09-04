@@ -31,6 +31,46 @@ describe("McpServersService", () => {
     await clearTestDatabase(setup.dataSource)
   })
 
+  describe("getAuthStatus", () => {
+    const oauth = {
+      clientId: "client-123",
+      authorizationEndpoint: "https://auth.example.com/oauth2/authorize",
+      tokenEndpoint: "https://auth.example.com/oauth2/token",
+      resource: "https://mcp.example.com",
+    }
+    const url = "https://mcp.example.com/mcp"
+
+    it("reports a fresh access token as connected", () => {
+      const tokens = { accessToken: "at-1", expiresAt: Date.now() + 3600_000 }
+      expect(service.getAuthStatus({ url, oauth: { ...oauth, tokens } })).toBe("oauthConnected")
+    })
+
+    it("reports an access token without a known expiry as connected", () => {
+      const tokens = { accessToken: "at-1" }
+      expect(service.getAuthStatus({ url, oauth: { ...oauth, tokens } })).toBe("oauthConnected")
+    })
+
+    it("reports an expired access token with a refresh token as connected", () => {
+      const tokens = { accessToken: "at-1", refreshToken: "rt-1", expiresAt: Date.now() - 1000 }
+      expect(service.getAuthStatus({ url, oauth: { ...oauth, tokens } })).toBe("oauthConnected")
+    })
+
+    it("reports an expired access token without a refresh token as pending", () => {
+      const tokens = { accessToken: "at-1", expiresAt: Date.now() - 1000 }
+      expect(service.getAuthStatus({ url, oauth: { ...oauth, tokens } })).toBe("oauthPending")
+    })
+
+    it("reports a server awaiting its first authorization as pending", () => {
+      expect(service.getAuthStatus({ url, authMethod: "oauth" })).toBe("oauthPending")
+      expect(service.getAuthStatus({ url, oauth })).toBe("oauthPending")
+    })
+
+    it("reports api key and unauthenticated servers", () => {
+      expect(service.getAuthStatus({ url, apiKey: "sk" })).toBe("apiKey")
+      expect(service.getAuthStatus({ url })).toBe("none")
+    })
+  })
+
   describe("createPreset", () => {
     it("should create a preset MCP server with encrypted config", async () => {
       const server = await service.createPreset("create-test", "Test Server", {

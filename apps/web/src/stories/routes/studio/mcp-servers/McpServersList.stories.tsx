@@ -30,6 +30,14 @@ function buildMockMcpServersService(
     async deleteOne() {},
     async enableForAgent() {},
     async disableForAgent() {},
+    async initiateOauth() {
+      return { authorizationUrl: "https://example.com/oauth/authorize" }
+    },
+    async completeOauth() {
+      return (
+        mcpServers[0] ?? mcpServerFactory.transient({ project: { id: "mock" } as never }).build()
+      )
+    },
   }
 }
 
@@ -69,6 +77,25 @@ export const WithServers: Story = {
     buildDecorator<StoryArgs>(({ withServers, ...args }) => {
       const { baseSeeds, project } = buildStudioData(args)
       const mcpServers = withServers ? mcpServerFactory.transient({ project }).buildList(3) : []
+      return {
+        state: mergeSeeds(baseSeeds, seed.studio.mcpServers(mcpServers)),
+        services: { mcpServers: buildMockMcpServersService({ mcpServers }) },
+      }
+    }),
+  ],
+}
+
+export const WithAuthStatuses: Story = {
+  args: { withServers: true },
+  decorators: [
+    buildDecorator<StoryArgs>(({ withServers: _withServers, ...args }) => {
+      const { baseSeeds, project } = buildStudioData(args)
+      const mcpServers = [
+        mcpServerFactory.build({ authStatus: "none" }, { transient: { project } }),
+        mcpServerFactory.build({ authStatus: "oauthPending" }, { transient: { project } }),
+        mcpServerFactory.build({ authStatus: "oauthConnected" }, { transient: { project } }),
+        mcpServerFactory.build({ authStatus: "apiKey" }, { transient: { project } }),
+      ]
       return {
         state: mergeSeeds(baseSeeds, seed.studio.mcpServers(mcpServers)),
         services: { mcpServers: buildMockMcpServersService({ mcpServers }) },

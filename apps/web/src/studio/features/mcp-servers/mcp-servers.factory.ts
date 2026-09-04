@@ -28,6 +28,7 @@ export const mcpServerFactory = McpServerFactory.define(({ params, transientPara
     name: params.name ?? faker.helpers.arrayElement(SERVER_NAMES),
     url: params.url ?? faker.internet.url(),
     projectId: project.id,
+    authStatus: params.authStatus ?? "none",
     createdAt: params.createdAt ?? faker.date.past().getTime(),
     updatedAt: params.updatedAt ?? faker.date.recent().getTime(),
   }

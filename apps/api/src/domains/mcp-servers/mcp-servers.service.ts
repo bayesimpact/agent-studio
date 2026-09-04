@@ -1,3 +1,4 @@
+import type { McpServerAuthStatus } from "@caseai-connect/api-contracts"
 import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
@@ -5,22 +6,18 @@ import { AgentMcpServer } from "./agent-mcp-server.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { EncryptionService } from "./encryption.service"
 import { McpServer } from "./mcp-server.entity"
+import type { EnabledMcpServer, McpServerConfig } from "./mcp-server-config.types"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { McpOauthService } from "./oauth/mcp-oauth.service"
+import { canStillAuthenticate } from "./oauth/oauth-tokens"
 
-export type McpServerConfig = {
-  url: string
-  apiKey?: string
-  /**
-   * Static headers sent on every call to this server, for whatever a given
-   * server expects beyond its auth (an API version, a tenant). Stored in the
-   * encrypted config blob, so adding them needs no migration. The conversation
-   * context is applied after them and cannot be overridden here.
-   */
-  headers?: Record<string, string>
-}
-
-export type EnabledMcpServer = McpServerConfig & {
-  id: string
-}
+export type {
+  EnabledMcpServer,
+  McpServerConfig,
+  McpServerOauthPendingAuth,
+  McpServerOauthState,
+  McpServerOauthTokens,
+} from "./mcp-server-config.types"
 
 @Injectable()
 export class McpServersService {
@@ -30,6 +27,7 @@ export class McpServersService {
     @InjectRepository(AgentMcpServer)
     private readonly agentMcpServerRepository: Repository<AgentMcpServer>,
     private readonly encryptionService: EncryptionService,
+    private readonly mcpOauthService: McpOauthService,
   ) {}
 
   async getEnabledServersForAgent(agentId: string): Promise<EnabledMcpServer[]> {
@@ -38,12 +36,18 @@ export class McpServersService {
       relations: ["mcpServer"],
     })
 
-    return agentMcpServers
-      .filter((agentMcpServer) => agentMcpServer.mcpServer)
-      .map((agentMcpServer) => ({
-        id: agentMcpServer.mcpServer.id,
-        ...this.decryptConfig(agentMcpServer.mcpServer),
-      }))
+    const enabledServers = agentMcpServers.filter((agentMcpServer) => agentMcpServer.mcpServer)
+    return Promise.all(
+      enabledServers.map(async (agentMcpServer) => {
+        const { oauth, ...config } = this.decryptConfig(agentMcpServer.mcpServer)
+        if (!oauth) return { id: agentMcpServer.mcpServer.id, ...config }
+        const accessToken = await this.mcpOauthService.getValidAccessToken(
+          agentMcpServer.mcpServer.id,
+          oauth,
+        )
+        return { id: agentMcpServer.mcpServer.id, ...config, apiKey: accessToken ?? undefined }
+      }),
+    )
   }
 
   async createPreset(slug: string, name: string, config: McpServerConfig): Promise<McpServer> {
@@ -110,8 +114,15 @@ export class McpServersService {
     await this.agentMcpServerRepository.delete({ agentId, mcpServerId })
   }
 
-  decryptUrl(mcpServer: McpServer): string {
-    return this.decryptConfig(mcpServer).url
+  getConfig(mcpServer: McpServer): McpServerConfig {
+    return this.decryptConfig(mcpServer)
+  }
+
+  getAuthStatus(config: McpServerConfig): McpServerAuthStatus {
+    if (canStillAuthenticate(config.oauth?.tokens)) return "oauthConnected"
+    if (config.oauth || config.authMethod === "oauth") return "oauthPending"
+    if (config.apiKey) return "apiKey"
+    return "none"
   }
 
   private decryptConfig(mcpServer: McpServer): McpServerConfig {
