@@ -8,6 +8,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ## [Unreleased]
 
 ### Added
+- Embedded public chat shows the document sources used in an answer.
 
 - (beta) Priority calls: agents on Gemini 3.x models can now enable the priority tier from the Model tab.
 
@@ -21,6 +22,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ## [26.09.1] - 2026-09-02
 
 ### Added
+- Embedded public chat shows matching resources from the agent's libraries as cards.
 
 ### Changed
 
