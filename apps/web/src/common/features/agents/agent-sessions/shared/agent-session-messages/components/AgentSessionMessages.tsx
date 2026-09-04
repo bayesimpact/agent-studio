@@ -43,6 +43,7 @@ import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { AttachDocument } from "@/studio/features/documents/components/AttachDocument"
 import { selectStreaming } from "../agent-session-messages.selectors"
 import { sendMessage } from "../agent-session-messages.thunks"
+import { findFailedLastTurn } from "./failed-last-turn"
 
 type AgentSession = ConversationAgentSession
 
@@ -76,14 +77,14 @@ export function AgentSessionMessages({
 
   // A failed or interrupted last reply offers to send its turn again: the same content and
   // attachment the user already provided, so nothing has to be retyped or re-uploaded.
-  const turnToResend = findTurnToResend(messages)
+  const failedTurn = findFailedLastTurn(messages)
   const handleResendLast =
-    turnToResend && !isStreaming
+    failedTurn && !isStreaming
       ? () =>
           void dispatch(
             sendMessage({
-              content: turnToResend.content,
-              attachmentDocumentId: turnToResend.attachmentDocumentId,
+              content: failedTurn.userMessage.content,
+              attachmentDocumentId: failedTurn.userMessage.attachmentDocumentId,
               onFillFormToolEvent,
               agentSession: session,
             }),
@@ -101,6 +102,7 @@ export function AgentSessionMessages({
                 <Messages
                   messages={messages}
                   renderMessageVersion={renderMessageVersion}
+                  resendReplyIndex={failedTurn?.replyIndex}
                   onResendLast={handleResendLast}
                 />
               </FormResultProvider>
@@ -120,33 +122,18 @@ export function AgentSessionMessages({
   )
 }
 
-/**
- * The user turn to send again when the thread ends on a reply that failed or was interrupted.
- * Older failures stay as they are: resending them would append out of order.
- */
-function findTurnToResend(
-  messages: AgentSessionMessageType[],
-): AgentSessionMessageType | undefined {
-  const lastMessage = messages.at(-1)
-  if (lastMessage?.role !== "assistant") return undefined
-  if (lastMessage.status !== "aborted" && lastMessage.status !== "error") return undefined
-  for (let index = messages.length - 1; index >= 0; index -= 1) {
-    const message = messages[index]
-    if (message?.role === "user") return message
-  }
-  return undefined
-}
-
 function Messages({
   messages,
   renderMessageVersion,
+  resendReplyIndex,
   onResendLast,
 }: {
   messages: AgentSessionMessageType[]
   renderMessageVersion?: (message: AgentSessionMessageType) => React.ReactNode
+  /** Index of the failed reply that renders the Retry affordance. */
+  resendReplyIndex?: number
   onResendLast?: () => void
 }) {
-  const lastIndex = messages.length - 1
   return (
     <MessageScroller className="flex-1">
       <MessageScrollerViewport className="p-6">
@@ -161,7 +148,7 @@ function Messages({
               <AgentSessionMessage
                 message={message}
                 renderMessageVersion={renderMessageVersion}
-                onResend={index === lastIndex ? onResendLast : undefined}
+                onResend={index === resendReplyIndex ? onResendLast : undefined}
               />
             </MessageScrollerItem>
           ))}
