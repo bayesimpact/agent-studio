@@ -28,15 +28,27 @@ export const STREAMING_RECOVERY_MAX_WAIT_MS = 30 * 60 * 1000
 /** Nobody is looking: skip the poll and catch up on the next visible tick. */
 const isTabHidden = () => typeof document !== "undefined" && document.hidden
 
+const findStreamingReply = (state: RootState) => {
+  const { data } = state.agentSessionMessages
+  return ADS.isFulfilled(data) ? data.value.find(isStreamingReply) : undefined
+}
+
 function registerListeners() {
   // A page refresh while the agent writes closes the SSE stream, but the server keeps writing and
   // persists the outcome. Loading such a reply used to render a spinner nothing would ever
   // resolve; instead re-fetch it until the server reports it settled.
   listenerMiddleware.startListening({
     actionCreator: listMessages.fulfilled,
-    effect: async (action, listenerApi) => {
-      const streamingReply = action.payload.find(isStreamingReply)
+    effect: async (_, listenerApi) => {
+      // Decided on the thread the reducer produced, not on the payload: a list the reducer set
+      // aside because a reply is being written here must not start a loop against it.
+      const streamingReply = findStreamingReply(listenerApi.getState())
       if (!streamingReply) return
+
+      // A reply that was already streaming before this list is either streamed live over SSE
+      // or already followed by a running loop. Only a reply the list introduced needs one.
+      const previousReply = findStreamingReply(listenerApi.getOriginalState())
+      if (previousReply?.id === streamingReply.id) return
 
       // One loop per thread, even if the list is reloaded while a loop already runs.
       listenerApi.cancelActiveListeners()

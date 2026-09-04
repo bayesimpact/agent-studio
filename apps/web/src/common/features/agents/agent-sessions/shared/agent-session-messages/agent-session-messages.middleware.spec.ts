@@ -134,6 +134,49 @@ describe("streaming recovery polling", () => {
     })
   })
 
+  it("does not follow a reply from a list set aside while a reply is written here", async () => {
+    // A list fetched before the turn was persisted is ignored by the reducer so the optimistic
+    // turn survives. The loop must follow what the thread holds, not what that list carried:
+    // polling the persisted id would only fail and kill the live reply.
+    const getOne = vi.fn().mockResolvedValue(completedReply)
+    const store = buildStore(getOne)
+
+    store.dispatch(loaded([userMessage]))
+    store.dispatch(
+      agentSessionMessagesActions.startStreaming({
+        userMessage: { id: "user-2", role: "user", content: "Again" },
+        assistantMessageId: "optimistic-2",
+      }),
+    )
+    store.dispatch(loaded([userMessage, streamingReply]))
+    await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS * 3)
+
+    expect(getOne).not.toHaveBeenCalled()
+    expect(store.getState().agentSessionMessages.data.value?.[2]).toMatchObject({
+      id: "optimistic-2",
+      status: "streaming",
+    })
+  })
+
+  it("keeps a running loop when the same list is loaded again", async () => {
+    // A remount reloads the list while the recovered reply is still being followed. The loop
+    // that already runs carries on; no second one starts.
+    const getOne = vi
+      .fn()
+      .mockResolvedValueOnce(streamingReply)
+      .mockResolvedValueOnce(completedReply)
+    const store = buildStore(getOne)
+
+    store.dispatch(loaded([userMessage, streamingReply]))
+    await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS)
+    expect(getOne).toHaveBeenCalledTimes(1)
+
+    store.dispatch(loaded([userMessage, streamingReply]))
+    await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS)
+    expect(getOne).toHaveBeenCalledTimes(2)
+    expect(selectStreaming(store.getState())).toBe(false)
+  })
+
   it("does not poll when every loaded reply has settled", async () => {
     const getOne = vi.fn()
     const store = buildStore(getOne)
