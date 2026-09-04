@@ -19,7 +19,7 @@ import { ServiceWithLLM } from "@/external/llm"
 import { AgentMessage } from "../agent-message.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentMessageAttachmentDocumentsService } from "../agent-message-attachment-documents.service"
-import { recoverAbortedStreams, STREAM_HEARTBEAT_MS } from "../stream-recovery"
+import { recoverAbortedStreams, throttleHeartbeat } from "../stream-recovery"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentLlmRequestService } from "./agent-llm-request.service"
 import type { AgentSessionScope, PublicStreamingSessionProxy } from "./streaming-session.types"
@@ -107,7 +107,10 @@ export class StreamingService extends ServiceWithLLM {
 
     let fullContent = ""
     let mcpClose: (() => Promise<void>) | undefined
-    const stopHeartbeat = this.startHeartbeat(assistantMessageId)
+    const onProgress = this.progressHeartbeat({
+      connectScope: agentSessionScope.connectScope,
+      assistantMessageId,
+    })
 
     try {
       const llmRequest = await this.agentLlmRequestService.buildLLMRequest({
@@ -129,6 +132,7 @@ export class StreamingService extends ServiceWithLLM {
       )
       for await (const chunk of chunks) {
         fullContent += chunk
+        onProgress()
         yield this.sseEvent({ type: "chunk", content: chunk, messageId: assistantMessageId })
       }
 
@@ -152,7 +156,6 @@ export class StreamingService extends ServiceWithLLM {
 
       throw error
     } finally {
-      stopHeartbeat()
       await mcpClose?.()
     }
   }
@@ -238,7 +241,7 @@ export class StreamingService extends ServiceWithLLM {
 
     let fullContent = ""
     let mcpClose: (() => Promise<void>) | undefined
-    const stopHeartbeat = this.startHeartbeat(assistantMessageId)
+    const onProgress = this.progressHeartbeat({ connectScope, assistantMessageId })
 
     try {
       const agentSessionScope: AgentSessionScope = {
@@ -266,6 +269,7 @@ export class StreamingService extends ServiceWithLLM {
       )
       for await (const chunk of chunks) {
         fullContent += chunk
+        onProgress()
         yield this.sseEvent({ type: "chunk", content: chunk, messageId: assistantMessageId })
       }
 
@@ -290,25 +294,34 @@ export class StreamingService extends ServiceWithLLM {
       yield this.sseEvent({ type: "error", messageId: assistantMessageId, error: errorMessage })
       throw error
     } finally {
-      stopHeartbeat()
       await mcpClose?.()
     }
   }
 
   /**
-   * Keeps touching the streaming message while the answer is generated, so a long turn is not
-   * taken for an orphaned one by the recovery sweep (see `isStreamStale`). Only a row still
-   * streaming is touched: a late tick must not disturb a settled message.
+   * Touches the streaming message as the answer progresses, so a long turn is not taken for an
+   * orphaned one by the recovery sweep (see `isStreamStale`), while a hung one is. Tool runs
+   * write the row on their own. Only a row still streaming is touched: a late write must not
+   * disturb a settled message. The write is not awaited, so it never slows the stream down.
    */
-  private startHeartbeat(assistantMessageId: string): () => void {
-    const timer = setInterval(() => {
-      this.agentMessageRepository
-        .update({ id: assistantMessageId, status: "streaming" }, { updatedAt: new Date() })
+  private progressHeartbeat({
+    connectScope,
+    assistantMessageId,
+  }: {
+    connectScope: RequiredConnectScope
+    assistantMessageId: string
+  }): () => void {
+    return throttleHeartbeat(() => {
+      this.agentMessageConnectRepository
+        .updateManyBy({
+          connectScope,
+          where: { id: assistantMessageId, status: "streaming" },
+          fields: { updatedAt: new Date() },
+        })
         .catch((error: unknown) => {
           this.logger.warn(`Heartbeat failed for message ${assistantMessageId}`, error)
         })
-    }, STREAM_HEARTBEAT_MS)
-    return () => clearInterval(timer)
+    })
   }
 
   private sseEvent<T extends StreamEventPayload["type"]>(

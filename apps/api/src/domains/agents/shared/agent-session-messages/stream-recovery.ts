@@ -15,8 +15,25 @@ import type { AgentMessage } from "./agent-message.entity"
  */
 export const STREAM_TIMEOUT_MS = 5 * 60 * 1000
 
-/** How often a running stream touches its message so it is not taken for orphaned. */
+/** How often a progressing stream touches its message at most, so it is not taken for orphaned. */
 export const STREAM_HEARTBEAT_MS = 60 * 1000
+
+/**
+ * Wraps the write that touches a streaming message so it runs at most once per
+ * {@link STREAM_HEARTBEAT_MS}, however often progress is reported. The returned function is
+ * called on every chunk of the answer. Progress, not the passing of time, is what keeps the row
+ * alive: a stream that hangs stops touching it and settles as aborted once the window has
+ * passed, instead of staying live for as long as its provider timeout allows.
+ */
+export function throttleHeartbeat(touch: () => void, now: () => number = Date.now): () => void {
+  let lastTouchedAt = now()
+  return () => {
+    const current = now()
+    if (current - lastTouchedAt < STREAM_HEARTBEAT_MS) return
+    lastTouchedAt = current
+    touch()
+  }
+}
 
 const toTime = (value: Date | string): number =>
   (value instanceof Date ? value : new Date(value)).getTime()

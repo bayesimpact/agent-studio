@@ -8,7 +8,13 @@ import { agentFactory } from "../../agent.factory"
 import { conversationAgentSessionFactory } from "../../conversation-agent-sessions/conversation-agent-session.factory"
 import type { AgentMessage } from "./agent-message.entity"
 import { agentMessageFactory } from "./agent-messages.factory"
-import { isStreamStale, recoverAbortedStream, STREAM_TIMEOUT_MS } from "./stream-recovery"
+import {
+  isStreamStale,
+  recoverAbortedStream,
+  STREAM_HEARTBEAT_MS,
+  STREAM_TIMEOUT_MS,
+  throttleHeartbeat,
+} from "./stream-recovery"
 
 const organization = organizationFactory.build()
 const project = projectFactory.transient({ organization }).build()
@@ -122,5 +128,38 @@ describe("recoverAbortedStream", () => {
 
     expect(recovered.status).toBe("streaming")
     expect(updateManyBy).not.toHaveBeenCalled()
+  })
+})
+
+describe("throttleHeartbeat", () => {
+  it("touches the row once per period however often progress is reported", () => {
+    let clock = now
+    const touch = jest.fn()
+    const onProgress = throttleHeartbeat(touch, () => clock)
+
+    onProgress()
+    clock += STREAM_HEARTBEAT_MS / 2
+    onProgress()
+    expect(touch).not.toHaveBeenCalled()
+
+    clock += STREAM_HEARTBEAT_MS / 2
+    onProgress()
+    onProgress()
+    expect(touch).toHaveBeenCalledTimes(1)
+
+    clock += STREAM_HEARTBEAT_MS
+    onProgress()
+    expect(touch).toHaveBeenCalledTimes(2)
+  })
+
+  it("does not touch the row while no progress is reported", () => {
+    // A hung stream reports nothing, so the row goes untouched and settles as aborted once the
+    // window has passed: that is what tells a hung turn from a long one.
+    let clock = now
+    const touch = jest.fn()
+    throttleHeartbeat(touch, () => clock)
+
+    clock += STREAM_TIMEOUT_MS * 2
+    expect(touch).not.toHaveBeenCalled()
   })
 })
