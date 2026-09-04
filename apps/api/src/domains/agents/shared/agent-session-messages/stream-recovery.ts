@@ -32,7 +32,9 @@ export function isStreamStale(message: AgentMessage, now: number = Date.now()): 
  * callers can hand it straight back to the client.
  *
  * The empty content is kept and `completedAt` stays null: nothing was ever written, and the
- * client renders an aborted message as an interrupted reply, not as an answer.
+ * client renders an aborted message as an interrupted reply, not as an answer. The update is
+ * conditional on the row still streaming: a stream that completes between the read and the
+ * write keeps its outcome, and the message is returned as read (the next poll sees it settled).
  */
 export async function recoverAbortedStream({
   agentMessageConnectRepository,
@@ -44,11 +46,12 @@ export async function recoverAbortedStream({
   message: AgentMessage
 }): Promise<AgentMessage> {
   if (!isStreamStale(message)) return message
-  await agentMessageConnectRepository.updateManyBy({
+  const affected = await agentMessageConnectRepository.updateManyBy({
     connectScope,
     where: { id: message.id, status: "streaming" },
     fields: { status: "aborted" },
   })
+  if (affected === 0) return message
   message.status = "aborted"
   return message
 }
