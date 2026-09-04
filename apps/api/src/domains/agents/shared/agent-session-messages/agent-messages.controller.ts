@@ -87,11 +87,16 @@ export class AgentMessagesController {
     if (!message) {
       throw new NotFoundException("Message not found")
     }
-    const htmlByKey = await this.mcpAppHtmlService.readLiveHtml({
-      agentId: request.agent.id,
-      sessionId: request.agentSession.id,
-      messages: [message],
-    })
+    // The client polls this while a reply is still being written and discards the snapshot
+    // unless it has settled, so the MCP markup is only worth fetching for a settled reply.
+    const htmlByKey =
+      message.status === "streaming"
+        ? new Map<string, string>()
+        : await this.mcpAppHtmlService.readLiveHtml({
+            agentId: request.agent.id,
+            sessionId: request.agentSession.id,
+            messages: [message],
+          })
     return { data: toDto(message, htmlByKey) }
   }
 
