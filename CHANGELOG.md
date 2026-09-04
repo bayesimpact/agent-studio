@@ -15,6 +15,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ### Changed
 
 ### Fixed
+- Replies no longer show leaked internal tool-call text, even without angle brackets.
 - Refreshing the page during a reply no longer loses the answer.
 - An interrupted reply can be sent again.
 
