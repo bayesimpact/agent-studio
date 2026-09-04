@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { CirclePlusIcon, MicIcon, PaperclipIcon } from "lucide-react"
 import { useState } from "react"
 import { withRouter } from "storybook-addon-remix-react-router"
+import { agentSessionMessageFactory } from "@/common/features/agents/agent-sessions/agent-session.factory"
 import type { AgentSessionMessage } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.models"
 import { AgentSessionMessage as AgentSessionMessageComponent } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/components/AgentSessionMessage"
 import {
@@ -153,8 +154,8 @@ export const InterruptedReply: Story = {
   ...Default,
   args: {
     messages: [
-      { id: "1", role: "user", content: "What can you do?" },
-      { id: "2", role: "assistant", content: "", status: "aborted" },
+      agentSessionMessageFactory.build({ role: "user", content: "What can you do?" }),
+      agentSessionMessageFactory.build({ role: "assistant", content: "", status: "aborted" }),
     ],
   },
 }
