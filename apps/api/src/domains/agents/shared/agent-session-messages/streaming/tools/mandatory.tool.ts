@@ -144,12 +144,12 @@ export function mandatoryToolDescription({
 }
 
 /**
- * Master-prompt reminder, placed as the FINAL section of the system prompt
- * (maximal recency — on big prompts the voluntary-call rate collapses when
- * this is buried mid-prompt) and phrased as a numbered protocol (models
- * follow a structured protocol better than imperative prose). The full
- * contract itself is in the tool description (see
- * {@link mandatoryToolDescription}).
+ * Master-prompt reminder, placed as the last authored section of the system
+ * prompt, just before the closing date line (near-maximal recency — on big
+ * prompts the voluntary-call rate collapses when this is buried mid-prompt)
+ * and phrased as a numbered protocol (models follow a structured protocol
+ * better than imperative prose). The full contract itself is in the tool
+ * description (see {@link mandatoryToolDescription}).
  */
 export function mandatoryToolInstruction(): string {
   return `## Response protocol (mandatory)

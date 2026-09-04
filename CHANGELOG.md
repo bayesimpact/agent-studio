@@ -23,6 +23,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ### Added
 
 ### Changed
+- Conversation agents receive the mandatory response protocol immediately before the current date.
 
 ### Fixed
 - Agents no longer confuse the day and month of today's date.

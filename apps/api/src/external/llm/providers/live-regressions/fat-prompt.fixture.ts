@@ -348,7 +348,14 @@ const FAQ = [
  * instruction competes with the strict refusal rule exactly like in
  * production.
  */
-export function buildFatSystemPrompt({ toolsSection }: { toolsSection: string }): string {
+export function buildFatSystemPrompt({
+  toolsSection,
+  epilogue,
+}: {
+  toolsSection: string
+  /** Last authored section, injected before the closing date line. */
+  epilogue?: string
+}): string {
   return `# System: My Space Virtual Assistant — Meridian employee portal
 
 ## Persona and Goal
@@ -394,6 +401,6 @@ ${toolsSection}
 
 ## Response language:
 Always answer in English.
-
+${epilogue ? `\n${epilogue}\n` : ""}
 Today's date: 2026-07-29 (Date format YYYY-MM-DD)`
 }

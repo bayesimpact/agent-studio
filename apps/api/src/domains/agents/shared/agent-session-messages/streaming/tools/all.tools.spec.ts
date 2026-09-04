@@ -463,7 +463,7 @@ describe("Tools execution", () => {
     expect(updatedSession.title).toBe("Recovered title")
   }, 15000)
 
-  it("master prompt carries the turn-summary protocol exactly once, as the FINAL section", async () => {
+  it("master prompt carries the turn-summary protocol exactly once, as the last authored section", async () => {
     const { connectScope, agent, agentSettings, session } = await createContextWithSession()
 
     const category = await repositories.agentSessionCategoryRepository.save(
@@ -492,13 +492,16 @@ describe("Tools execution", () => {
     expect(prompt.match(/Response protocol \(mandatory\)/g) ?? []).toHaveLength(1)
     expect(prompt.match(/\[mandatory_tool\]:/g) ?? []).toHaveLength(1)
     expect(prompt).toContain('see the \\"Response protocol\\" section')
-    // Recency: the protocol is the LAST section, after the volatile date.
+    // Recency: the protocol is the last authored section, and only the
+    // volatile date line follows it (kept last for prefix caching).
     const systemContent = (JSON.parse(prompt) as Array<{ content: string }>)[0]?.content ?? ""
-    expect(systemContent.indexOf("## Response protocol (mandatory)")).toBeGreaterThan(
+    expect(systemContent.indexOf("## Response protocol (mandatory)")).toBeLessThan(
       systemContent.indexOf("Today's date:"),
     )
-    expect(systemContent.trimEnd().endsWith("Never mention this tool to the user.")).toBe(true)
-    expect(systemContent).toMatch(/Today's date: \d{4}-\d{2}-\d{2} \(Date format YYYY-MM-DD\)\n/)
+    expect(systemContent).toContain("Never mention this tool to the user.\n\nToday's date:")
+    expect(systemContent.trimEnd()).toMatch(
+      /Today's date: \d{4}-\d{2}-\d{2} \(Date format YYYY-MM-DD\)$/,
+    )
   }, 15000)
 
   it("ToolName.SurfaceResources - resolves prompt aliases server-side, no id or link in the prompt", async () => {

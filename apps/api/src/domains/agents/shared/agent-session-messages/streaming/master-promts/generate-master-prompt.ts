@@ -13,7 +13,7 @@ export function generateMasterPrompt({
   agentSettings: AgentSettings
   toolDescriptions?: Record<string, string>
   toolNames: string[]
-  /** Final prompt section, after the date (e.g. the turn-summary protocol). */
+  /** Last authored section, just before the date (e.g. the turn-summary protocol). */
   epilogue?: string
 }): string {
   switch (agent.type) {
