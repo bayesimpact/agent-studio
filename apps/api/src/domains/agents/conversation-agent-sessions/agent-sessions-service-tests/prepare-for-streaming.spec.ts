@@ -15,7 +15,7 @@ describe("prepareForStreaming", () => {
       testOrganization,
       testUser,
       testProject,
-      streamingService,
+      streamingLLMService,
     } = getTestContext()
     const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
@@ -30,7 +30,7 @@ describe("prepareForStreaming", () => {
     })
 
     const { session: updatedSession, assistantMessageId } =
-      await streamingService.prepareForStreaming({
+      await streamingLLMService.prepareForStreaming({
         agentSessionScope: {
           agent: testAgent,
           agentSettings: testAgentSettings,
@@ -63,7 +63,7 @@ describe("prepareForStreaming", () => {
         testOrganization,
         testUser,
         testProject,
-        streamingService,
+        streamingLLMService,
         repositories,
       } = getTestContext()
       const connectScope: RequiredConnectScope = {
@@ -101,7 +101,7 @@ describe("prepareForStreaming", () => {
         )
       return {
         service,
-        streamingService,
+        streamingLLMService,
         repositories,
         attachmentDocument,
         agentSessionScope,
@@ -114,10 +114,10 @@ describe("prepareForStreaming", () => {
     }
 
     it("attaches a fresh document as is", async () => {
-      const { streamingService, attachmentDocument, agentSessionScope } = await buildContext()
+      const { streamingLLMService, attachmentDocument, agentSessionScope } = await buildContext()
 
       const { session: updatedSession, attachmentDocumentId } =
-        await streamingService.prepareForStreaming({
+        await streamingLLMService.prepareForStreaming({
           agentSessionScope,
           userContent: "What is in this file?",
           attachmentDocumentId: attachmentDocument.id,
@@ -131,7 +131,7 @@ describe("prepareForStreaming", () => {
       // Resending an interrupted turn reuses its attachment, but a document row can only be
       // attached to one message. The new turn gets its own row pointing at the same stored file.
       const {
-        streamingService,
+        streamingLLMService,
         repositories,
         attachmentDocument,
         agentSessionScope,
@@ -141,7 +141,7 @@ describe("prepareForStreaming", () => {
       await attachToMessageOf(session)
 
       const { session: updatedSession, attachmentDocumentId } =
-        await streamingService.prepareForStreaming({
+        await streamingLLMService.prepareForStreaming({
           agentSessionScope,
           userContent: "What is in this file?",
           attachmentDocumentId: attachmentDocument.id,
@@ -174,7 +174,7 @@ describe("prepareForStreaming", () => {
       // by another conversation of the project must not be copied into this one.
       const {
         service,
-        streamingService,
+        streamingLLMService,
         attachmentDocument,
         agentSessionScope,
         connectScope,
@@ -191,7 +191,7 @@ describe("prepareForStreaming", () => {
       await attachToMessageOf(otherSession)
 
       await expect(
-        streamingService.prepareForStreaming({
+        streamingLLMService.prepareForStreaming({
           agentSessionScope,
           userContent: "What is in this file?",
           attachmentDocumentId: attachmentDocument.id,
@@ -201,7 +201,7 @@ describe("prepareForStreaming", () => {
   })
 
   it("should throw NotFoundException for non-existent session", async () => {
-    const { testOrganization, testProject, streamingService, testAgent, testAgentSettings } =
+    const { testOrganization, testProject, streamingLLMService, testAgent, testAgentSettings } =
       getTestContext()
     const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
@@ -217,7 +217,7 @@ describe("prepareForStreaming", () => {
       messages: [],
     }
     await expect(
-      streamingService.prepareForStreaming({
+      streamingLLMService.prepareForStreaming({
         agentSessionScope: {
           agent: testAgent,
           agentSettings: testAgentSettings,

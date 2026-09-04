@@ -15,7 +15,7 @@ import type { LLMProvider } from "@/common/interfaces/llm-provider.interface"
 import type { Agent } from "@/domains/agents/agent.entity"
 import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
 import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
-import { ServiceWithLLM } from "@/external/llm"
+import { LlmServiceBase } from "@/external/llm"
 import { AgentMessage } from "../agent-message.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentMessageAttachmentDocumentsService } from "../agent-message-attachment-documents.service"
@@ -29,8 +29,8 @@ import type { ToolExecutionLog } from "./tools/tool-execution-log"
 type NotifyClient = (event: Extract<StreamEvent, { type: "notify_client" }>) => void
 
 @Injectable()
-export class StreamingService extends ServiceWithLLM {
-  private readonly logger = new Logger(StreamingService.name)
+export class StreamingLlmService extends LlmServiceBase {
+  private readonly logger = new Logger(StreamingLlmService.name)
   private readonly agentMessageRepository: Repository<AgentMessage>
   private readonly agentMessageConnectRepository: ConnectRepository<AgentMessage>
   private readonly conversationAgentSessionRepository: Repository<ConversationAgentSession>
@@ -124,6 +124,8 @@ export class StreamingService extends ServiceWithLLM {
             toolExecution,
           })
         },
+        getProviderForModel: this.getProviderForModel,
+        buildLLMConfig: this.buildLLMConfig,
       })
       mcpClose = llmRequest.mcpClose
 
@@ -261,6 +263,8 @@ export class StreamingService extends ServiceWithLLM {
             toolExecution,
           })
         },
+        getProviderForModel: this.getProviderForModel,
+        buildLLMConfig: this.buildLLMConfig,
       })
       mcpClose = llmRequest.mcpClose
 

@@ -18,6 +18,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - An interrupted reply can be sent again.
 
 ### Security
+- Security updates of dependencies and base images across all services.
 
 ## [26.09.1] - 2026-09-02
 
