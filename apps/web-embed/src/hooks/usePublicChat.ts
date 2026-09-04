@@ -60,6 +60,12 @@ function toDisplayMessage(msg: {
  */
 const STREAMING_RECOVERY_POLL_INTERVAL_MS = 2_000
 
+/**
+ * Polls that may fail in a row before the reply is given up on. A single failed read (network
+ * blip) says nothing about the reply, which the server is still writing.
+ */
+const STREAMING_RECOVERY_MAX_CONSECUTIVE_FAILURES = 3
+
 const hasStreamingReply = (messages: { role: string; status?: string }[]) =>
   messages.some((message) => message.role === "assistant" && message.status === "streaming")
 
@@ -147,7 +153,7 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
           setMessages(sessionData.messages.map(toDisplayMessage))
           setStatus("ready")
           if (hasStreamingReply(sessionData.messages)) {
-            void settleStreamingReply(stored, stillCurrent)
+            void settleStreamingReply(stored, stillCurrent, nonce)
           }
           return
         } catch (err) {
@@ -172,27 +178,48 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
     /**
      * Re-fetches the session until its streaming reply settles, keeping the composer locked as
      * it was before the reload. Ends when the reply settles, the session is reset, or the
-     * widget unmounts.
+     * widget unmounts. A session that is no longer accepted is replaced by a fresh one, as on
+     * load; other failures are tolerated a few times before the reply is shown as failed.
      */
-    async function settleStreamingReply(session: StoredSession, stillCurrent: () => boolean) {
+    async function settleStreamingReply(
+      session: StoredSession,
+      stillCurrent: () => boolean,
+      nonce: number,
+    ) {
       setIsStreaming(true)
+      let consecutiveFailures = 0
       try {
-        while (stillCurrent()) {
+        while (true) {
           await sleep(STREAMING_RECOVERY_POLL_INTERVAL_MS)
           if (!stillCurrent()) return
-          const sessionData = await getSession(embedToken, session.sessionId, session.sessionToken)
-          if (!stillCurrent()) return
-          setMessages(sessionData.messages.map(toDisplayMessage))
-          if (!hasStreamingReply(sessionData.messages)) return
+
+          try {
+            const sessionData = await getSession(
+              embedToken,
+              session.sessionId,
+              session.sessionToken,
+            )
+            if (!stillCurrent()) return
+            consecutiveFailures = 0
+            setMessages(sessionData.messages.map(toDisplayMessage))
+            if (!hasStreamingReply(sessionData.messages)) return
+          } catch (err) {
+            if (!stillCurrent()) return
+            if (err instanceof ApiError && err.isUnauthorized) {
+              await startFreshSession(nonce).catch((error) => failInit(error, nonce))
+              return
+            }
+            consecutiveFailures += 1
+            if (consecutiveFailures < STREAMING_RECOVERY_MAX_CONSECUTIVE_FAILURES) continue
+            // The reply can no longer be followed: show it failed rather than spinning for good.
+            setMessages((prev) =>
+              prev.map((message) =>
+                message.status === "streaming" ? { ...message, status: "error" } : message,
+              ),
+            )
+            return
+          }
         }
-      } catch {
-        if (!stillCurrent()) return
-        // The reply can no longer be followed: show it failed rather than spinning for good.
-        setMessages((prev) =>
-          prev.map((message) =>
-            message.status === "streaming" ? { ...message, status: "error" } : message,
-          ),
-        )
       } finally {
         if (stillCurrent()) setIsStreaming(false)
       }
