@@ -71,6 +71,56 @@ describe("agentSessionMessages slice", () => {
       expect(isStreaming(state)).toBe(true)
     })
 
+    it("applies a list that shows the reply being written here as settled", () => {
+      // Once the stream ends the thread is reloaded for the persisted turn (tool results, MCP
+      // markup). A list carrying the reply's outcome is the truth and must not be set aside.
+      const streamingState = reducer(
+        agentSessionMessagesInitialState,
+        listMessages.fulfilled([userMessage, streamingReply], "request-1", "session-1"),
+      )
+
+      const state = reducer(
+        streamingState,
+        listMessages.fulfilled([userMessage, completedReply], "request-2", "session-1"),
+      )
+
+      expect(ADS.isFulfilled(state.data) && state.data.value).toEqual([userMessage, completedReply])
+      expect(isStreaming(state)).toBe(false)
+    })
+
+    it("keeps locally streamed content when the list still reports the reply streaming", () => {
+      // A list that lands mid-stream knows the turn but not its content, which the server writes
+      // at completion. The rest of the list is applied; the reply keeps the chunks received.
+      const withChunk = reducer(
+        reducer(
+          agentSessionMessagesInitialState,
+          listMessages.fulfilled([userMessage, streamingReply], "request-1", "session-1"),
+        ),
+        agentSessionMessagesActions.appendAssistantChunk({
+          messageId: streamingReply.id,
+          chunk: "Hel",
+        }),
+      )
+      const toolRow: AgentSessionMessage = {
+        id: "tool-1",
+        role: "tool",
+        content: "search called",
+        status: "completed",
+      }
+
+      const state = reducer(
+        withChunk,
+        listMessages.fulfilled([userMessage, streamingReply, toolRow], "request-2", "session-1"),
+      )
+
+      expect(ADS.isFulfilled(state.data) && state.data.value).toEqual([
+        userMessage,
+        { ...streamingReply, content: "Hel" },
+        toolRow,
+      ])
+      expect(isStreaming(state)).toBe(true)
+    })
+
     it("does not stream when every reply has settled", () => {
       const state = reducer(
         agentSessionMessagesInitialState,

@@ -128,12 +128,22 @@ const slice = createSlice({
         state.data.error = null
       })
       .addCase(listMessages.fulfilled, (state, action) => {
-        // A list that lands while a reply is being written here (fetched before the turn was
-        // persisted, or a remount) would drop the optimistic turn and unlock the composer while
-        // the stream still runs. The stream, or the recovery poll, settles the thread itself.
-        if (ADS.isFulfilled(state.data) && hasStreamingReply(state.data.value)) return
+        const localReply = ADS.isFulfilled(state.data)
+          ? state.data.value.find(isStreamingReply)
+          : undefined
+        // A list fetched before the turn being written here was persisted knows nothing of it:
+        // applying it would drop the optimistic turn and unlock the composer while the stream
+        // still runs. The stream, or the recovery poll, settles the thread itself.
+        if (localReply && !action.payload.some((message) => message.id === localReply.id)) return
         state.data = {
-          value: action.payload,
+          // The server persists a reply's content at completion only, so while it still reports
+          // the reply streaming the chunks received here are the fuller picture. A list that
+          // shows it settled, on the other hand, is the outcome and replaces it.
+          value: action.payload.map((message) =>
+            localReply && message.id === localReply.id && isStreamingReply(message)
+              ? { ...localReply }
+              : message,
+          ),
           status: ADS.Fulfilled,
           error: null,
         }
@@ -149,7 +159,7 @@ const slice = createSlice({
       // A snapshot of a reply still being written carries no content (it is persisted at
       // completion) and may even trail a completion the client already saw. Only a settled
       // snapshot may replace what the client holds.
-      if (updatedMessage.status === "streaming") return
+      if (isStreamingReply(updatedMessage)) return
       const messageIndex = state.data.value.findIndex((msg) => msg.id === updatedMessage.id)
       if (messageIndex !== -1) {
         state.data.value[messageIndex] = updatedMessage
