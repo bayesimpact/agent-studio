@@ -9,6 +9,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 
 ### Added
 
+- Kubernetes: the platform can be installed on any cluster with a Helm chart, with bundled Postgres and Redis.
 - (beta) Priority calls: agents on Gemini 3.x models can now enable the priority tier from the Model tab.
 - Agents can run on gemini-3.7-flash and gemini-3.8-flash.
 
