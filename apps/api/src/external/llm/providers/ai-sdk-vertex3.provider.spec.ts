@@ -1,4 +1,9 @@
-import { AgentModel, AgentModelToAgentProvider, AgentProvider } from "@caseai-connect/api-contracts"
+import {
+  AgentModel,
+  AgentModelMetadataMap,
+  AgentModelToAgentProvider,
+  AgentProvider,
+} from "@caseai-connect/api-contracts"
 import { afterAll, beforeAll } from "@jest/globals"
 import { BatchSpanProcessor, ConsoleSpanExporter } from "@opentelemetry/sdk-trace-base"
 import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node"
@@ -27,14 +32,26 @@ describe("AISDKVertex3Provider location routing", () => {
   const locationOf = (model: AgentModel) =>
     new AISDKVertex3Provider().getTags({ model, temperature: 0, serviceTier: undefined })[1]
 
-  it("routes the model that is not EU-served through the global endpoint", () => {
-    expect(locationOf(AgentModel.Gemini36Flash)).toBe("global")
+  it("keeps every vertex 3 model on the eu endpoint", () => {
+    const vertex3Models = Object.values(AgentModel).filter(
+      (model) => AgentModelToAgentProvider[model] === AgentProvider.Vertex3,
+    )
+    expect(vertex3Models).toContain(AgentModel.Gemini38Flash)
+    for (const model of vertex3Models) {
+      expect(locationOf(model)).toBe("eu")
+    }
   })
 
-  it("keeps every other vertex 3 model on the eu endpoint", () => {
-    expect(locationOf(AgentModel.Gemini35FlashLite)).toBe("eu")
-    expect(locationOf(AgentModel.Gemini35Flash)).toBe("eu")
-    expect(locationOf(AgentModel.Gemini31FlashLite)).toBe("eu")
+  it("routes a model flagged as served outside the EU through the global endpoint", () => {
+    // No catalog entry carries the flag today, so it is seeded on the real catalog and restored:
+    // the assertion is about the routing, not about the current data.
+    const metadata = AgentModelMetadataMap[AgentModel.Gemini36Flash]
+    metadata.servedOutsideEu = true
+    try {
+      expect(locationOf(AgentModel.Gemini36Flash)).toBe("global")
+    } finally {
+      delete metadata.servedOutsideEu
+    }
   })
 })
 
