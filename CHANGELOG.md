@@ -10,8 +10,10 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ### Added
 
 - (beta) Priority calls: agents on Gemini 3.x models can now enable the priority tier from the Model tab.
+- Agents can run on gemini-3.7-flash and gemini-3.8-flash, served from the EU.
 
 ### Changed
+- gemini-3.6-flash now runs on the EU endpoint and loses its "(non-EU)" label.
 
 ### Fixed
 - Refreshing the page during a reply no longer loses the answer.
