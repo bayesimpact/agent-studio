@@ -25,7 +25,6 @@ export class ConversationAgentSessionsService {
   private readonly agentSettingsConnectRepository: ConnectRepository<AgentSettings>
   private readonly conversationAgentSessionRepository: Repository<ConversationAgentSession>
   private readonly conversationAgentSessionCategoryRepository: Repository<ConversationAgentSessionCategory>
-  private readonly agentMessageRepository: Repository<AgentMessage>
 
   constructor(
     @InjectRepository(ConversationAgentSession)
@@ -53,7 +52,6 @@ export class ConversationAgentSessionsService {
     )
     this.conversationAgentSessionRepository = conversationAgentSessionRepository
     this.conversationAgentSessionCategoryRepository = conversationAgentSessionCategoryRepository
-    this.agentMessageRepository = agentMessageRepository
   }
 
   async listMessagesForSession({
@@ -64,7 +62,11 @@ export class ConversationAgentSessionsService {
     connectScope: RequiredConnectScope
   }): Promise<AgentMessage[]> {
     // A reply whose stream died with the server would otherwise be listed as live forever.
-    await recoverAbortedStreams(this.agentMessageRepository, agentSessionId)
+    await recoverAbortedStreams({
+      agentMessageConnectRepository: this.agentMessageConnectRepository,
+      connectScope,
+      sessionId: agentSessionId,
+    })
     return this.agentMessageConnectRepository.find(connectScope, {
       where: { sessionId: agentSessionId },
       order: { createdAt: "ASC" },
@@ -94,7 +96,11 @@ export class ConversationAgentSessionsService {
     })
     if (!message) return null
     // The client polls this after a refresh until the reply settles; a dead stream must settle too.
-    return recoverAbortedStream(this.agentMessageRepository, message)
+    return recoverAbortedStream({
+      agentMessageConnectRepository: this.agentMessageConnectRepository,
+      connectScope,
+      message,
+    })
   }
 
   async getAllSessionsForAgent({

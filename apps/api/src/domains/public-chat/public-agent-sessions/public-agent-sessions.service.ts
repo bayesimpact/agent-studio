@@ -2,6 +2,7 @@ import crypto from "node:crypto"
 import { Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
+import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { AgentSessionCategory } from "@/domains/agents/session-categories/agent-session-category.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -14,6 +15,8 @@ import { PublicAgentSessionCategory } from "./public-agent-session-category.enti
 
 @Injectable()
 export class PublicAgentSessionsService {
+  private readonly agentMessageConnectRepository: ConnectRepository<AgentMessage>
+
   constructor(
     @InjectRepository(PublicAgentSession)
     private readonly publicAgentSessionRepository: Repository<PublicAgentSession>,
@@ -24,7 +27,12 @@ export class PublicAgentSessionsService {
     @InjectRepository(AgentSessionCategory)
     private readonly agentSessionCategoryRepository: Repository<AgentSessionCategory>,
     private readonly agentSettingsService: AgentSettingsService,
-  ) {}
+  ) {
+    this.agentMessageConnectRepository = new ConnectRepository(
+      agentMessageRepository,
+      "agentMessage",
+    )
+  }
 
   /**
    * SessionMetadataRecalculator implementation for PUBLIC sessions — same
@@ -175,7 +183,11 @@ export class PublicAgentSessionsService {
     const session = await this.publicAgentSessionRepository.findOne({ where: { id: sessionId } })
     if (!session) throw new NotFoundException("Session not found")
 
-    await recoverAbortedStreams(this.agentMessageRepository, sessionId)
+    await recoverAbortedStreams({
+      agentMessageConnectRepository: this.agentMessageConnectRepository,
+      connectScope: { organizationId: session.organizationId, projectId: session.projectId },
+      sessionId,
+    })
 
     const messages = await this.agentMessageRepository.find({
       where: { sessionId },

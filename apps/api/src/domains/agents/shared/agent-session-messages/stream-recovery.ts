@@ -1,4 +1,6 @@
-import type { Repository } from "typeorm"
+import { LessThan } from "typeorm"
+import type { ConnectRepository } from "@/common/entities/connect-repository"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type { AgentMessage } from "./agent-message.entity"
 
 /**
@@ -26,31 +28,57 @@ export function isStreamStale(message: AgentMessage, now: number = Date.now()): 
 }
 
 /**
- * Marks the message as aborted when its stream is stale. Returns the message in its settled
- * state so callers can hand it straight back to the client.
+ * Marks the message as aborted when its stream is stale, and returns it in its settled state so
+ * callers can hand it straight back to the client.
  *
  * The empty content is kept and `completedAt` stays null: nothing was ever written, and the
  * client renders an aborted message as an interrupted reply, not as an answer.
  */
-export async function recoverAbortedStream(
-  agentMessageRepository: Repository<AgentMessage>,
-  message: AgentMessage,
-): Promise<AgentMessage> {
+export async function recoverAbortedStream({
+  agentMessageConnectRepository,
+  connectScope,
+  message,
+}: {
+  agentMessageConnectRepository: ConnectRepository<AgentMessage>
+  connectScope: RequiredConnectScope
+  message: AgentMessage
+}): Promise<AgentMessage> {
   if (!isStreamStale(message)) return message
+  await agentMessageConnectRepository.updateManyBy({
+    connectScope,
+    where: { id: message.id, status: "streaming" },
+    fields: { status: "aborted" },
+  })
   message.status = "aborted"
-  await agentMessageRepository.save(message)
   return message
 }
 
-/** Settles every stale streaming message of a session. */
-export async function recoverAbortedStreams(
-  agentMessageRepository: Repository<AgentMessage>,
-  sessionId: string,
-): Promise<void> {
-  const streamingMessages = await agentMessageRepository.find({
-    where: { sessionId, role: "assistant", status: "streaming" },
+/**
+ * Settles every stale streaming message of a session in one statement, so the list endpoints
+ * that call this on every load pay one write only when something is stale. A row is stale when
+ * neither its start nor its last write falls inside the window (see {@link isStreamStale}).
+ */
+export async function recoverAbortedStreams({
+  agentMessageConnectRepository,
+  connectScope,
+  sessionId,
+  now = Date.now(),
+}: {
+  agentMessageConnectRepository: ConnectRepository<AgentMessage>
+  connectScope: RequiredConnectScope
+  sessionId: string
+  now?: number
+}): Promise<void> {
+  const threshold = new Date(now - STREAM_TIMEOUT_MS)
+  await agentMessageConnectRepository.updateManyBy({
+    connectScope,
+    where: {
+      sessionId,
+      role: "assistant",
+      status: "streaming",
+      startedAt: LessThan(threshold),
+      updatedAt: LessThan(threshold),
+    },
+    fields: { status: "aborted" },
   })
-  for (const message of streamingMessages) {
-    await recoverAbortedStream(agentMessageRepository, message)
-  }
 }

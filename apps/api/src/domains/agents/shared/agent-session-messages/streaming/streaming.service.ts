@@ -189,7 +189,11 @@ export class StreamingService extends ServiceWithLLM {
     /** Identifier the embedding page attached to the session, if any. */
     externalVisitorId?: string | null
   }): AsyncGenerator<StreamEvent, void, unknown> {
-    await recoverAbortedStreams(this.agentMessageRepository, publicSessionId)
+    await recoverAbortedStreams({
+      agentMessageConnectRepository: this.agentMessageConnectRepository,
+      connectScope,
+      sessionId: publicSessionId,
+    })
 
     await this.agentMessageConnectRepository.createAndSave(connectScope, {
       sessionId: publicSessionId,
@@ -332,7 +336,11 @@ export class StreamingService extends ServiceWithLLM {
     }
 
     // Recover aborted streams
-    await recoverAbortedStreams(this.agentMessageRepository, sessionId)
+    await recoverAbortedStreams({
+      agentMessageConnectRepository: this.agentMessageConnectRepository,
+      connectScope: { organizationId: session.organizationId, projectId: session.projectId },
+      sessionId,
+    })
 
     // Reload session with updated messages
     return this.conversationAgentSessionRepository.findOne({
