@@ -73,17 +73,24 @@ export class ConversationAgentSessionsService {
     })
   }
 
+  /**
+   * One message of the given session. The session is part of the lookup: the client polls this
+   * with ids it holds, and a read that also settles stale streams must not reach into another
+   * session of the same project.
+   */
   async getMessageById({
     id,
+    agentSessionId,
     connectScope,
   }: {
     id: string
+    agentSessionId: string
     connectScope: RequiredConnectScope
   }): Promise<AgentMessage | null> {
-    // `getOneById` builds a query builder, so relations are named as strings here — unlike
-    // the `find` above, which forwards TypeORM's object-form FindManyOptions.
-    const message = await this.agentMessageConnectRepository.getOneById(connectScope, id, {
-      relations: ["agentSettings"],
+    const [message] = await this.agentMessageConnectRepository.find(connectScope, {
+      where: { id, sessionId: agentSessionId },
+      relations: { agentSettings: true },
+      take: 1,
     })
     if (!message) return null
     // The client polls this after a refresh until the reply settles; a dead stream must settle too.

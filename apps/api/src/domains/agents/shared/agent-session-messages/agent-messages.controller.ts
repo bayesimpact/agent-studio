@@ -76,11 +76,12 @@ export class AgentMessagesController {
   @Post(AgentSessionMessagesRoutes.getOne.path)
   async getOne(
     @Req() request: EndpointRequestWithAgentSession<ConversationAgentSession>,
-    @Param("messageId") messageId: string, // TODO: add context
+    @Param("messageId") messageId: string,
   ): Promise<typeof AgentSessionMessagesRoutes.getOne.response> {
     const connectScope = getRequiredConnectScope(request)
     const message = await this.conversationAgentSessionsService.getMessageById({
       id: messageId,
+      agentSessionId: request.agentSession.id,
       connectScope,
     })
     if (!message) {

@@ -142,11 +142,15 @@ describe("stale streaming recovery", () => {
     it("marks a streaming message whose stream is long gone as aborted", async () => {
       // The client polls this endpoint after a refresh until the message settles, so a stale
       // stream must settle here too or the poll never ends.
-      const { service, connectScope, agentMessageRepository, buildStreamingMessage } =
+      const { service, connectScope, agentMessageRepository, buildStreamingMessage, session } =
         await buildContext()
       const staleMessage = await agentMessageRepository.save(buildStreamingMessage(10))
 
-      const message = await service.getMessageById({ id: staleMessage.id, connectScope })
+      const message = await service.getMessageById({
+        id: staleMessage.id,
+        agentSessionId: session.id,
+        connectScope,
+      })
 
       expect(message?.status).toBe("aborted")
       const persisted = await agentMessageRepository.findOneBy({ id: staleMessage.id })
@@ -154,13 +158,41 @@ describe("stale streaming recovery", () => {
     })
 
     it("leaves a message that may still be streaming alone", async () => {
-      const { service, connectScope, agentMessageRepository, buildStreamingMessage } =
+      const { service, connectScope, agentMessageRepository, buildStreamingMessage, session } =
         await buildContext()
       const recentMessage = await agentMessageRepository.save(buildStreamingMessage(1))
 
-      const message = await service.getMessageById({ id: recentMessage.id, connectScope })
+      const message = await service.getMessageById({
+        id: recentMessage.id,
+        agentSessionId: session.id,
+        connectScope,
+      })
 
       expect(message?.status).toBe("streaming")
+    })
+
+    it("does not see, nor settle, a message of another session", async () => {
+      // The endpoint is polled with ids the client holds. An id from another session must not
+      // flip that session's live reply to aborted through this read.
+      const { service, connectScope, agentMessageRepository, buildStreamingMessage, session } =
+        await buildContext()
+      const staleMessage = await agentMessageRepository.save(buildStreamingMessage(10))
+      const otherSession = await service.createSession({
+        connectScope,
+        agentSettingsId: staleMessage.agentSettingsId,
+        userId: session.userId,
+        type: "playground",
+      })
+
+      const message = await service.getMessageById({
+        id: staleMessage.id,
+        agentSessionId: otherSession.id,
+        connectScope,
+      })
+
+      expect(message).toBeNull()
+      const persisted = await agentMessageRepository.findOneBy({ id: staleMessage.id })
+      expect(persisted?.status).toBe("streaming")
     })
   })
 })
