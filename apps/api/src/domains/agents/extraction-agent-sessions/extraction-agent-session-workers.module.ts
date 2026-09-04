@@ -9,7 +9,7 @@ import { ProjectRepository } from "@/domains/projects/project.repository"
 import { LlmModule } from "@/external/llm/llm.module"
 import { EXTRACTION_AGENT_SESSION_QUEUE_NAME } from "./extraction-agent-session.constants"
 import { ExtractionAgentSessionExecuteWorker } from "./extraction-agent-session-execute.worker"
-import { ExtractionAgentSessionRunnerService } from "./extraction-agent-session-runner.service"
+import { ExtractionAgentSessionRunLlmService } from "./extraction-agent-session-run-llm.service"
 import { ExtractionAgentSessionStatusNotifierService } from "./extraction-agent-session-status-notifier.service"
 import { ExtractionAgentSessionQueueMetricsService } from "./queue-metrics.service"
 
@@ -24,7 +24,7 @@ import { ExtractionAgentSessionQueueMetricsService } from "./queue-metrics.servi
   ],
   providers: [
     ExtractionAgentSessionExecuteWorker,
-    ExtractionAgentSessionRunnerService,
+    ExtractionAgentSessionRunLlmService,
     ExtractionAgentSessionStatusNotifierService,
     ExtractionAgentSessionQueueMetricsService,
     ProjectRepository,
