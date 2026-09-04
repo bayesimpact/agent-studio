@@ -11,6 +11,7 @@ import { ConversationAgentSession } from "@/domains/agents/conversation-agent-se
 import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 import { ServiceWithLLM } from "@/external/llm"
 import { AgentMessage } from "../agent-message.entity"
+import { AgentMessageAttachmentDocument } from "../agent-message-attachment-document.entity"
 import { recoverAbortedStreams } from "../stream-recovery"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentLlmRequestService } from "./agent-llm-request.service"
@@ -24,6 +25,7 @@ type NotifyClient = (event: Extract<StreamEvent, { type: "notify_client" }>) => 
 export class StreamingService extends ServiceWithLLM {
   private readonly agentMessageRepository: Repository<AgentMessage>
   private readonly agentMessageConnectRepository: ConnectRepository<AgentMessage>
+  private readonly attachmentDocumentConnectRepository: ConnectRepository<AgentMessageAttachmentDocument>
   private readonly conversationAgentSessionRepository: Repository<ConversationAgentSession>
 
   constructor(
@@ -34,6 +36,9 @@ export class StreamingService extends ServiceWithLLM {
 
     @InjectRepository(AgentMessage)
     agentMessageRepository: Repository<AgentMessage>,
+
+    @InjectRepository(AgentMessageAttachmentDocument)
+    attachmentDocumentRepository: Repository<AgentMessageAttachmentDocument>,
 
     @Inject("_MockLLMProvider")
     mockLlmProvider: LLMProvider,
@@ -64,6 +69,10 @@ export class StreamingService extends ServiceWithLLM {
       agentMessageRepository,
       "agentMessage",
     )
+    this.attachmentDocumentConnectRepository = new ConnectRepository(
+      attachmentDocumentRepository,
+      "agentMessageAttachmentDocument",
+    )
   }
   /**
    * Streams an agent response for a session.
@@ -80,7 +89,11 @@ export class StreamingService extends ServiceWithLLM {
     attachmentDocumentId?: string
     notifyClient: NotifyClient
   }): AsyncGenerator<StreamEvent, void, unknown> {
-    const { session: updatedSession, assistantMessageId } = await this.prepareForStreaming({
+    const {
+      session: updatedSession,
+      assistantMessageId,
+      attachmentDocumentId: turnAttachmentDocumentId,
+    } = await this.prepareForStreaming({
       agentSessionScope,
       userContent,
       attachmentDocumentId,
@@ -97,7 +110,7 @@ export class StreamingService extends ServiceWithLLM {
     try {
       const llmRequest = await this.agentLlmRequestService.buildLLMRequest({
         agentSessionScope,
-        attachmentDocumentId,
+        attachmentDocumentId: turnAttachmentDocumentId,
         onToolExecute: async (toolExecution) => {
           await this.persistToolExecutionAndNotifyClient({
             agentSessionScope,
@@ -311,6 +324,9 @@ export class StreamingService extends ServiceWithLLM {
   /**
    * Prepares session for streaming
    * Persists user message + empty assistant message with status "streaming"
+   *
+   * Returns the attachment the turn actually carries: the given one, or a copy of it when it
+   * already belongs to an earlier message (see {@link attachmentForTurn}).
    */
   async prepareForStreaming({
     agentSessionScope,
@@ -323,10 +339,15 @@ export class StreamingService extends ServiceWithLLM {
   }): Promise<{
     session: ConversationAgentSession
     assistantMessageId: string
+    attachmentDocumentId?: string
   }> {
     const { session, connectScope } = agentSessionScope
     const sessionId = session.id
     const agentSettingsId = agentSessionScope.agentSettings.id
+
+    const turnAttachmentDocumentId = attachmentDocumentId
+      ? await this.attachmentForTurn({ connectScope, attachmentDocumentId })
+      : undefined
 
     // Create user message
     await this.agentMessageConnectRepository.createAndSave(connectScope, {
@@ -338,7 +359,7 @@ export class StreamingService extends ServiceWithLLM {
       startedAt: null,
       completedAt: null,
       toolCalls: null,
-      attachmentDocumentId: attachmentDocumentId ?? null,
+      attachmentDocumentId: turnAttachmentDocumentId ?? null,
     })
 
     // Create empty assistant message with streaming status
@@ -362,7 +383,48 @@ export class StreamingService extends ServiceWithLLM {
       throw new NotFoundException(`AgentSession with id ${sessionId} not found`)
     }
 
-    return { session: updatedSession, assistantMessageId }
+    return {
+      session: updatedSession,
+      assistantMessageId,
+      attachmentDocumentId: turnAttachmentDocumentId,
+    }
+  }
+
+  /**
+   * An attachment row is attached to exactly one message (unique column). Resending a turn
+   * reuses the attachment the user already uploaded, so when the row is taken the new turn gets
+   * a copy pointing at the same stored file. Rendered PDF pages are cached under the attachment
+   * id, so the copy starts without a page count and renders its own.
+   */
+  private async attachmentForTurn({
+    connectScope,
+    attachmentDocumentId,
+  }: {
+    connectScope: RequiredConnectScope
+    attachmentDocumentId: string
+  }): Promise<string> {
+    const attachedTo = await this.agentMessageRepository.findOne({
+      where: { attachmentDocumentId },
+      select: { id: true },
+    })
+    if (!attachedTo) return attachmentDocumentId
+
+    const attachmentDocument = await this.attachmentDocumentConnectRepository.getOneById(
+      connectScope,
+      attachmentDocumentId,
+    )
+    if (!attachmentDocument) {
+      throw new NotFoundException(`Attachment document with ID ${attachmentDocumentId} not found`)
+    }
+
+    const copy = await this.attachmentDocumentConnectRepository.createAndSave(connectScope, {
+      fileName: attachmentDocument.fileName,
+      mimeType: attachmentDocument.mimeType,
+      size: attachmentDocument.size,
+      storageRelativePath: attachmentDocument.storageRelativePath,
+      pdfPageCount: null,
+    })
+    return copy.id
   }
 
   /**

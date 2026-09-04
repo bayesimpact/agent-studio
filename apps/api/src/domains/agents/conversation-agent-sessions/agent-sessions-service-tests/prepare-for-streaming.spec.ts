@@ -1,5 +1,7 @@
 import { NotFoundException } from "@nestjs/common/exceptions"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
+import { agentMessageAttachmentDocumentFactory } from "../../shared/agent-session-messages/agent-message-attachment-document.factory"
+import { agentMessageFactory } from "../../shared/agent-session-messages/agent-messages.factory"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()
@@ -50,6 +52,120 @@ describe("prepareForStreaming", () => {
     expect(assistantMessage.content).toBe("")
     expect(assistantMessage.id).toBe(assistantMessageId)
     expect(assistantMessage.startedAt).toBeDefined()
+  })
+
+  describe("attachment", () => {
+    const buildContext = async () => {
+      const {
+        service,
+        testAgent,
+        testAgentSettings,
+        testOrganization,
+        testUser,
+        testProject,
+        streamingService,
+        repositories,
+      } = getTestContext()
+      const connectScope: RequiredConnectScope = {
+        organizationId: testOrganization.id,
+        projectId: testProject.id,
+      }
+      const session = await service.createSession({
+        connectScope,
+        agentSettingsId: testAgentSettings.id,
+        userId: testUser.id,
+        type: "playground",
+      })
+      const attachmentDocument = await repositories.agentMessageAttachmentDocumentRepository.save(
+        agentMessageAttachmentDocumentFactory
+          .transient({ organization: testOrganization, project: testProject })
+          .build({ pdfPageCount: 3 }),
+      )
+      const agentSessionScope = {
+        agent: testAgent,
+        agentSettings: testAgentSettings,
+        session,
+        connectScope,
+      }
+      return {
+        streamingService,
+        repositories,
+        attachmentDocument,
+        agentSessionScope,
+        session,
+        testOrganization,
+        testProject,
+        testAgentSettings,
+      }
+    }
+
+    it("attaches a fresh document as is", async () => {
+      const { streamingService, attachmentDocument, agentSessionScope } = await buildContext()
+
+      const { session: updatedSession, attachmentDocumentId } =
+        await streamingService.prepareForStreaming({
+          agentSessionScope,
+          userContent: "What is in this file?",
+          attachmentDocumentId: attachmentDocument.id,
+        })
+
+      expect(attachmentDocumentId).toBe(attachmentDocument.id)
+      expect(updatedSession.messages[0]?.attachmentDocumentId).toBe(attachmentDocument.id)
+    })
+
+    it("attaches a copy when the document already belongs to an earlier turn", async () => {
+      // Resending an interrupted turn reuses its attachment, but a document row can only be
+      // attached to one message. The new turn gets its own row pointing at the same stored file.
+      const {
+        streamingService,
+        repositories,
+        attachmentDocument,
+        agentSessionScope,
+        session,
+        testOrganization,
+        testProject,
+        testAgentSettings,
+      } = await buildContext()
+      await repositories.agentMessageRepository.save(
+        agentMessageFactory
+          .user()
+          .transient({
+            organization: testOrganization,
+            project: testProject,
+            session,
+            agentSettings: testAgentSettings,
+          })
+          .build({ attachmentDocumentId: attachmentDocument.id }),
+      )
+
+      const { session: updatedSession, attachmentDocumentId } =
+        await streamingService.prepareForStreaming({
+          agentSessionScope,
+          userContent: "What is in this file?",
+          attachmentDocumentId: attachmentDocument.id,
+        })
+
+      expect(attachmentDocumentId).toBeDefined()
+      expect(attachmentDocumentId).not.toBe(attachmentDocument.id)
+      const resentUserMessage = updatedSession.messages.find(
+        (message) => message.role === "user" && message.content === "What is in this file?",
+      )
+      expect(resentUserMessage?.attachmentDocumentId).toBe(attachmentDocumentId)
+
+      const copy = await repositories.agentMessageAttachmentDocumentRepository.findOneBy({
+        id: attachmentDocumentId,
+      })
+      expect(copy).toMatchObject({
+        organizationId: attachmentDocument.organizationId,
+        projectId: attachmentDocument.projectId,
+        fileName: attachmentDocument.fileName,
+        mimeType: attachmentDocument.mimeType,
+        size: attachmentDocument.size,
+        storageRelativePath: attachmentDocument.storageRelativePath,
+        // Rendered pages are stored under the attachment id, so the copy renders its own.
+        pdfPageCount: null,
+      })
+    })
   })
 
   it("should throw NotFoundException for non-existent session", async () => {
