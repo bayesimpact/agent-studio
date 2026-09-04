@@ -1,4 +1,4 @@
-import { NotFoundException } from "@nestjs/common/exceptions"
+import { NotFoundException, UnprocessableEntityException } from "@nestjs/common/exceptions"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { agentMessageAttachmentDocumentFactory } from "../../shared/agent-session-messages/agent-message-attachment-document.factory"
 import { agentMessageFactory } from "../../shared/agent-session-messages/agent-messages.factory"
@@ -87,15 +87,29 @@ describe("prepareForStreaming", () => {
         session,
         connectScope,
       }
+      const attachToMessageOf = (attachedSession: typeof session) =>
+        repositories.agentMessageRepository.save(
+          agentMessageFactory
+            .user()
+            .transient({
+              organization: testOrganization,
+              project: testProject,
+              session: attachedSession,
+              agentSettings: testAgentSettings,
+            })
+            .build({ attachmentDocumentId: attachmentDocument.id }),
+        )
       return {
+        service,
         streamingService,
         repositories,
         attachmentDocument,
         agentSessionScope,
         session,
-        testOrganization,
-        testProject,
+        connectScope,
         testAgentSettings,
+        testUser,
+        attachToMessageOf,
       }
     }
 
@@ -122,21 +136,9 @@ describe("prepareForStreaming", () => {
         attachmentDocument,
         agentSessionScope,
         session,
-        testOrganization,
-        testProject,
-        testAgentSettings,
+        attachToMessageOf,
       } = await buildContext()
-      await repositories.agentMessageRepository.save(
-        agentMessageFactory
-          .user()
-          .transient({
-            organization: testOrganization,
-            project: testProject,
-            session,
-            agentSettings: testAgentSettings,
-          })
-          .build({ attachmentDocumentId: attachmentDocument.id }),
-      )
+      await attachToMessageOf(session)
 
       const { session: updatedSession, attachmentDocumentId } =
         await streamingService.prepareForStreaming({
@@ -162,9 +164,39 @@ describe("prepareForStreaming", () => {
         mimeType: attachmentDocument.mimeType,
         size: attachmentDocument.size,
         storageRelativePath: attachmentDocument.storageRelativePath,
-        // Rendered pages are stored under the attachment id, so the copy renders its own.
-        pdfPageCount: null,
+        // Rendered pages are cached under the file path, so the copy never renders again.
+        pdfPageCount: 3,
       })
+    })
+
+    it("rejects a document already attached in another conversation", async () => {
+      // Only the conversation that uploaded a file may attach it again: an attachment id taken
+      // by another conversation of the project must not be copied into this one.
+      const {
+        service,
+        streamingService,
+        attachmentDocument,
+        agentSessionScope,
+        connectScope,
+        testAgentSettings,
+        testUser,
+        attachToMessageOf,
+      } = await buildContext()
+      const otherSession = await service.createSession({
+        connectScope,
+        agentSettingsId: testAgentSettings.id,
+        userId: testUser.id,
+        type: "playground",
+      })
+      await attachToMessageOf(otherSession)
+
+      await expect(
+        streamingService.prepareForStreaming({
+          agentSessionScope,
+          userContent: "What is in this file?",
+          attachmentDocumentId: attachmentDocument.id,
+        }),
+      ).rejects.toThrow(UnprocessableEntityException)
     })
   })
 

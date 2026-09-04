@@ -1,5 +1,11 @@
 import type { StreamEvent, StreamEventPayload } from "@caseai-connect/api-contracts"
-import { Inject, Injectable, Logger, NotFoundException } from "@nestjs/common"
+import {
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnprocessableEntityException,
+} from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm/repository/Repository"
 import { v4 } from "uuid"
@@ -11,7 +17,8 @@ import { ConversationAgentSession } from "@/domains/agents/conversation-agent-se
 import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 import { ServiceWithLLM } from "@/external/llm"
 import { AgentMessage } from "../agent-message.entity"
-import { AgentMessageAttachmentDocument } from "../agent-message-attachment-document.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { AgentMessageAttachmentDocumentsService } from "../agent-message-attachment-documents.service"
 import { recoverAbortedStreams, STREAM_HEARTBEAT_MS } from "../stream-recovery"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentLlmRequestService } from "./agent-llm-request.service"
@@ -26,20 +33,17 @@ export class StreamingService extends ServiceWithLLM {
   private readonly logger = new Logger(StreamingService.name)
   private readonly agentMessageRepository: Repository<AgentMessage>
   private readonly agentMessageConnectRepository: ConnectRepository<AgentMessage>
-  private readonly attachmentDocumentConnectRepository: ConnectRepository<AgentMessageAttachmentDocument>
   private readonly conversationAgentSessionRepository: Repository<ConversationAgentSession>
 
   constructor(
     private readonly agentLlmRequestService: AgentLlmRequestService,
+    private readonly attachmentDocumentsService: AgentMessageAttachmentDocumentsService,
 
     @InjectRepository(ConversationAgentSession)
     conversationAgentSessionRepository: Repository<ConversationAgentSession>,
 
     @InjectRepository(AgentMessage)
     agentMessageRepository: Repository<AgentMessage>,
-
-    @InjectRepository(AgentMessageAttachmentDocument)
-    attachmentDocumentRepository: Repository<AgentMessageAttachmentDocument>,
 
     @Inject("_MockLLMProvider")
     mockLlmProvider: LLMProvider,
@@ -69,10 +73,6 @@ export class StreamingService extends ServiceWithLLM {
     this.agentMessageConnectRepository = new ConnectRepository(
       agentMessageRepository,
       "agentMessage",
-    )
-    this.attachmentDocumentConnectRepository = new ConnectRepository(
-      attachmentDocumentRepository,
-      "agentMessageAttachmentDocument",
     )
   }
   /**
@@ -375,7 +375,7 @@ export class StreamingService extends ServiceWithLLM {
     const agentSettingsId = agentSessionScope.agentSettings.id
 
     const turnAttachmentDocumentId = attachmentDocumentId
-      ? await this.attachmentForTurn({ connectScope, attachmentDocumentId })
+      ? await this.attachmentForTurn({ connectScope, sessionId, attachmentDocumentId })
       : undefined
 
     // Create user message
@@ -420,38 +420,36 @@ export class StreamingService extends ServiceWithLLM {
   }
 
   /**
-   * An attachment row is attached to exactly one message (unique column). Resending a turn
-   * reuses the attachment the user already uploaded, so when the row is taken the new turn gets
-   * a copy pointing at the same stored file. Rendered PDF pages are cached under the attachment
-   * id, so the copy starts without a page count and renders its own.
+   * An attachment row is attached to exactly one message (unique column). Sending an interrupted
+   * turn again reuses the attachment the user already uploaded, so when the row is taken by an
+   * earlier message of this same conversation the new turn gets a copy of it. An attachment
+   * taken by another conversation is not reusable: only the conversation that uploaded a file
+   * may attach it again.
    */
   private async attachmentForTurn({
     connectScope,
+    sessionId,
     attachmentDocumentId,
   }: {
     connectScope: RequiredConnectScope
+    sessionId: string
     attachmentDocumentId: string
   }): Promise<string> {
-    const attachedTo = await this.agentMessageRepository.findOne({
+    const [attachedTo] = await this.agentMessageConnectRepository.find(connectScope, {
       where: { attachmentDocumentId },
-      select: { id: true },
+      select: { id: true, sessionId: true },
+      take: 1,
     })
     if (!attachedTo) return attachmentDocumentId
-
-    const attachmentDocument = await this.attachmentDocumentConnectRepository.getOneById(
-      connectScope,
-      attachmentDocumentId,
-    )
-    if (!attachmentDocument) {
-      throw new NotFoundException(`Attachment document with ID ${attachmentDocumentId} not found`)
+    if (attachedTo.sessionId !== sessionId) {
+      throw new UnprocessableEntityException(
+        `Attachment document with ID ${attachmentDocumentId} belongs to another conversation`,
+      )
     }
 
-    const copy = await this.attachmentDocumentConnectRepository.createAndSave(connectScope, {
-      fileName: attachmentDocument.fileName,
-      mimeType: attachmentDocument.mimeType,
-      size: attachmentDocument.size,
-      storageRelativePath: attachmentDocument.storageRelativePath,
-      pdfPageCount: null,
+    const copy = await this.attachmentDocumentsService.copyAttachmentDocument({
+      connectScope,
+      attachmentDocumentId,
     })
     return copy.id
   }
