@@ -2,20 +2,27 @@ import type { Repository } from "typeorm"
 import type { AgentMessage } from "./agent-message.entity"
 
 /**
- * How long an assistant message may stay in "streaming" before it is considered orphaned.
+ * How long a "streaming" assistant message may go without a write before it is considered
+ * orphaned.
  *
  * A stream survives its client: a page refresh closes the SSE connection but the server keeps
  * generating and settles the message on its own. Only a server that died mid-reply leaves the
- * row streaming for good, and nothing distinguishes that from a slow multi-tool turn except
- * time, so the window is generous.
+ * row streaming for good. A live stream keeps writing to the row (tool persists, and a heartbeat
+ * every {@link STREAM_HEARTBEAT_MS}), so silence for the whole window is what marks it dead,
+ * however long the turn has been running.
  */
 export const STREAM_TIMEOUT_MS = 5 * 60 * 1000
 
+/** How often a running stream touches its message so it is not taken for orphaned. */
+export const STREAM_HEARTBEAT_MS = 60 * 1000
+
+const toTime = (value: Date | string): number =>
+  (value instanceof Date ? value : new Date(value)).getTime()
+
 export function isStreamStale(message: AgentMessage, now: number = Date.now()): boolean {
   if (message.status !== "streaming" || !message.startedAt) return false
-  const startedAt =
-    message.startedAt instanceof Date ? message.startedAt : new Date(message.startedAt)
-  return now - startedAt.getTime() > STREAM_TIMEOUT_MS
+  const lastWriteAt = Math.max(toTime(message.startedAt), toTime(message.updatedAt))
+  return now - lastWriteAt > STREAM_TIMEOUT_MS
 }
 
 /**

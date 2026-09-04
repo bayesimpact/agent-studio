@@ -1,5 +1,5 @@
 import type { StreamEvent, StreamEventPayload } from "@caseai-connect/api-contracts"
-import { Inject, Injectable, NotFoundException } from "@nestjs/common"
+import { Inject, Injectable, Logger, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm/repository/Repository"
 import { v4 } from "uuid"
@@ -12,7 +12,7 @@ import type { AgentSettings } from "@/domains/agents/settings/agent-settings.ent
 import { ServiceWithLLM } from "@/external/llm"
 import { AgentMessage } from "../agent-message.entity"
 import { AgentMessageAttachmentDocument } from "../agent-message-attachment-document.entity"
-import { recoverAbortedStreams } from "../stream-recovery"
+import { recoverAbortedStreams, STREAM_HEARTBEAT_MS } from "../stream-recovery"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentLlmRequestService } from "./agent-llm-request.service"
 import type { AgentSessionScope, PublicStreamingSessionProxy } from "./streaming-session.types"
@@ -23,6 +23,7 @@ type NotifyClient = (event: Extract<StreamEvent, { type: "notify_client" }>) => 
 
 @Injectable()
 export class StreamingService extends ServiceWithLLM {
+  private readonly logger = new Logger(StreamingService.name)
   private readonly agentMessageRepository: Repository<AgentMessage>
   private readonly agentMessageConnectRepository: ConnectRepository<AgentMessage>
   private readonly attachmentDocumentConnectRepository: ConnectRepository<AgentMessageAttachmentDocument>
@@ -106,6 +107,7 @@ export class StreamingService extends ServiceWithLLM {
 
     let fullContent = ""
     let mcpClose: (() => Promise<void>) | undefined
+    const stopHeartbeat = this.startHeartbeat(assistantMessageId)
 
     try {
       const llmRequest = await this.agentLlmRequestService.buildLLMRequest({
@@ -150,6 +152,7 @@ export class StreamingService extends ServiceWithLLM {
 
       throw error
     } finally {
+      stopHeartbeat()
       await mcpClose?.()
     }
   }
@@ -231,6 +234,7 @@ export class StreamingService extends ServiceWithLLM {
 
     let fullContent = ""
     let mcpClose: (() => Promise<void>) | undefined
+    const stopHeartbeat = this.startHeartbeat(assistantMessageId)
 
     try {
       const agentSessionScope: AgentSessionScope = {
@@ -282,8 +286,25 @@ export class StreamingService extends ServiceWithLLM {
       yield this.sseEvent({ type: "error", messageId: assistantMessageId, error: errorMessage })
       throw error
     } finally {
+      stopHeartbeat()
       await mcpClose?.()
     }
+  }
+
+  /**
+   * Keeps touching the streaming message while the answer is generated, so a long turn is not
+   * taken for an orphaned one by the recovery sweep (see `isStreamStale`). Only a row still
+   * streaming is touched: a late tick must not disturb a settled message.
+   */
+  private startHeartbeat(assistantMessageId: string): () => void {
+    const timer = setInterval(() => {
+      this.agentMessageRepository
+        .update({ id: assistantMessageId, status: "streaming" }, { updatedAt: new Date() })
+        .catch((error: unknown) => {
+          this.logger.warn(`Heartbeat failed for message ${assistantMessageId}`, error)
+        })
+    }, STREAM_HEARTBEAT_MS)
+    return () => clearInterval(timer)
   }
 
   private sseEvent<T extends StreamEventPayload["type"]>(
