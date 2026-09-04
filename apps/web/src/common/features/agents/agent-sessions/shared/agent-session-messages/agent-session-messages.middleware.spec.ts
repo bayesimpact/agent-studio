@@ -2,6 +2,8 @@ import { combineReducers, configureStore, type Reducer } from "@reduxjs/toolkit"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { RootState } from "@/common/store/types"
 import type { Services } from "@/di/services"
+import { reviewCampaignsTesterMiddleware } from "@/tester/features/review-campaigns/tester.middleware"
+import { reviewCampaignsTesterActions } from "@/tester/features/review-campaigns/tester.slice"
 import { conversationAgentSessionsActions } from "../../conversation/conversation-agent-sessions.slice"
 import {
   agentSessionMessagesMiddleware,
@@ -47,6 +49,7 @@ const completedReply: AgentSessionMessage = {
  * A store holding only the slices the listener reads. The messages slice reducer is the real one
  * so the loop observes the same state transitions production does. The cast mirrors the one in
  * the production store: `RootState` is the many-scope union the listener is typed against.
+ * The tester middleware is registered too, as it is the one resetting the slice on its unmount.
  */
 function buildStore(getOne: ReturnType<typeof vi.fn>) {
   const services = { agentSessionMessages: { getOne } } as unknown as Services
@@ -58,9 +61,11 @@ function buildStore(getOne: ReturnType<typeof vi.fn>) {
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({ thunk: { extraArgument: { services } } }).prepend(
         agentSessionMessagesMiddleware.listenerMiddleware.middleware,
+        reviewCampaignsTesterMiddleware.listenerMiddleware.middleware,
       ),
   })
   agentSessionMessagesMiddleware.registerListeners()
+  reviewCampaignsTesterMiddleware.registerListeners()
   return store
 }
 
@@ -73,6 +78,7 @@ beforeEach(() => {
 
 afterEach(() => {
   agentSessionMessagesMiddleware.listenerMiddleware.clearListeners()
+  reviewCampaignsTesterMiddleware.listenerMiddleware.clearListeners()
   vi.useRealTimers()
   vi.unstubAllGlobals()
 })
@@ -147,6 +153,21 @@ describe("streaming recovery polling", () => {
     expect(getOne).toHaveBeenCalledTimes(1)
 
     store.dispatch(conversationAgentSessionsActions.sessionUnmount())
+    await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS * 3)
+
+    expect(getOne).toHaveBeenCalledTimes(1)
+  })
+
+  it("stops polling when a tester session is left", async () => {
+    // The tester leaves through its own unmount action, which must reset the thread as well.
+    const getOne = vi.fn().mockResolvedValue(streamingReply)
+    const store = buildStore(getOne)
+
+    store.dispatch(loaded([userMessage, streamingReply]))
+    await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS)
+    expect(getOne).toHaveBeenCalledTimes(1)
+
+    store.dispatch(reviewCampaignsTesterActions.sessionUnmount())
     await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS * 3)
 
     expect(getOne).toHaveBeenCalledTimes(1)
