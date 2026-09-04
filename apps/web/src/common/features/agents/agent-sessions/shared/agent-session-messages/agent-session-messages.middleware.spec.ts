@@ -170,7 +170,8 @@ describe("streaming recovery polling", () => {
 
   it("gives up once the reply has been followed for the maximum wait", async () => {
     // A safety net: the server settles orphaned replies on its own, but the loop must not run
-    // for the rest of the session if that ever fails.
+    // for the rest of the session if that ever fails. The reply then reads as interrupted, so
+    // the turn can be sent again.
     const getOne = vi.fn().mockResolvedValue(streamingReply)
     const store = buildStore(getOne)
 
@@ -182,11 +183,32 @@ describe("streaming recovery polling", () => {
 
     await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS)
     expect(store.getState().agentSessionMessages.data.value?.[1]).toMatchObject({
-      status: "error",
+      status: "aborted",
     })
     const pollsSoFar = getOne.mock.calls.length
     await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS * 3)
     expect(getOne).toHaveBeenCalledTimes(pollsSoFar)
+  })
+
+  it("asks once more before giving up on a tab left hidden past the maximum wait", async () => {
+    // The deadline keeps running while nobody looks, but the server may well have completed the
+    // reply in the meantime. Declaring it interrupted without asking would invite a duplicate
+    // resend of a turn that was answered.
+    vi.stubGlobal("document", { hidden: true })
+    const getOne = vi.fn().mockResolvedValue(completedReply)
+    const store = buildStore(getOne)
+
+    store.dispatch(loaded([userMessage, streamingReply]))
+    await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_MAX_WAIT_MS * 2)
+    expect(getOne).not.toHaveBeenCalled()
+    expect(store.getState().agentSessionMessages.data.value?.[1]).toMatchObject({
+      status: "streaming",
+    })
+
+    vi.stubGlobal("document", { hidden: false })
+    await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS)
+    expect(getOne).toHaveBeenCalledTimes(1)
+    expect(store.getState().agentSessionMessages.data.value?.[1]).toEqual(completedReply)
   })
 
   it("keeps polling through a transient failure", async () => {
@@ -205,7 +227,7 @@ describe("streaming recovery polling", () => {
     expect(store.getState().agentSessionMessages.data.value?.[1]).toEqual(completedReply)
   })
 
-  it("marks the reply as failed once polls keep failing", async () => {
+  it("marks the reply as interrupted once polls keep failing", async () => {
     // Without this the spinner would outlive a deleted or unreachable message.
     const getOne = vi.fn().mockRejectedValue(new Error("Message not found"))
     const store = buildStore(getOne)
@@ -223,7 +245,7 @@ describe("streaming recovery polling", () => {
     expect(selectStreaming(state)).toBe(false)
     expect(state.agentSessionMessages.data.value?.[1]).toMatchObject({
       id: streamingReply.id,
-      status: "error",
+      status: "aborted",
     })
 
     await vi.advanceTimersByTimeAsync(STREAMING_RECOVERY_POLL_INTERVAL_MS * 3)

@@ -106,6 +106,20 @@ const slice = createSlice({
       }
       state.streamingToolSteps = []
     },
+    /**
+     * The reply can no longer be followed (see the recovery poll): shown as interrupted, with the
+     * turn offered again, rather than as a spinner for good. Nothing written so far is kept.
+     */
+    interruptAssistantMessage: (state, action: PayloadAction<{ messageId: string }>) => {
+      if (!ADS.isFulfilled(state.data)) return
+
+      const message = state.data.value.find((msg) => msg.id === action.payload.messageId)
+      if (message && isStreamingReply(message)) {
+        message.status = "aborted"
+        message.content = ""
+      }
+      state.streamingToolSteps = []
+    },
   },
   extraReducers: (builder) => {
     builder

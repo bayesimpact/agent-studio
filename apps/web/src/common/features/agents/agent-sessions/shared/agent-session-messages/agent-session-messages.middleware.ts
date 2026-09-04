@@ -19,9 +19,9 @@ export const STREAMING_RECOVERY_POLL_INTERVAL_MS = 2_000
 export const STREAMING_RECOVERY_MAX_CONSECUTIVE_FAILURES = 3
 
 /**
- * Longest a reply is followed before it is shown as failed. The server settles an orphaned reply
- * within its own window, so this only guards against that never happening; it is generous enough
- * for the longest legitimate turn.
+ * Longest a reply is followed before it is shown as interrupted. The server settles an orphaned
+ * reply within its own window, so this only guards against that never happening; it is generous
+ * enough for the longest legitimate turn.
  */
 export const STREAMING_RECOVERY_MAX_WAIT_MS = 30 * 60 * 1000
 
@@ -48,33 +48,38 @@ function registerListeners() {
       const giveUpAt = Date.now() + STREAMING_RECOVERY_MAX_WAIT_MS
       let consecutiveFailures = 0
 
-      // The reply cannot be followed any more: better a visible failure than a spinner for good.
-      const giveUp = (error: string) => {
-        listenerApi.dispatch(agentSessionMessagesActions.failAssistantMessage({ messageId, error }))
+      // The reply cannot be followed any more: better shown interrupted than a spinner for good.
+      const giveUp = () => {
+        listenerApi.dispatch(agentSessionMessagesActions.interruptAssistantMessage({ messageId }))
+      }
+
+      // Whether the reply is still being written, as far as the client knows. Leaving the
+      // session resets the slice, which is how the loop learns to stop.
+      const isStillStreaming = () => {
+        const { data } = listenerApi.getState().agentSessionMessages
+        if (!ADS.isFulfilled(data)) return false
+        const reply = data.value.find((message) => message.id === messageId)
+        return reply !== undefined && isStreamingReply(reply)
       }
 
       while (true) {
         await listenerApi.delay(STREAMING_RECOVERY_POLL_INTERVAL_MS)
-
-        // Leaving the session resets the slice, which is how the loop learns to stop.
-        const { data } = listenerApi.getState().agentSessionMessages
-        if (!ADS.isFulfilled(data)) return
-        const reply = data.value.find((message) => message.id === messageId)
-        if (reply?.status !== "streaming") return
-
-        if (Date.now() > giveUpAt) return giveUp("The reply took too long")
+        if (!isStillStreaming()) return
         if (isTabHidden()) continue
 
         const result = await listenerApi.dispatch(getMessage(messageId))
-        if (!getMessage.rejected.match(result)) {
-          consecutiveFailures = 0
+        if (!isStillStreaming()) return
+
+        if (getMessage.rejected.match(result)) {
+          consecutiveFailures += 1
+          if (consecutiveFailures >= STREAMING_RECOVERY_MAX_CONSECUTIVE_FAILURES) return giveUp()
           continue
         }
+        consecutiveFailures = 0
 
-        consecutiveFailures += 1
-        if (consecutiveFailures >= STREAMING_RECOVERY_MAX_CONSECUTIVE_FAILURES) {
-          return giveUp(result.error.message ?? "The reply could not be loaded")
-        }
+        // Decided on a fresh answer only: a tab left hidden past the deadline must not declare
+        // interrupted a reply the server has since completed.
+        if (Date.now() > giveUpAt) return giveUp()
       }
     },
   })

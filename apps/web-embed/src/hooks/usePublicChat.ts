@@ -67,8 +67,8 @@ const STREAMING_RECOVERY_POLL_INTERVAL_MS = 2_000
 const STREAMING_RECOVERY_MAX_CONSECUTIVE_FAILURES = 3
 
 /**
- * Longest a reply is followed before it is shown as failed. The server settles an orphaned reply
- * within its own window, so this only guards against that never happening.
+ * Longest a reply is followed before it is shown as interrupted. The server settles an orphaned
+ * reply within its own window, so this only guards against that never happening.
  */
 const STREAMING_RECOVERY_MAX_WAIT_MS = 30 * 60 * 1000
 
@@ -188,7 +188,7 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
      * Re-fetches the session until its streaming reply settles, keeping the composer locked as
      * it was before the reload. Ends when the reply settles, the session is reset, or the
      * widget unmounts. A session that is no longer accepted is replaced by a fresh one, as on
-     * load; other failures are tolerated a few times before the reply is shown as failed.
+     * load; other failures are tolerated a few times before the reply is shown as interrupted.
      */
     async function settleStreamingReply(
       session: StoredSession,
@@ -198,18 +198,17 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
       setIsStreaming(true)
       const giveUpAt = Date.now() + STREAMING_RECOVERY_MAX_WAIT_MS
       let consecutiveFailures = 0
-      // The reply can no longer be followed: show it failed rather than spinning for good.
+      // The reply can no longer be followed: show it interrupted rather than spinning for good.
       const giveUp = () =>
         setMessages((prev) =>
           prev.map((message) =>
-            message.status === "streaming" ? { ...message, status: "error" } : message,
+            message.status === "streaming" ? { ...message, status: "aborted" } : message,
           ),
         )
       try {
         while (true) {
           await sleep(STREAMING_RECOVERY_POLL_INTERVAL_MS)
           if (!stillCurrent()) return
-          if (Date.now() > giveUpAt) return giveUp()
           if (isTabHidden()) continue
 
           try {
@@ -220,8 +219,12 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
             )
             if (!stillCurrent()) return
             consecutiveFailures = 0
-            setMessages(sessionData.messages.map(toDisplayMessage))
-            if (!hasStreamingReply(sessionData.messages)) return
+            // A snapshot of a reply still being written carries nothing new; only the settled
+            // thread replaces what the widget shows.
+            if (!hasStreamingReply(sessionData.messages)) {
+              setMessages(sessionData.messages.map(toDisplayMessage))
+              return
+            }
           } catch (err) {
             if (!stillCurrent()) return
             if (err instanceof ApiError && err.isUnauthorized) {
@@ -230,7 +233,12 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
             }
             consecutiveFailures += 1
             if (consecutiveFailures >= STREAMING_RECOVERY_MAX_CONSECUTIVE_FAILURES) return giveUp()
+            continue
           }
+
+          // Decided on a fresh answer only: a tab left hidden past the deadline must not declare
+          // interrupted a reply the server has since completed.
+          if (Date.now() > giveUpAt) return giveUp()
         }
       } finally {
         if (stillCurrent()) setIsStreaming(false)
