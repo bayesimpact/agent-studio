@@ -15,7 +15,6 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ### Changed
 
 ### Fixed
-- Background jobs (evaluations, CSV extraction, crawling, extraction sessions) start again after a worker startup failure.
 - Refreshing the page during a reply no longer loses the answer.
 - An interrupted reply can be sent again.
 
