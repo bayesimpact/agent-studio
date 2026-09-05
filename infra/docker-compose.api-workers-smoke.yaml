@@ -60,7 +60,7 @@ services:
       - "3003:3000"
     restart: "no"
 
-  # CPU pool: no Docling, consumes the LLM/extraction/crawling queues.
+  # CPU pool: no Docling, consumes the LLM/extraction/crawling/sweep queues.
   cpu-workers:
     image: ${CPU_WORKERS_IMAGE:-agentstudio-cpu-workers-smoke:latest}
     build:
@@ -91,7 +91,8 @@ services:
       DOCUMENT_EXTRACTOR_DOCLING_ENABLED: "false"
       LOCAL_STORAGE_SERVER_BASE_URL: http://api:3000
       MCP_ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
-      WORKER_QUEUE_NAMES: "evaluation-extraction-run-queue,evaluation-extraction-run-execute-queue,evaluation-conversation-run-queue,evaluation-conversation-run-execute-queue,agent-csv-extraction-run-queue,agent-csv-extraction-run-execute-queue,url-crawling"
+      # Same list as the production cpu-workers pool (infra repo, platform/terraform/envs/connect), so every CPU worker module boots in CI.
+      WORKER_QUEUE_NAMES: "evaluation-extraction-run-queue,evaluation-extraction-run-execute-queue,evaluation-conversation-run-queue,evaluation-conversation-run-execute-queue,agent-csv-extraction-run-queue,agent-csv-extraction-run-execute-queue,url-crawling,web-source-embeddings,document-embeddings-stuck-sweep,extraction-agent-session-queue,conversation-retention-sweep"
       WORKERS_HEALTH_QUEUE_NAME: evaluation-extraction-run-queue
     restart: "no"
 
@@ -126,6 +127,7 @@ services:
       DOCUMENT_EXTRACTOR_DOCLING_ENABLED: "true"
       LOCAL_STORAGE_SERVER_BASE_URL: http://api:3000
       MCP_ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
-      WORKER_QUEUE_NAMES: "document-embeddings,document-embeddings-stuck-sweep,web-source-embeddings"
+      # Same list as the production gpu-workers pool.
+      WORKER_QUEUE_NAMES: "document-embeddings"
       WORKERS_HEALTH_QUEUE_NAME: document-embeddings
     restart: "no"
